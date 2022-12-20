@@ -1,0 +1,24 @@
+Microsoft (R) Incremental Linker Version 14.32.31332.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:final_libs\.exe 
+/LIBPATH:F:\\GREED(programming 
+game)\\final_libs 
+/LIBPATH:C:\\SFML 
+visual 
+c++\\SFML-2.5.1\\lib 
+"/LIBPATH:C:\\TGUI-0.10-nightly\\lib" 
+lib2.lib 
+tgui.lib 
+sfml-graphics.lib 
+sfml-audio.lib 
+sfml-network.lib 
+sfml-window.lib 
+sfml-system.lib 
+game)\\final_libs\ 
+visual 
+c++\\SFML-2.5.1\\include\ 
+\F:\\GREED(programming 
+game)\\GREED(programming 
+game)\\greed.cpp\ 
+LINK : fatal error LNK1104: cannot open file 'final_libs\.exe'

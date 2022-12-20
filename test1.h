@@ -1,0 +1,5 @@
+
+namespace work
+{
+	void print();
+}

@@ -1,0 +1,4 @@
+update in main_lib.hpp
+1. added some new collision functions
+2. added a new vector in class ship for  colliding of ships
+3. added a new event for collision of ships

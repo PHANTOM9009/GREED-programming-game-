@@ -1,0 +1,27 @@
+Rock 'em sock 'em
+
+Welcome to
+Greed(with an animation)
+////////////////////////////////////////////////////////////////////////////
+A programming game that lets you program your Battleship to destroy others.
+(new page)practice coding in a fun and engaging way
+
+
+(new page)Only as complex as you make it:
+
+(new page)‍What strategies will you use? Min–max?
+Reinforcement learning?
+Machine learning?
+Your choice!
+
+(new page)playing Greed is as simple as two clicks!
+//////////////////////////////////////////////////////////////////////////////
+"Gameplay"
+Upload your algorithm.
+Prepare to witness the AI battle!
+These Battleships are programmed to chase and destroy each other!
+
+"Gameplay continues"
+Visit the Website to play, compete and emerge as the winner!
+
+

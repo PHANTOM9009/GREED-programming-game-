@@ -1,0 +1,46 @@
+greed.cpp
+F:\\GREED(programming game)\\final_libs\lib2.hpp(476): warning C4305: '=': truncation from 'int' to 'bool'
+Microsoft (R) Incremental Linker Version 14.32.31332.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:greed.exe 
+"/LIBPATH:F:\\GREED(programming game)\\final_libs" 
+"/LIBPATH:C:\\SFML visual c++\\SFML-2.5.1\\lib" 
+"/LIBPATH:C:\\TGUI-0.10-nightly\\lib" lib2.lib tgui.lib sfml-graphics.lib sfml-audio.lib sfml-network.lib sfml-window.lib sfml-system.lib 
+greed.obj 
+lib2.lib(lib2.obj) : MSIL .netmodule or module compiled with /GL found; restarting link with /LTCG; add /LTCG to the link command line to improve linker performance
+Microsoft (R) Incremental Linker Version 14.32.31332.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:greed.exe 
+"/LIBPATH:F:\\GREED(programming game)\\final_libs" 
+"/LIBPATH:C:\\SFML visual c++\\SFML-2.5.1\\lib" 
+"/LIBPATH:C:\\TGUI-0.10-nightly\\lib" lib2.lib tgui.lib sfml-graphics.lib sfml-audio.lib sfml-network.lib sfml-window.lib sfml-system.lib 
+greed.obj 
+Generating code
+F:\lib2\lib2\lib2.cpp(2865) : warning C4715: 'get': not all control paths return a value
+F:\lib2\lib2\lib2.hpp(1232) : warning C4715: 'ship::getMutexId': not all control paths return a value
+F:\lib2\lib2\lib2.hpp(1213) : warning C4715: 'ship::getPathList': not all control paths return a value
+F:\lib2\lib2\lib2.hpp(1168) : warning C4715: 'ship::getGlobalMapref': not all control paths return a value
+F:\lib2\lib2\lib2.hpp(1183) : warning C4715: 'ship::getPointPath': not all control paths return a value
+F:\lib2\lib2\lib2.hpp(1103) : warning C4715: 'ship::getAbsolutePosition1': not all control paths return a value
+F:\lib2\lib2\lib2.hpp(1585) : warning C4715: 'Control::getShipList': not all control paths return a value
+F:\lib2\lib2\lib2.hpp(1595) : warning C4715: 'Control::getCannonList': not all control paths return a value
+F:\lib2\lib2\lib2.hpp(1116) : warning C4715: 'ship::getAbsolutePosition': not all control paths return a value
+F:\lib2\lib2\List.h(254) : warning C4715: 'List<Greed::cannon>::operator[]': not all control paths return a value
+F:\lib2\lib2\List.h(254) : warning C4715: 'List<Greed::abs_pos>::operator[]': not all control paths return a value
+F:\lib2\lib2\List.h(254) : warning C4715: 'List<Greed::point>::operator[]': not all control paths return a value
+F:\lib2\lib2\List.h(254) : warning C4715: 'List<Greed::coords>::operator[]': not all control paths return a value
+F:\lib2\lib2\List.h(254) : warning C4715: 'List<Greed::bullet>::operator[]': not all control paths return a value
+F:\lib2\lib2\List.h(254) : warning C4715: 'List<Greed::vertex>::operator[]': not all control paths return a value
+F:\lib2\lib2\List.h(254) : warning C4715: 'List<int>::operator[]': not all control paths return a value
+F:\lib2\lib2\List.h(254) : warning C4715: 'List<graphics::animator>::operator[]': not all control paths return a value
+F:\lib2\lib2\List.h(254) : warning C4715: 'List<Greed::A>::operator[]': not all control paths return a value
+F:\lib2\lib2\lib2.cpp(2847) : warning C4715: 'ship::anchorShip': not all control paths return a value
+F:\lib2\lib2\lib2.cpp(2157) : warning C4715: 'ship::isShipInMyRadius': not all control paths return a value
+F:\lib2\lib2\lib2.cpp(2114) : warning C4715: 'ship::isShipInMyRadius_forFire': not all control paths return a value
+F:\lib2\lib2\lib2.cpp(2455) : warning C4715: 'ship::fireCannon': not all control paths return a value
+F:\lib2\lib2\lib2.cpp(2238) : warning C4715: 'ship::fireAtCannon': not all control paths return a value
+F:\lib2\lib2\lib2.cpp(2757) : warning C4715: 'Greed::cannon::fireCannon': not all control paths return a value
+F:\lib2\lib2\lib2.cpp(2171) : warning C4715: 'ship::chaseShip': not all control paths return a value
+Finished generating code
