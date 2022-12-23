@@ -627,11 +627,14 @@ public:
 class Greed::shipCannon
 {
 	Mutex* mutx;
+	static long double current_bullet;
 	int mid;//here it will be equal to the ship id of the ship owning the cannon
 	//here id of the cannon will be same as the id of ship 
 	double power;
-	vector<Greed::bullet> activeBullets;
-	vector<Greed::bullet> allBullets;
+	vector<Greed::bullet> activeBullets;//(this is for online version of the game) the bullets that are not yet legalized by graphics::callable and just called by the player yet
+	vector<Greed::bullet> allBullets;//this shit is useless for now. it has nothing in it.
+	unordered_map<int, Greed::bullet> legal_bullets;
+
 
 	/*
 	List<Greed::bullet> getAllBullets()

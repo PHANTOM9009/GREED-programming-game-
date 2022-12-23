@@ -1,0 +1,3 @@
+The server should send the following things:
+1. for collision:
+	send the frame

@@ -102,6 +102,9 @@
     <ClCompile Include="offline_functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="online_lib2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">
@@ -113,5 +116,11 @@
     <ClInclude Include="networking.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="online_lib2.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="dependency.txt" />
   </ItemGroup>
 </Project>

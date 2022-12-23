@@ -21,7 +21,7 @@ List<Greed::coords> Control::opaque_coords;
 List<Greed::cannon> Control::cannon_list;
 long double graphics::total_secs = 0;
 bool graphics::showPatterns = false;
-
+long double Greed::shipCannon::current_bullet = 0;
 
 //for moving entites over the screen
 template<typename T>
@@ -2506,7 +2506,7 @@ bool ship::fireAtCannon(int c_id, cannon can = cannon::FRONT)
 		Control ob;
 
 		Greed::bullet bull;
-		bull.initialize(true, mutx, cannon_ob.activeBullets.size(), this->ship_id, cannon_ob.power, -1, this->ship_id, c_id, -1, true, can, ShipSide::NA);
+		bull.initialize(true, mutx, cannon_ob.current_bullet++, this->ship_id, cannon_ob.power, -1, this->ship_id, c_id, -1, true, can, ShipSide::NA);
 
 
 		mutx->m[ship_id].lock();
@@ -2718,8 +2718,8 @@ bool ship::fireCannon(cannon can, int s_id, ShipSide s)//s_id and s are of targe
 		{
 			mutx->m[ship_id].lock();
 			Greed::bullet bull;
-
-			bull.initialize(true, mutx, cannon_ob.activeBullets.size(), this->ship_id, cannon_ob.power, -1, this->ship_id, -1, s_id, true, can, s);
+			
+			bull.initialize(true, mutx, cannon_ob.current_bullet++, this->ship_id, cannon_ob.power, -1, this->ship_id, -1, s_id, true, can, s);
 			//setting the starting and ending tile for the bullet in the game
 
 
