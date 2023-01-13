@@ -1,3 +1,1 @@
-The server should send the following things:
-1. for collision:
-	send the frame
+if client doesn't send data to the server retain its previous position

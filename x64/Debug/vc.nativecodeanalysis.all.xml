@@ -1,807 +1,1090 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><DEFECTS><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>166</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>163</LINE>
       <COLUMN>2</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
-    <DESCRIPTION>Variable 'Greed::abs_pos::x' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <DESCRIPTION>Variable 'Greed::abs_pos::y' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Greed::abs_pos::{ctor}</FUNCTION>
     <DECORATED>??0abs_pos@Greed@@QEAA@XZ</DECORATED>
-    <FUNCLINE>166</FUNCLINE>
+    <FUNCLINE>163</FUNCLINE>
     <ADDITIONALINFO>
-      <targetSymbol>Greed::abs_pos::x</targetSymbol>
+      <targetSymbol>Greed::abs_pos::y</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>199</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>196</LINE>
       <COLUMN>2</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Greed::coords::bonus' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Greed::coords::{ctor}</FUNCTION>
     <DECORATED>??0coords@Greed@@QEAA@XZ</DECORATED>
-    <FUNCLINE>199</FUNCLINE>
+    <FUNCLINE>196</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Greed::coords::bonus</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>206</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>203</LINE>
       <COLUMN>2</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Greed::coords::bonus' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Greed::coords::{ctor}</FUNCTION>
     <DECORATED>??0coords@Greed@@QEAA@HHH@Z</DECORATED>
-    <FUNCLINE>206</FUNCLINE>
+    <FUNCLINE>203</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Greed::coords::bonus</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>212</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>209</LINE>
       <COLUMN>2</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Greed::coords::heuristic' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Greed::coords::{ctor}</FUNCTION>
     <DECORATED>??0coords@Greed@@QEAA@HHHW4Entity@@HW4Bonus@@@Z</DECORATED>
-    <FUNCLINE>212</FUNCLINE>
+    <FUNCLINE>209</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Greed::coords::heuristic</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>246</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>242</LINE>
       <COLUMN>2</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Greed::point::ob' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Greed::point::{ctor}</FUNCTION>
     <DECORATED>??0point@Greed@@QEAA@XZ</DECORATED>
-    <FUNCLINE>246</FUNCLINE>
+    <FUNCLINE>242</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Greed::point::ob</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>299</LINE>
-      <COLUMN>33</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>Greed::makeList</FUNCTION>
-    <DECORATED>?makeList@Greed@@QEAA?AV?$List@Vabs_pos@Greed@@@@V?$List@Vcoords@Greed@@@@@Z</DECORATED>
-    <FUNCLINE>268</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>306</LINE>
-      <COLUMN>33</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>Greed::makeList</FUNCTION>
-    <DECORATED>?makeList@Greed@@QEAA?AV?$List@Vabs_pos@Greed@@@@V?$List@Vcoords@Greed@@@@@Z</DECORATED>
-    <FUNCLINE>268</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>282</LINE>
-      <COLUMN>36</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>Greed::makeList</FUNCTION>
-    <DECORATED>?makeList@Greed@@QEAA?AV?$List@Vabs_pos@Greed@@@@V?$List@Vcoords@Greed@@@@@Z</DECORATED>
-    <FUNCLINE>268</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>289</LINE>
-      <COLUMN>36</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>Greed::makeList</FUNCTION>
-    <DECORATED>?makeList@Greed@@QEAA?AV?$List@Vabs_pos@Greed@@@@V?$List@Vcoords@Greed@@@@@Z</DECORATED>
-    <FUNCLINE>268</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>403</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>280</LINE>
       <COLUMN>2</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
-    <DESCRIPTION>Variable 'Greed::A::heuristic' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <DESCRIPTION>Variable 'Greed::A::sum' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Greed::A::{ctor}</FUNCTION>
     <DECORATED>??0A@Greed@@QEAA@XZ</DECORATED>
-    <FUNCLINE>403</FUNCLINE>
+    <FUNCLINE>280</FUNCLINE>
     <ADDITIONALINFO>
-      <targetSymbol>Greed::A::heuristic</targetSymbol>
+      <targetSymbol>Greed::A::sum</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>422</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>299</LINE>
       <COLUMN>32</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>Greed::calc_heuristic</FUNCTION>
-    <DECORATED>?calc_heuristic@Greed@@IEAANVcoords@1@0@Z</DECORATED>
-    <FUNCLINE>419</FUNCLINE>
+    <DECORATED>?calc_heuristic@Greed@@QEAANVcoords@1@0@Z</DECORATED>
+    <FUNCLINE>296</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>615</LINE>
-      <COLUMN>1</COLUMN>
-    </SFA>
-    <DEFECTCODE>26495</DEFECTCODE>
-    <DESCRIPTION>Variable 'Greed::bullet::mutx' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
-    <FUNCTION>Greed::bullet::{ctor}</FUNCTION>
-    <DECORATED>??0bullet@Greed@@QEAA@XZ</DECORATED>
-    <FUNCLINE>615</FUNCLINE>
-    <ADDITIONALINFO>
-      <targetSymbol>Greed::bullet::mutx</targetSymbol>
-    </ADDITIONALINFO>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>697</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>612</LINE>
       <COLUMN>1</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Greed::cannon::ss' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Greed::cannon::{ctor}</FUNCTION>
     <DECORATED>??0cannon@Greed@@QEAA@XZ</DECORATED>
-    <FUNCLINE>697</FUNCLINE>
+    <FUNCLINE>612</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Greed::cannon::ss</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>750</LINE>
-      <COLUMN>1</COLUMN>
-    </SFA>
-    <DEFECTCODE>26495</DEFECTCODE>
-    <DESCRIPTION>Variable 'Greed::shipCannon::mid' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
-    <FUNCTION>Greed::shipCannon::{ctor}</FUNCTION>
-    <DECORATED>??0shipCannon@Greed@@QEAA@XZ</DECORATED>
-    <FUNCLINE>750</FUNCLINE>
-    <ADDITIONALINFO>
-      <targetSymbol>Greed::shipCannon::mid</targetSymbol>
-    </ADDITIONALINFO>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>755</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>651</LINE>
       <COLUMN>1</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Greed::shipCannon::mutx' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Greed::shipCannon::{ctor}</FUNCTION>
-    <DECORATED>??0shipCannon@Greed@@QEAA@HH@Z</DECORATED>
-    <FUNCLINE>755</FUNCLINE>
+    <DECORATED>??0shipCannon@Greed@@QEAA@XZ</DECORATED>
+    <FUNCLINE>651</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Greed::shipCannon::mutx</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1080</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>656</LINE>
+      <COLUMN>1</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'Greed::shipCannon::mutx' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>Greed::shipCannon::{ctor}</FUNCTION>
+    <DECORATED>??0shipCannon@Greed@@QEAA@HH@Z</DECORATED>
+    <FUNCLINE>656</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>Greed::shipCannon::mutx</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>693</LINE>
       <COLUMN>1</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'shipInfo::ob' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>shipInfo::{ctor}</FUNCTION>
     <DECORATED>??0shipInfo@@QEAA@XZ</DECORATED>
-    <FUNCLINE>1080</FUNCLINE>
+    <FUNCLINE>693</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>shipInfo::ob</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1156</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>770</LINE>
       <COLUMN>1</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Map::map_id' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Map::{ctor}</FUNCTION>
     <DECORATED>??0Map@@QEAA@XZ</DECORATED>
-    <FUNCLINE>1156</FUNCLINE>
+    <FUNCLINE>770</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Map::map_id</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1241</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>840</LINE>
       <COLUMN>1</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
-    <DESCRIPTION>Variable 'Event::sid' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <DESCRIPTION>Variable 'Event::ttl' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Event::{ctor}</FUNCTION>
     <DECORATED>??0Event@@QEAA@XZ</DECORATED>
-    <FUNCLINE>1241</FUNCLINE>
+    <FUNCLINE>840</FUNCLINE>
     <ADDITIONALINFO>
-      <targetSymbol>Event::sid</targetSymbol>
+      <targetSymbol>Event::ttl</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1313</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>909</LINE>
       <COLUMN>2</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Event::LowFuel::fuel' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Event::LowFuel::{ctor}</FUNCTION>
     <DECORATED>??0LowFuel@Event@@QEAA@XZ</DECORATED>
-    <FUNCLINE>1313</FUNCLINE>
+    <FUNCLINE>909</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Event::LowFuel::fuel</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1333</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>926</LINE>
       <COLUMN>2</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Event::LowAmmo::ammo' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Event::LowAmmo::{ctor}</FUNCTION>
     <DECORATED>??0LowAmmo@Event@@QEAA@XZ</DECORATED>
-    <FUNCLINE>1333</FUNCLINE>
+    <FUNCLINE>926</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Event::LowAmmo::ammo</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1354</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>944</LINE>
       <COLUMN>2</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
     <DESCRIPTION>Variable 'Event::LowHealth::health' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
     <FUNCTION>Event::LowHealth::{ctor}</FUNCTION>
     <DECORATED>??0LowHealth@Event@@QEAA@XZ</DECORATED>
-    <FUNCLINE>1354</FUNCLINE>
+    <FUNCLINE>944</FUNCLINE>
     <ADDITIONALINFO>
       <targetSymbol>Event::LowHealth::health</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1595</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1061</LINE>
+      <COLUMN>1</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'Startup_info_client::framerateLimit' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>Startup_info_client::{ctor}</FUNCTION>
+    <DECORATED>??0Startup_info_client@@QEAA@XZ</DECORATED>
+    <FUNCLINE>1061</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>Startup_info_client::framerateLimit</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1113</LINE>
+      <COLUMN>1</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'old_bullet_data::id' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>old_bullet_data::{ctor}</FUNCTION>
+    <DECORATED>??0old_bullet_data@@QEAA@XZ</DECORATED>
+    <FUNCLINE>1113</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>old_bullet_data::id</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1163</LINE>
+      <COLUMN>1</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'shipData_forServer::isFiring' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>shipData_forServer::{ctor}</FUNCTION>
+    <DECORATED>??0shipData_forServer@@QEAA@XZ</DECORATED>
+    <FUNCLINE>1163</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>shipData_forServer::isFiring</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1106</LINE>
+      <COLUMN>0</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'bullet_data::id' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>bullet_data::{ctor}</FUNCTION>
+    <DECORATED>??0bullet_data@@QEAA@XZ</DECORATED>
+    <FUNCLINE>1106</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>bullet_data::id</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1252</LINE>
+      <COLUMN>1</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'send_data::packet_id' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>send_data::{ctor}</FUNCTION>
+    <DECORATED>??0send_data@@QEAA@XZ</DECORATED>
+    <FUNCLINE>1252</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>send_data::packet_id</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1427</LINE>
       <COLUMN>55</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>ship::initialize_player</FUNCTION>
-    <DECORATED>?initialize_player@ship@@AEAAXPEAVMutex@@AEAV?$deque@VshipInfo@@V?$allocator@VshipInfo@@@std@@@std@@QEAY0BI@HHVcoords@Greed@@@Z</DECORATED>
-    <FUNCLINE>1578</FUNCLINE>
+    <DECORATED>?initialize_player@ship@@AEAAXHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAVMutex@@AEAV?$deque@VshipInfo@@V?$allocator@VshipInfo@@@std@@@3@QEAY0BI@HHVcoords@Greed@@@Z</DECORATED>
+    <FUNCLINE>1408</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1595</LINE>
-      <COLUMN>84</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1427</LINE>
+      <COLUMN>81</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>ship::initialize_player</FUNCTION>
-    <DECORATED>?initialize_player@ship@@AEAAXPEAVMutex@@AEAV?$deque@VshipInfo@@V?$allocator@VshipInfo@@@std@@@std@@QEAY0BI@HHVcoords@Greed@@@Z</DECORATED>
-    <FUNCLINE>1578</FUNCLINE>
+    <DECORATED>?initialize_player@ship@@AEAAXHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAVMutex@@AEAV?$deque@VshipInfo@@V?$allocator@VshipInfo@@@std@@@3@QEAY0BI@HHVcoords@Greed@@@Z</DECORATED>
+    <FUNCLINE>1408</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1790</LINE>
-      <COLUMN>13</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::getRadiBound</FUNCTION>
-    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
-    <FUNCLINE>1751</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1791</LINE>
-      <COLUMN>22</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::getRadiBound</FUNCTION>
-    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
-    <FUNCLINE>1751</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1791</LINE>
-      <COLUMN>13</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::getRadiBound</FUNCTION>
-    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
-    <FUNCLINE>1751</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1792</LINE>
-      <COLUMN>13</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::getRadiBound</FUNCTION>
-    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
-    <FUNCLINE>1751</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1793</LINE>
-      <COLUMN>22</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::getRadiBound</FUNCTION>
-    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
-    <FUNCLINE>1751</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1793</LINE>
-      <COLUMN>13</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::getRadiBound</FUNCTION>
-    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
-    <FUNCLINE>1751</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1999</LINE>
-      <COLUMN>38</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::checkCollision</FUNCTION>
-    <DECORATED>?checkCollision@ship@@QEAA_NHAEBVbullet@Greed@@@Z</DECORATED>
-    <FUNCLINE>1994</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>1999</LINE>
-      <COLUMN>63</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::checkCollision</FUNCTION>
-    <DECORATED>?checkCollision@ship@@QEAA_NHAEBVbullet@Greed@@@Z</DECORATED>
-    <FUNCLINE>1994</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>2250</LINE>
-      <COLUMN>6</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>2256</LINE>
+      <COLUMN>1</COLUMN>
     </SFA>
     <DEFECTCODE>26495</DEFECTCODE>
-    <DESCRIPTION>Variable 'ship::threshold_health' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
-    <FUNCTION>ship::{ctor}</FUNCTION>
-    <DECORATED>??0ship@@QEAA@XZ</DECORATED>
-    <FUNCLINE>2250</FUNCLINE>
+    <DESCRIPTION>Variable 'pack_ship::bullet_pointer' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>pack_ship::{ctor}</FUNCTION>
+    <DECORATED>??0pack_ship@@QEAA@XZ</DECORATED>
+    <FUNCLINE>2256</FUNCLINE>
     <ADDITIONALINFO>
-      <targetSymbol>ship::threshold_health</targetSymbol>
+      <targetSymbol>pack_ship::bullet_pointer</targetSymbol>
     </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>2741</LINE>
-      <COLUMN>31</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>2277</LINE>
+      <COLUMN>1</COLUMN>
     </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::setPath</FUNCTION>
-    <DECORATED>?setPath@ship@@QEAA_NV?$List@Vcoords@Greed@@@@H@Z</DECORATED>
-    <FUNCLINE>2690</FUNCLINE>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'cannon_data::is_cannon_dead' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>cannon_data::{ctor}</FUNCTION>
+    <DECORATED>??0cannon_data@@QEAA@XZ</DECORATED>
+    <FUNCLINE>2277</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>cannon_data::is_cannon_dead</targetSymbol>
+    </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>2742</LINE>
-      <COLUMN>31</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>2332</LINE>
+      <COLUMN>1</COLUMN>
     </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::setPath</FUNCTION>
-    <DECORATED>?setPath@ship@@QEAA_NV?$List@Vcoords@Greed@@@@H@Z</DECORATED>
-    <FUNCLINE>2690</FUNCLINE>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'graphics::mutx' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>graphics::{ctor}</FUNCTION>
+    <DECORATED>??0graphics@@QEAA@XZ</DECORATED>
+    <FUNCLINE>2332</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>graphics::mutx</targetSymbol>
+    </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3543</LINE>
-      <COLUMN>57</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>2408</LINE>
+      <COLUMN>2</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'graphics::GuiRenderer::showRadius' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>graphics::GuiRenderer::{ctor}</FUNCTION>
+    <DECORATED>??0GuiRenderer@graphics@@QEAA@XZ</DECORATED>
+    <FUNCLINE>2408</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>graphics::GuiRenderer::showRadius</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>2500</LINE>
+      <COLUMN>2</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'graphics::animator::no_of_frames' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>graphics::animator::{ctor}</FUNCTION>
+    <DECORATED>??0animator@graphics@@QEAA@XZ</DECORATED>
+    <FUNCLINE>2500</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>graphics::animator::no_of_frames</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>2504</LINE>
+      <COLUMN>2</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'graphics::animator::no_of_frames' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>graphics::animator::{ctor}</FUNCTION>
+    <DECORATED>??0animator@graphics@@QEAA@V?$Vector2@M@sf@@NW4ANIMATION_TYPE@1@H@Z</DECORATED>
+    <FUNCLINE>2504</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>graphics::animator::no_of_frames</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>2532</LINE>
+      <COLUMN>2</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'graphics::animator::no_of_frames' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>graphics::animator::{ctor}</FUNCTION>
+    <DECORATED>??0animator@graphics@@QEAA@V?$Vector2@M@sf@@NW4ANIMATION_TYPE@1@0HH@Z</DECORATED>
+    <FUNCLINE>2532</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>graphics::animator::no_of_frames</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>237</LINE>
+      <COLUMN>32</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>Greed::makeList</FUNCTION>
+    <DECORATED>?makeList@Greed@@QEAA?AV?$List@Vabs_pos@Greed@@@@V?$List@Vcoords@Greed@@@@@Z</DECORATED>
+    <FUNCLINE>206</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>244</LINE>
+      <COLUMN>32</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>Greed::makeList</FUNCTION>
+    <DECORATED>?makeList@Greed@@QEAA?AV?$List@Vabs_pos@Greed@@@@V?$List@Vcoords@Greed@@@@@Z</DECORATED>
+    <FUNCLINE>206</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>220</LINE>
+      <COLUMN>35</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>Greed::makeList</FUNCTION>
+    <DECORATED>?makeList@Greed@@QEAA?AV?$List@Vabs_pos@Greed@@@@V?$List@Vcoords@Greed@@@@@Z</DECORATED>
+    <FUNCLINE>206</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>227</LINE>
+      <COLUMN>35</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>Greed::makeList</FUNCTION>
+    <DECORATED>?makeList@Greed@@QEAA?AV?$List@Vabs_pos@Greed@@@@V?$List@Vcoords@Greed@@@@@Z</DECORATED>
+    <FUNCLINE>206</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>763</LINE>
+      <COLUMN>12</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::getRadiBound</FUNCTION>
+    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
+    <FUNCLINE>724</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>764</LINE>
+      <COLUMN>18</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::fireAtCannon</FUNCTION>
-    <DECORATED>?fireAtCannon@ship@@QEAA_NHW4cannon@@@Z</DECORATED>
-    <FUNCLINE>3508</FUNCLINE>
+    <FUNCTION>ship::getRadiBound</FUNCTION>
+    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
+    <FUNCLINE>724</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3543</LINE>
-      <COLUMN>52</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>764</LINE>
+      <COLUMN>12</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::fireAtCannon</FUNCTION>
-    <DECORATED>?fireAtCannon@ship@@QEAA_NHW4cannon@@@Z</DECORATED>
-    <FUNCLINE>3508</FUNCLINE>
+    <FUNCTION>ship::getRadiBound</FUNCTION>
+    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
+    <FUNCLINE>724</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3543</LINE>
-      <COLUMN>97</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>765</LINE>
+      <COLUMN>12</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::getRadiBound</FUNCTION>
+    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
+    <FUNCLINE>724</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>766</LINE>
+      <COLUMN>18</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::fireAtCannon</FUNCTION>
-    <DECORATED>?fireAtCannon@ship@@QEAA_NHW4cannon@@@Z</DECORATED>
-    <FUNCLINE>3508</FUNCLINE>
+    <FUNCTION>ship::getRadiBound</FUNCTION>
+    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
+    <FUNCLINE>724</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3543</LINE>
-      <COLUMN>92</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>766</LINE>
+      <COLUMN>12</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>ship::fireAtCannon</FUNCTION>
-    <DECORATED>?fireAtCannon@ship@@QEAA_NHW4cannon@@@Z</DECORATED>
-    <FUNCLINE>3508</FUNCLINE>
+    <FUNCTION>ship::getRadiBound</FUNCTION>
+    <DECORATED>?getRadiBound@ship@@AEAA?AVboundingEntity@1@Vcoords@Greed@@@Z</DECORATED>
+    <FUNCLINE>724</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3885</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>874</LINE>
       <COLUMN>44</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::checkCollision</FUNCTION>
+    <DECORATED>?checkCollision@ship@@AEAA_NHAEBVbullet@Greed@@@Z</DECORATED>
+    <FUNCLINE>869</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>874</LINE>
+      <COLUMN>77</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::checkCollision</FUNCTION>
+    <DECORATED>?checkCollision@ship@@AEAA_NHAEBVbullet@Greed@@@Z</DECORATED>
+    <FUNCLINE>869</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>1034</LINE>
+      <COLUMN>6</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'ship::invisible' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>ship::{ctor}</FUNCTION>
+    <DECORATED>??0ship@@QEAA@XZ</DECORATED>
+    <FUNCLINE>1034</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>ship::invisible</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>1208</LINE>
+      <COLUMN>11</COLUMN>
+    </SFA>
+    <DEFECTCODE>26817</DEFECTCODE>
+    <DESCRIPTION>Potentially expensive copy of variable 'c' in range-for loop. Consider making it a const reference (es.71).</DESCRIPTION>
+    <FUNCTION>ship::getRadiusCoords_ship</FUNCTION>
+    <DECORATED>?getRadiusCoords_ship@ship@@QEAA?AV?$vector@Vcoords@Greed@@V?$allocator@Vcoords@Greed@@@std@@@std@@H@Z</DECORATED>
+    <FUNCLINE>1090</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>1847</LINE>
+      <COLUMN>31</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::setPath</FUNCTION>
+    <DECORATED>?setPath@ship@@QEAA_NV?$List@Vcoords@Greed@@@@H@Z</DECORATED>
+    <FUNCLINE>1796</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>1848</LINE>
+      <COLUMN>31</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::setPath</FUNCTION>
+    <DECORATED>?setPath@ship@@QEAA_NV?$List@Vcoords@Greed@@@@H@Z</DECORATED>
+    <FUNCLINE>1796</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2481</LINE>
+      <COLUMN>56</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::setBullet_forCannon</FUNCTION>
+    <DECORATED>?setBullet_forCannon@ship@@AEAAXAEAVbullet@Greed@@@Z</DECORATED>
+    <FUNCLINE>2452</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2481</LINE>
+      <COLUMN>51</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::setBullet_forCannon</FUNCTION>
+    <DECORATED>?setBullet_forCannon@ship@@AEAAXAEAVbullet@Greed@@@Z</DECORATED>
+    <FUNCLINE>2452</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2481</LINE>
+      <COLUMN>93</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::setBullet_forCannon</FUNCTION>
+    <DECORATED>?setBullet_forCannon@ship@@AEAAXAEAVbullet@Greed@@@Z</DECORATED>
+    <FUNCLINE>2452</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2481</LINE>
+      <COLUMN>88</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::setBullet_forCannon</FUNCTION>
+    <DECORATED>?setBullet_forCannon@ship@@AEAAXAEAVbullet@Greed@@@Z</DECORATED>
+    <FUNCLINE>2452</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2879</LINE>
+      <COLUMN>41</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>Greed::cannon::get_required_angle</FUNCTION>
-    <DECORATED>?get_required_angle@cannon@Greed@@QEAANXZ</DECORATED>
-    <FUNCLINE>3872</FUNCLINE>
+    <DECORATED>?get_required_angle@cannon@Greed@@AEAANXZ</DECORATED>
+    <FUNCLINE>2866</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3885</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2879</LINE>
       <COLUMN>34</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>Greed::cannon::get_required_angle</FUNCTION>
-    <DECORATED>?get_required_angle@cannon@Greed@@QEAANXZ</DECORATED>
-    <FUNCLINE>3872</FUNCLINE>
+    <DECORATED>?get_required_angle@cannon@Greed@@AEAANXZ</DECORATED>
+    <FUNCLINE>2866</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3885</LINE>
-      <COLUMN>83</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2879</LINE>
+      <COLUMN>74</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>Greed::cannon::get_required_angle</FUNCTION>
-    <DECORATED>?get_required_angle@cannon@Greed@@QEAANXZ</DECORATED>
-    <FUNCLINE>3872</FUNCLINE>
+    <DECORATED>?get_required_angle@cannon@Greed@@AEAANXZ</DECORATED>
+    <FUNCLINE>2866</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3885</LINE>
-      <COLUMN>73</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2879</LINE>
+      <COLUMN>67</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>Greed::cannon::get_required_angle</FUNCTION>
-    <DECORATED>?get_required_angle@cannon@Greed@@QEAANXZ</DECORATED>
-    <FUNCLINE>3872</FUNCLINE>
+    <DECORATED>?get_required_angle@cannon@Greed@@AEAANXZ</DECORATED>
+    <FUNCLINE>2866</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3886</LINE>
-      <COLUMN>37</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2880</LINE>
+      <COLUMN>34</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>Greed::cannon::get_required_angle</FUNCTION>
-    <DECORATED>?get_required_angle@cannon@Greed@@QEAANXZ</DECORATED>
-    <FUNCLINE>3872</FUNCLINE>
+    <DECORATED>?get_required_angle@cannon@Greed@@AEAANXZ</DECORATED>
+    <FUNCLINE>2866</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3886</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2880</LINE>
       <COLUMN>28</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>Greed::cannon::get_required_angle</FUNCTION>
-    <DECORATED>?get_required_angle@cannon@Greed@@QEAANXZ</DECORATED>
-    <FUNCLINE>3872</FUNCLINE>
+    <DECORATED>?get_required_angle@cannon@Greed@@AEAANXZ</DECORATED>
+    <FUNCLINE>2866</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3886</LINE>
-      <COLUMN>69</COLUMN>
-    </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>Greed::cannon::get_required_angle</FUNCTION>
-    <DECORATED>?get_required_angle@cannon@Greed@@QEAANXZ</DECORATED>
-    <FUNCLINE>3872</FUNCLINE>
-    <PATH></PATH>
-  </DEFECT><DEFECT>
-    <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>3886</LINE>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2880</LINE>
       <COLUMN>60</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>Greed::cannon::get_required_angle</FUNCTION>
+    <DECORATED>?get_required_angle@cannon@Greed@@AEAANXZ</DECORATED>
+    <FUNCLINE>2866</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>2880</LINE>
+      <COLUMN>54</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>Greed::cannon::get_required_angle</FUNCTION>
-    <DECORATED>?get_required_angle@cannon@Greed@@QEAANXZ</DECORATED>
-    <FUNCLINE>3872</FUNCLINE>
+    <DECORATED>?get_required_angle@cannon@Greed@@AEAANXZ</DECORATED>
+    <FUNCLINE>2866</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4118</LINE>
-      <COLUMN>2</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>3081</LINE>
+      <COLUMN>8</COLUMN>
     </SFA>
-    <DEFECTCODE>26495</DEFECTCODE>
-    <DESCRIPTION>Variable 'graphics::animator::sid' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
-    <FUNCTION>graphics::animator::{ctor}</FUNCTION>
-    <DECORATED>??0animator@graphics@@QEAA@XZ</DECORATED>
-    <FUNCLINE>4118</FUNCLINE>
-    <ADDITIONALINFO>
-      <targetSymbol>graphics::animator::sid</targetSymbol>
-    </ADDITIONALINFO>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::upgradeHealth</FUNCTION>
+    <DECORATED>?upgradeHealth@ship@@QEAA_NH@Z</DECORATED>
+    <FUNCLINE>3074</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4122</LINE>
-      <COLUMN>2</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>3092</LINE>
+      <COLUMN>13</COLUMN>
     </SFA>
-    <DEFECTCODE>26495</DEFECTCODE>
-    <DESCRIPTION>Variable 'graphics::animator::sid' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
-    <FUNCTION>graphics::animator::{ctor}</FUNCTION>
-    <DECORATED>??0animator@graphics@@QEAA@V?$Vector2@M@sf@@NW4ANIMATION_TYPE@1@H@Z</DECORATED>
-    <FUNCLINE>4122</FUNCLINE>
-    <ADDITIONALINFO>
-      <targetSymbol>graphics::animator::sid</targetSymbol>
-    </ADDITIONALINFO>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::upgradeHealth</FUNCTION>
+    <DECORATED>?upgradeHealth@ship@@QEAA_NH@Z</DECORATED>
+    <FUNCLINE>3074</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4150</LINE>
-      <COLUMN>2</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>3106</LINE>
+      <COLUMN>8</COLUMN>
     </SFA>
-    <DEFECTCODE>26495</DEFECTCODE>
-    <DESCRIPTION>Variable 'graphics::animator::sid' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
-    <FUNCTION>graphics::animator::{ctor}</FUNCTION>
-    <DECORATED>??0animator@graphics@@QEAA@V?$Vector2@M@sf@@NW4ANIMATION_TYPE@1@0HH@Z</DECORATED>
-    <FUNCLINE>4150</FUNCLINE>
-    <ADDITIONALINFO>
-      <targetSymbol>graphics::animator::sid</targetSymbol>
-    </ADDITIONALINFO>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::upgradeFuel</FUNCTION>
+    <DECORATED>?upgradeFuel@ship@@QEAA_NH@Z</DECORATED>
+    <FUNCLINE>3101</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4218</LINE>
-      <COLUMN>21</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>3115</LINE>
+      <COLUMN>13</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::upgradeFuel</FUNCTION>
+    <DECORATED>?upgradeFuel@ship@@QEAA_NH@Z</DECORATED>
+    <FUNCLINE>3101</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>3167</LINE>
+      <COLUMN>35</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::update_pos_collision</FUNCTION>
+    <DECORATED>?update_pos_collision@ship@@AEAAXXZ</DECORATED>
+    <FUNCLINE>3162</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>3170</LINE>
+      <COLUMN>35</COLUMN>
+    </SFA>
+    <DEFECTCODE>26451</DEFECTCODE>
+    <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
+    <FUNCTION>ship::update_pos_collision</FUNCTION>
+    <DECORATED>?update_pos_collision@ship@@AEAAXXZ</DECORATED>
+    <FUNCLINE>3162</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>3959</LINE>
+      <COLUMN>19</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>graphics::tileMap::setScene</FUNCTION>
     <DECORATED>?setScene@tileMap@graphics@@QEAAXHHHHAEAVTexture@sf@@QEAY0BI@H@Z</DECORATED>
-    <FUNCLINE>4214</FUNCLINE>
+    <FUNCLINE>3954</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4218</LINE>
-      <COLUMN>17</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>3959</LINE>
+      <COLUMN>15</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>graphics::tileMap::setScene</FUNCTION>
     <DECORATED>?setScene@tileMap@graphics@@QEAAXHHHHAEAVTexture@sf@@QEAY0BI@H@Z</DECORATED>
-    <FUNCLINE>4214</FUNCLINE>
+    <FUNCLINE>3954</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4231</LINE>
-      <COLUMN>12</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>3975</LINE>
+      <COLUMN>10</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>graphics::tileMap::setScene</FUNCTION>
     <DECORATED>?setScene@tileMap@graphics@@QEAAXHHHHAEAVTexture@sf@@QEAY0BI@H@Z</DECORATED>
-    <FUNCLINE>4214</FUNCLINE>
+    <FUNCLINE>3954</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4266</LINE>
-      <COLUMN>39</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>4024</LINE>
+      <COLUMN>44</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>graphics::checkCollision</FUNCTION>
     <DECORATED>?checkCollision@graphics@@QEAA_NHAEBVbullet@Greed@@@Z</DECORATED>
-    <FUNCLINE>4259</FUNCLINE>
+    <FUNCLINE>4017</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4266</LINE>
-      <COLUMN>66</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>4024</LINE>
+      <COLUMN>77</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
     <DESCRIPTION>Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>graphics::checkCollision</FUNCTION>
     <DECORATED>?checkCollision@graphics@@QEAA_NHAEBVbullet@Greed@@@Z</DECORATED>
-    <FUNCLINE>4259</FUNCLINE>
+    <FUNCLINE>4017</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4447</LINE>
-      <COLUMN>28</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.cpp</FILENAME>
+      <LINE>4115</LINE>
+      <COLUMN>1</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'fileData::no_of_players' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>fileData::{ctor}</FUNCTION>
+    <DECORATED>??0fileData@@QEAA@XZ</DECORATED>
+    <FUNCLINE>4115</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>fileData::no_of_players</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>server_v1.cpp</FILENAME>
+      <LINE>121</LINE>
+      <COLUMN>15</COLUMN>
+    </SFA>
+    <DEFECTCODE>6262</DEFECTCODE>
+    <DESCRIPTION>Function uses '52816' bytes of stack.  Consider moving some data to heap.</DESCRIPTION>
+    <FUNCTION>graphics::callable</FUNCTION>
+    <DECORATED>?callable@graphics@@QEAAXPEAVMutex@@QEAY0BI@HAEAVMap@@AEAV?$vector@HV?$allocator@H@std@@@std@@AEAV?$unordered_map@HHU?$hash@H@std@@U?$equal_to@H@2@V?$allocator@U?$pair@$$CBHH@std@@@2@@5@@Z</DECORATED>
+    <FUNCLINE>121</FUNCLINE>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>server_v1.cpp</FILENAME>
+      <LINE>515</LINE>
+      <COLUMN>27</COLUMN>
     </SFA>
     <DEFECTCODE>6031</DEFECTCODE>
     <DESCRIPTION>Return value ignored: 'std::deque&lt;ship *,std::allocator&lt;ship *&gt; &gt;::[]'.</DESCRIPTION>
     <FUNCTION>graphics::callable</FUNCTION>
-    <DECORATED>?callable@graphics@@QEAAXAEAVMutex@@QEAY0BI@HAEAVMap@@@Z</DECORATED>
-    <FUNCLINE>4300</FUNCLINE>
+    <DECORATED>?callable@graphics@@QEAAXPEAVMutex@@QEAY0BI@HAEAVMap@@AEAV?$vector@HV?$allocator@H@std@@@std@@AEAV?$unordered_map@HHU?$hash@H@std@@U?$equal_to@H@2@V?$allocator@U?$pair@$$CBHH@std@@@2@@5@@Z</DECORATED>
+    <FUNCLINE>121</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4442</LINE>
-      <COLUMN>59</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>server_v1.cpp</FILENAME>
+      <LINE>1287</LINE>
+      <COLUMN>18</COLUMN>
     </SFA>
     <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).</DESCRIPTION>
+    <DESCRIPTION>Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).</DESCRIPTION>
     <FUNCTION>graphics::callable</FUNCTION>
-    <DECORATED>?callable@graphics@@QEAAXAEAVMutex@@QEAY0BI@HAEAVMap@@@Z</DECORATED>
-    <FUNCLINE>4300</FUNCLINE>
+    <DECORATED>?callable@graphics@@QEAAXPEAVMutex@@QEAY0BI@HAEAVMap@@AEAV?$vector@HV?$allocator@H@std@@@std@@AEAV?$unordered_map@HHU?$hash@H@std@@U?$equal_to@H@2@V?$allocator@U?$pair@$$CBHH@std@@@2@@5@@Z</DECORATED>
+    <FUNCLINE>121</FUNCLINE>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
-      <FILENAME>class_outlet.cpp</FILENAME>
-      <LINE>4442</LINE>
-      <COLUMN>100</COLUMN>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1205</LINE>
+      <COLUMN>0</COLUMN>
     </SFA>
-    <DEFECTCODE>26451</DEFECTCODE>
-    <DESCRIPTION>Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).</DESCRIPTION>
-    <FUNCTION>graphics::callable</FUNCTION>
-    <DECORATED>?callable@graphics@@QEAAXAEAVMutex@@QEAY0BI@HAEAVMap@@@Z</DECORATED>
-    <FUNCLINE>4300</FUNCLINE>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'shipData_forMe::ship_id' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>shipData_forMe::{ctor}</FUNCTION>
+    <DECORATED>??0shipData_forMe@@QEAA@XZ</DECORATED>
+    <FUNCLINE>1205</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>shipData_forMe::ship_id</targetSymbol>
+    </ADDITIONALINFO>
     <PATH></PATH>
   </DEFECT><DEFECT>
     <SFA>
-      <FILEPATH>F:\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1244</LINE>
+      <COLUMN>0</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'recv_data::packet_id' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>recv_data::{ctor}</FUNCTION>
+    <DECORATED>??0recv_data@@QEAA@XZ</DECORATED>
+    <FUNCLINE>1244</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>recv_data::packet_id</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
+      <FILENAME>online_lib2.hpp</FILENAME>
+      <LINE>1234</LINE>
+      <COLUMN>0</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'shipData_exceptMe::died' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>shipData_exceptMe::{ctor}</FUNCTION>
+    <DECORATED>??0shipData_exceptMe@@QEAA@XZ</DECORATED>
+    <FUNCLINE>1234</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>shipData_exceptMe::died</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT><DEFECT>
+    <SFA>
+      <FILEPATH>F:\current projects\GREED(programming game)\GREED(programming game)\</FILEPATH>
       <FILENAME>List.h</FILENAME>
       <LINE>22</LINE>
       <COLUMN>4</COLUMN>

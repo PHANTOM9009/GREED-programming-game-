@@ -2498,6 +2498,10 @@ void ship::setBullet_forCannon(Greed::bullet& bull)
 	bull.bullet_trajectory.pop_back();
 	this->ammo--;
 }
+double shipInfo::getCurrentAmmo()
+{
+	return ob->getCurrentAmmo();
+}
 bool ship::fireAtCannon(int c_id, cannon can = cannon::FRONT)
 {
 	if (cannon_ob.activeBullets.size() <= 1 && isCannonInRadius(c_id, (ShipSide)(int)can) && ammo > 0 && cannon_list[c_id].isDead == false)//if cannon is in the provided radius of the firing ship

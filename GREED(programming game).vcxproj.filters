@@ -105,6 +105,12 @@
     <ClCompile Include="online_lib2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="server_v1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_algorithm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">
@@ -117,6 +123,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="online_lib2.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lib2.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

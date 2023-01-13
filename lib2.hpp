@@ -700,6 +700,7 @@ public:
 	int getShipRadius();
 	double getCurrentHealth();
 	double getCurrentGold();
+	double getCurrentAmmo();
 	double getCurrentResources();
 	double getCurrentFuel();
 	int  getDiedStatus();
@@ -1139,14 +1140,14 @@ private:
 	Greed::abs_pos absolutePosition;
 	int autopilot = 0;//bit to check if the ship is moving in autopilot or not
 
-
+	vector<int> collided_ships;//ships that have collided with the given ship at one frame
 	
 	List<Greed::vertex> localMap;
 	deque<shipInfo> shipInfoList;
 
 	//for armory
 	//now some functions
-private:
+
 	void updateFuel(int n)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
@@ -1466,7 +1467,7 @@ public:
 	}
 	Greed::coords getCurrentTile()//returns the front tile
 	{
-		//unique_lock<mutex> lk(mutx->m[mutex_id]);
+		unique_lock<mutex> lk(mutx->m[mutex_id]);
 		return tile_pos_front;
 
 	}

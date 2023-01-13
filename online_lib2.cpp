@@ -1,12 +1,8 @@
 // lib2.cpp : Defines the functions for the static library.
 //
-//#include "lib2.hpp"
-//#include "main_lilb.hpp"
 #include "online_lib2.hpp"
-#include "Hawk.cpp"
-#include "dodger.cpp"
-#include "normal.cpp"
-#include "silent_killer.cpp"
+//#include "main_lilb.hpp"
+
 #include "proxy_file.cpp"
 
 using namespace std;
@@ -22,8 +18,7 @@ List<Greed::coords> Control::opaque_coords;
 List<Greed::cannon> Control::cannon_list;
 long double graphics::total_secs = 0;
 bool graphics::showPatterns = false;
-Control info;
-
+long double Greed::shipCannon::current_bullet = 0;
 
 //for moving entites over the screen
 template<typename T>
@@ -151,7 +146,7 @@ int ry(int y)
 	return round(((y * 1080) / modes[shall].height));
 }
 
-sf::RenderWindow window(sf::VideoMode(::cx(1970), ::cy(1190)), "GREED");
+
 
 template<typename Y>
 int getIndex(List<Y>& l, Y val)
@@ -1047,9 +1042,7 @@ ship::ship()//default ctor for now
 	health = 200;
 	motion = 0;
 	autopilot = 0;
-	ship_id = total;
-	mutex_id = total;
-	total++;
+
 	//making the localMap here
 	died = 0;
 	tile_pos_front = Greed::coords(5, 5);
@@ -2500,6 +2493,10 @@ void ship::setBullet_forCannon(Greed::bullet& bull)
 	bull.bullet_trajectory.pop_back();
 	this->ammo--;
 }
+double shipInfo::getCurrentAmmo()
+{
+	return ob->getCurrentAmmo();
+}
 bool ship::fireAtCannon(int c_id, cannon can = cannon::FRONT)
 {
 	if (cannon_ob.activeBullets.size() <= 1 && isCannonInRadius(c_id, (ShipSide)(int)can) && ammo > 0 && cannon_list[c_id].isDead == false)//if cannon is in the provided radius of the firing ship
@@ -2508,7 +2505,7 @@ bool ship::fireAtCannon(int c_id, cannon can = cannon::FRONT)
 		Control ob;
 
 		Greed::bullet bull;
-		bull.initialize(true, mutx, cannon_ob.activeBullets.size(), this->ship_id, cannon_ob.power, -1, this->ship_id, c_id, -1, true, can, ShipSide::NA);
+		bull.initialize(true, mutx, cannon_ob.current_bullet++, this->ship_id, cannon_ob.power, -1, this->ship_id, c_id, -1, true, can, ShipSide::NA);
 
 
 		mutx->m[ship_id].lock();
@@ -2721,7 +2718,7 @@ bool ship::fireCannon(cannon can, int s_id, ShipSide s)//s_id and s are of targe
 			mutx->m[ship_id].lock();
 			Greed::bullet bull;
 
-			bull.initialize(true, mutx, cannon_ob.activeBullets.size(), this->ship_id, cannon_ob.power, -1, this->ship_id, -1, s_id, true, can, s);
+			bull.initialize(true, mutx, cannon_ob.current_bullet++, this->ship_id, cannon_ob.power, -1, this->ship_id, -1, s_id, true, can, s);
 			//setting the starting and ending tile for the bullet in the game
 
 
@@ -4127,4 +4124,3 @@ public:
 	}
 };
 
-#include "offline_functions.cpp"

@@ -4179,7 +4179,7 @@ void update_frame(deque<ship*>& pl1, pack_ship& ob,int i)
 	//data ends
 }
 SOCKET peer_sock = -1;
-int connect_to_server()
+SOCKET connect_to_server()
 {
 #if defined(_WIN32)
 	WSADATA d;

@@ -1,4 +1,18 @@
-
+namespace user4
+{
+	void GreedMain(ship &ob)
+	{}
+}
+namespace user3
+{
+	void GreedMain(ship &ob)
+	{}
+}
+namespace user2
+{
+	void GreedMain(ship &ob)
+	{}
+}
 
 namespace user5
 {
