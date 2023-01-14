@@ -1134,6 +1134,9 @@ class shipData_forServer
 	double threshold_ammo;
 	double threshold_fuel;
 	int ammo;
+	double health;
+	double fuel;
+
 
 	Greed::coords tile_pos_front;
 	Greed::coords tile_pos_rear;
@@ -2025,7 +2028,10 @@ class control1
 		ob.threshold_ammo = pl1[ship_id]->threshold_ammo;
 		ob.threshold_fuel = pl1[ship_id]->threshold_fuel;
 		ob.ammo = pl1[ship_id]->ammo;
+		ob.health = pl1[ship_id]->health;
+		ob.fuel = pl1[ship_id]->fuel;
 		ob.tile_pos_front = pl1[ship_id]->tile_pos_front;
+		ob.tile_pos_rear = pl1[ship_id]->tile_pos_rear;
 		ob.front_abs_pos = pl1[ship_id]->front_abs_pos;
 		ob.rear_abs_pos = pl1[ship_id]->rear_abs_pos;
 		ob.dir = pl1[ship_id]->dir;
@@ -2116,6 +2122,7 @@ class control1
 		pl1[ship_id]->threshold_fuel = ob.threshold_fuel;
 
 		pl1[ship_id]->tile_pos_front = ob.tile_pos_front;
+		pl1[ship_id]->tile_pos_rear = ob.tile_pos_rear;
 		pl1[ship_id]->front_abs_pos = ob.front_abs_pos;
 		pl1[ship_id]->rear_abs_pos = ob.rear_abs_pos;
 		pl1[ship_id]->dir = ob.dir;
@@ -2123,7 +2130,8 @@ class control1
 		pl1[ship_id]->absolutePosition = ob.absolutePosition;
 		pl1[ship_id]->autopilot = ob.autopilot;
 		pl1[ship_id]->ammo = ob.ammo;
-
+		pl1[ship_id]->health = ob.health;
+		//pl1[ship_id]->fuel = ob.fuel;
 
 	}
 	friend class graphics;

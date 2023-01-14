@@ -1,5 +1,5 @@
 
-namespace user4
+namespace user1
 {
 	int find_ship_to_kill3(deque<shipInfo>& shipList, int myid)
 	{

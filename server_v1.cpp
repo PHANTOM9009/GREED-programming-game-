@@ -1046,14 +1046,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 							arr.push_back(s);
 							gui_renderer.timeline[i]->addItem(arr);
 						}
-						else if (pl1[i]->time_line[0].eventype == timeline::EventType::ANCHOR_SHIP)
-						{
-							vector<tgui::String> arr;
-							arr.push_back(static_cast<tgui::String>(to_string(pl1[i]->time_line[0].timestamp)));
-							string s = "Ship is anchored";
-							arr.push_back(s);
-							gui_renderer.timeline[i]->addItem(arr);
-						}
+					
 						else if (pl1[i]->time_line[0].eventype == timeline::EventType::SHIP_DIED)
 						{
 							vector<tgui::String> arr;
@@ -1346,7 +1339,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 				{
 					control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 				}
-			
+				cout << "\n server frame=>" << total_time << " " << "received frame=>" << data2.packet_id;
 			}
 		}
 

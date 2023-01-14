@@ -17,7 +17,7 @@ namespace user1
 
 				//ob.chaseShip(2);
 				Event e;
-				if (e.eventType == Event::EventType::LowHealth)
+				if (ob.getCurrentHealth() < 50)
 				{
 					ob.upgradeHealth(20);
 				}

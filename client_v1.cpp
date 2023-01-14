@@ -219,7 +219,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				}
 
 			}
-			
+			cout << "\n client frame=>" << total_time << " " << " received frame=>" << data1.packet_id;
 			
 			if (!gameOver)
 			{
