@@ -862,42 +862,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 
 			}
 		}
-
-		//upgrading the information and the timeline;
-		for (int i = 0; i < pl1.size(); i++)
-		{
-			if (pl1[i]->died == 1)
-			{
-				continue;
-			}
-			for (int j = 0; j < pl1[i]->upgrade.size(); j++)
-			{
-				if (pl1[i]->upgrade[j].type == 0)//for health
-				{
-					
-					//upgrading timeline
-					timeline t;
-					t.eventype = timeline::EventType::GOLD_TO_HEALTH;
-					t.timestamp = graphics::getTotalTime();
-					t.h.old = pl1[i]->health;
-					pl1[i]->health += pl1[i]->upgrade[j].n;
-					pl1[i]->gold -= 5 * pl1[i]->upgrade[j].n;
-					t.h.n = pl1[i]->health;
-					pl1[i]->time_line.push_back(t);
-				}
-				else if (pl1[i]->upgrade[j].type == 1)
-				{
-					timeline t;
-					t.eventype = timeline::EventType::GOLD_TO_FUEL;
-					t.timestamp = graphics::getTotalTime();
-					t.f.old = pl1[i]->fuel;
-					pl1[i]->fuel += pl1[i]->upgrade[j].n;
-					pl1[i]->gold -= 5 * pl1[i]->upgrade[j].n;
-					t.f.n = pl1[i]->fuel;
-					pl1[i]->time_line.push_back(t);
-				}
-			}
-		}
+			
 		for (int i = 0; i < pl1.size(); i++)
 		{
 			string s = to_string((int)pl1[i]->getCurrentHealth());
@@ -1484,10 +1449,21 @@ int main()
 	}
 	for (int i = 0; i < no_of_players; i++)
 	{
-		
+		if (i == 0)
 			player[i].initialize_player(i,"hawk", &mutx, silist, code, 5, spawn[i]);//last element is the tile pos of the player
 
-
+		else if (i == 1)
+		{
+			player[i].initialize_player(i,"dodger", &mutx, silist, code, 5, spawn[i]);
+		}
+		else if (i == 2)
+		{
+			player[i].initialize_player(i,"normal", &mutx, silist, code, 5, spawn[i]);
+		}
+		else if (i == 3)
+		{
+			player[i].initialize_player(i,"silent_killer", &mutx, silist, code, 5, spawn[i]);
+		}
 	}
 	//sending the startup data to all the connected clients
 	cout << "\n sending the data to the clients=>";

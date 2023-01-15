@@ -1048,25 +1048,6 @@ public:
 
 
 };
-class upgrade_data
-{
-	int type;
-	/*
-	* 0 for gold to health
-	* 1 for gold to fuel
-	* 2 for gold to ammo
-	*/
-	int n;//number of quantities wanted
-public:
-	upgrade_data() {}
-	upgrade_data(int t, int n)
-	{
-		this->type = type;
-		this->n = n;
-	}
-	friend class graphics;
-	friend class control1;
-};
 class Startup_info_client
 {
 	/*
@@ -1179,8 +1160,8 @@ class shipData_forServer
 	int size_del_bullets;
 	int del_bullets[100];//bullets that the server has to delete because there is nothing left to update.
 
-	int size_upgrade;
-	upgrade_data upgrade[100];
+	int size_timeline;
+	timeline time[100];
 public:
 	shipData_forServer()
 	{
@@ -1254,7 +1235,6 @@ class shipData_exceptMe //updated data that the server will send for the client
 	friend class control1;
 
 };
-
 class recv_data//to be recv by the client and to be  sent by the server
 {
 	int packet_id; //for debugging purpose only
@@ -1313,7 +1293,7 @@ private:
 public: //this will be public the user will be able to access this object freely
 	//object 
 	bool isFiring;
-	deque<upgrade_data> upgrade;//values to be upgraded in that frame
+
 	List<Greed::abs_pos> path;
 	bool frame_rate_limiter();//function to maintain the frame rate of the user function
 	double threshold_health;
@@ -1331,7 +1311,6 @@ public: //this will be public the user will be able to access this object freely
 	int passive_event_point;//pointer to getNextPassiveEvent..to tell which event to send
 private:
 	int seconds;//seconds lived
-
 	vector<int> collided_ships;//ship id's that have collided with the ship per frame
 	vector<int> del_bullets;//id of the bullet that will be deleted in that frame to be sent by server
 	vector<int> del_bullets_client;//id of the bullet that will be deleted in that frame to be sent by client to the server
@@ -2086,14 +2065,14 @@ class control1
 		{
 			ob.old_bullet[i] = pl1[ship_id]->old_bullet_pos[i];
 		}
-		//sending the upgrade information
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-		ob.size_upgrade = pl1[ship_id]->upgrade.size();
-		for (int i = 0; i < ob.size_upgrade; i++)
+		//sending the timeline 
+		unique_lock<mutex> lk(mutx->timeMutex[ship_id]);
+		ob.size_timeline = pl1[ship_id]->time_line.size();
+		for (int i = 0; i < pl1[ship_id]->time_line.size(); i++)
 		{
-			ob.upgrade[i] = pl1[ship_id]->upgrade[i];
+			ob.time[i] = pl1[ship_id]->time_line[i];
 		}
-		pl1[ship_id]->upgrade.clear();
+		pl1[ship_id]->time_line.clear();
 
 
 	}
@@ -2127,9 +2106,10 @@ class control1
 		}
 		//accepting timeline events
 		
-		for (int i = 0; i < ob.size_upgrade; i++)
+		for (int i = 0; i < ob.size_timeline; i++)
 		{
-			pl1[ship_id]->upgrade.push_back(ob.upgrade[i]);
+			pl1[ship_id]->time_line.push_back(ob.time[i]);
+
 		}
 		
 

@@ -3083,7 +3083,15 @@ bool ship::upgradeHealth(int n)// 1 health in 5 money
 
 			unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
 			//adding the event in the timeline
-			upgrade.push_back(upgrade_data(0,n));
+			timeline t;
+			t.eventype = timeline::EventType::GOLD_TO_HEALTH;
+			t.timestamp = graphics::getTotalTime();
+			t.h.old = health;
+
+			health += n;
+			gold -= 5 * n;
+			t.h.n = health;
+			this->time_line.push_back(t);
 			return true;
 		}
 	}
@@ -3099,7 +3107,14 @@ bool ship::upgradeFuel(int n)// 1 fuel in 5 money
 		{
 			unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
 			//adding the event in the timeline
-			upgrade.push_back(upgrade_data(1, n));
+			timeline t;
+			t.eventype = timeline::EventType::GOLD_TO_FUEL;
+			t.timestamp = graphics::getTotalTime();
+			t.f.old = fuel;
+			fuel += n;
+			gold -= 5 * n;
+			t.f.n = fuel;
+			time_line.push_back(t);
 			return true;
 		}
 	}
@@ -3115,7 +3130,14 @@ bool ship::upgradeAmmo(int n)//1 ammo in 1 money
 		{
 			unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
 			//adding the event in the timeline
-			upgrade.push_back(upgrade_data(2, n));
+			timeline t;
+			t.eventype = timeline::EventType::GOLD_TO_AMMO;
+			t.timestamp = graphics::getTotalTime();
+			t.a.old = ammo;
+			ammo += n;
+			gold -= n;
+			t.a.n = ammo;
+			time_line.push_back(t);
 			return true;
 		}
 	}
