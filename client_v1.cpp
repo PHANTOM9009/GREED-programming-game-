@@ -37,7 +37,7 @@
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 #include "test_algorithm.cpp"
-
+#include<ctime>
 /*
 * what am i doing here?
 * the entire template is in lib2.hpp and its cpp counterpart
@@ -219,7 +219,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				}
 
 			}
-			cout << "\n client frame=>" << total_time << " " << " received frame=>" << data1.packet_id;
+			std::time_t result = std::time(nullptr);
+			cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
 			
 			if (!gameOver)
 			{
@@ -235,42 +236,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 					if (mutx->m[pl1[ship_id]->getMutexId(2369)].try_lock())
 					{
-						//collision is settled.
-							for (int j = 0; j < data1.shipdata_forMe.size_collide_ship; j++)
-							{
-								
-								mutx->m[ship_id].unlock();
-								pl1[ship_id]->anchorShip_collision();
-								mutx->m[ship_id].lock();
-							}
 						
-						List<Greed::abs_pos>& l1 = pl1[ship_id]->getPathList(2369);
+						//no fucking need to manage the fucking motion!
 
-						if (pl1[ship_id]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 1 != pl1[ship_id]->getPointPath(2369))
-						{
-							// cout << "\n fuel " << i << " now=>" << pl1[ship_id]->fuel;
-							pl1[ship_id]->motion = 1;
-
-							pl1[ship_id]->update_pointPath(pl1[ship_id]->getPointPath(2369) + 1, 2369);
-
-							pl1[ship_id]->rect.setPosition(::cx(l1[pl1[ship_id]->getPointPath(2369)].x + origin_x), ::cy(l1[pl1[ship_id]->getPointPath(2369)].y + origin_y));
-
-							pl1[ship_id]->update_tile_pos(l1[pl1[ship_id]->getPointPath(2369)].x, l1[pl1[ship_id]->getPointPath(2369)].y);
-
-							//update the fuel here for this ship
-							//fuel will be updated by the server
-							if (pl1[ship_id]->fuel <= 0)
-							{
-								mutx->m[ship_id].unlock();
-								pl1[ship_id]->anchorShip();
-								mutx->m[ship_id].lock();
-							}
-
-						}
-						else
-						{
-							pl1[ship_id]->motion = 0;
-						}
+						
 						if (pl1[ship_id]->ammo > 0 && pl1[ship_id]->cannon_ob.activeBullets.size() > 0 && frames % 30 == 0)
 						{
 							frames = 0;

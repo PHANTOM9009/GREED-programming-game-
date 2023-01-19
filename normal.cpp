@@ -1,4 +1,4 @@
-namespace user3
+namespace user1
 {
 	int find_ship_to_kill1(deque<shipInfo>& shipList, int myid)
 	{
@@ -18,13 +18,14 @@ namespace user3
 		return index;
 
 	}
+	
 
 	void GreedMain(ship& ob)
 	{
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill1(shipList, ob.getShipId());
 		if (index >= 0)
-			ob.chaseShip(index);
+			ob.Greed_chaseShip(index);
 
 		while (1)
 		{
@@ -39,7 +40,7 @@ namespace user3
 				{
 					index = find_ship_to_kill1(shipList, ob.getShipId());
 
-					ob.chaseShip(index);
+					ob.Greed_chaseShip(index);
 				}
 				if (e.eventType == Event::EventType::LowHealth)
 				{

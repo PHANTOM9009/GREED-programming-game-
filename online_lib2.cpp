@@ -2445,7 +2445,7 @@ bool ship::chaseShip(int s_id)
 
 
 	}
-	Sleep(300);
+	//Sleep(300);
 	return true;
 }
 //make a filter function to remove the out of bound coords from the trajectory list given

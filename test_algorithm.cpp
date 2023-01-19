@@ -6,8 +6,7 @@ namespace user1
 
 	void GreedMain(ship& ob)
 	{
-		Greed::path_attribute path = ob.setTarget(Greed::coords(1,1));
-		ob.setPath(path.getPath());
+		ob.Greed_setPath(Greed::coords(5, 18));
 
 		while (1)
 		{

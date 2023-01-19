@@ -24,7 +24,7 @@ namespace user1
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill2(shipList, ob.getShipId());
 		if (index >= 0)
-			ob.chaseShip(index);
+			ob.Greed_chaseShip(index);
 		//updating the cannon costs
 		vector <Greed::cannon> cannonList = ob.getCannonList();
 		for (int j = 0; j < cannonList.size(); j++)
@@ -51,7 +51,7 @@ namespace user1
 				if (index >= 0 && shipList[index].getDiedStatus() == 1)
 				{
 					index = find_ship_to_kill2(shipList, ob.getShipId());
-					ob.chaseShip(index);
+					ob.Greed_chaseShip(index);
 				}
 				if (e.eventType == Event::EventType::LowHealth)
 				{

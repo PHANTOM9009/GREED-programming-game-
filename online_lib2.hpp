@@ -1048,6 +1048,32 @@ public:
 
 
 };
+class navigation
+{
+	int type;
+	/*
+	* 0 for target type
+	* 1 for sailing
+	* 2 for chasing
+	* 3 for aborting
+	*/
+	Greed::coords target;
+	int s_id;//for target type and chasing
+	int n;//number of tiles
+	Direction dir;
+public:
+	navigation(){}
+	navigation(int t, Greed::coords tar, int sid, int nn, Direction d)
+	{
+		type = t;
+		target = tar;
+		s_id = sid;
+		n = nn;
+		dir = d;
+	}
+	friend class graphics;
+	friend class control1;
+};
 class Startup_info_client
 {
 	/*
@@ -1152,16 +1178,16 @@ class shipData_forServer
 
 	/*bullets that are introduced for the first time in that frame*/
 	int size_new_bullets;
-	bullet_data new_bullets[100];
+	bullet_data new_bullets[50];
 	/*bullets that were introduced in past frames but has to be updated in the current frame*/
 	int size_old_bullet;
-	old_bullet_data old_bullet[100];
+	old_bullet_data old_bullet[50];
 	/* bullets that have completed their trajectory so tell the server that they have to be removed*/
 	int size_del_bullets;
-	int del_bullets[100];//bullets that the server has to delete because there is nothing left to update.
+	int del_bullets[50];//bullets that the server has to delete because there is nothing left to update.
 
-	int size_timeline;
-	timeline time[100];
+	int size_navigation;
+	navigation nav_data[10];
 public:
 	shipData_forServer()
 	{
@@ -1193,6 +1219,14 @@ class shipData_forMe
 	int fuel;//fuel is used for moving the ship around, once its over the ship cant move
 	int invisible;//to be changed
 	
+	Greed::coords front_tile;
+	Greed::coords rear_tile;
+	Greed::abs_pos front_abs_pos;
+	Greed::abs_pos rear_abs_pos;
+	Greed::abs_pos absolute_position;
+	Direction dir;
+	int motion;
+
 	//if you are hit by a ship's bullet: sending that  bullet's information
 	int size_bullet_hit;
 	bullet_data bullet[100];//you will add this object after parsing in your bullet_hit and bullet_hit_tempo
@@ -1323,7 +1357,7 @@ private:
 	int score;
 	string name;
 	int current_event_point;//pointer to current_event
-
+	deque<navigation> nav_data;
 	List<Greed::bullet> bullet_hit;//the list of the bullets that had ever hit the ship
 	deque<Greed::bullet> bullet_hit_tempo;//made solely for the purpose of events, here the objects will be deleted as they are inserted into the events
 
@@ -1823,8 +1857,37 @@ public:
 
 	double getDistance(int s_id);//returns the distance of s_id ship from the this->ship
 
-	
-
+	//introducing the new functions
+	void Greed_sail(Direction d, int tiles = 1)
+	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		navigation nav(1, Greed::coords(-1, -1), -1, tiles, d);
+		nav_data.push_back(nav);
+	}
+	void Greed_setPath(int s_id)
+	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		navigation nav(0, Greed::coords(-1, -1), s_id, -1, Direction::NA);
+		nav_data.push_back(nav);
+	}
+	void Greed_setPath(Greed::coords ob)
+	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		navigation nav(0, ob, -1, -1, Direction::NA);
+		nav_data.push_back(nav);
+	}
+	void Greed_chaseShip(int s_id)
+	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
+		nav_data.push_back(nav);
+	}
+	void Greed_anchorShip()
+	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		navigation nav(3, Greed::coords(-1, -1), -1, -1, Direction::NA);
+		nav_data.push_back(nav);
+	}
 	//entity conversion functions
 
 	bool upgradeHealth(int n);
@@ -1952,7 +2015,14 @@ class control1
 		pl1[id]->fuel = ob.fuel;
 		pl1[id]->invisible = ob.invisible;
 
-		
+		pl1[id]->tile_pos_front = ob.front_tile;
+		pl1[id]->tile_pos_rear = ob.rear_tile;
+		pl1[id]->front_abs_pos = ob.front_abs_pos;
+		pl1[id]->rear_abs_pos = ob.rear_abs_pos;
+		pl1[id]->dir = ob.dir;
+		pl1[id]->motion = ob.motion;
+		pl1[id]->absolutePosition = ob.absolute_position;
+
 		
 		for (int i = 0; i < ob.size_bullet_hit; i++)
 		{
@@ -1997,6 +2067,15 @@ class control1
 		ob.invisible = pl1[id]->invisible;
 
 		ob.size_bullet_hit = pl1[id]->hit_bullet.size();
+
+		ob.front_tile = pl1[id]->tile_pos_front;
+		ob.rear_tile = pl1[id]->tile_pos_rear;
+		ob.front_abs_pos = pl1[id]->front_abs_pos;
+		ob.rear_abs_pos = pl1[id]->rear_abs_pos;
+		ob.dir = pl1[id]->dir;
+		ob.motion = pl1[id]->motion;
+		ob.absolute_position = pl1[id]->absolutePosition;
+
 		for (int i = 0; i < pl1[id]->hit_bullet.size(); i++)
 		{
 			bullet_data bull;
@@ -2017,11 +2096,11 @@ class control1
 			ob.collide_ship[i] = pl1[id]->collided_ships[i];
 		}
 	}
-	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets,Mutex *mutx)
+	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx)
 	{
 		//transfer data members from pl1 to shipData_forServer
 		ob.ship_id = pl1[ship_id]->ship_id;
-		ob.motion = pl1[ship_id]->motion;
+
 		ob.isFiring = pl1[ship_id]->isFiring;
 		ob.isFiring = pl1[ship_id]->isFiring;
 		ob.threshold_health = pl1[ship_id]->threshold_health;
@@ -2030,18 +2109,10 @@ class control1
 		ob.ammo = pl1[ship_id]->ammo;
 		ob.health = pl1[ship_id]->health;
 		ob.fuel = pl1[ship_id]->fuel;
-		ob.tile_pos_front = pl1[ship_id]->tile_pos_front;
-		ob.tile_pos_rear = pl1[ship_id]->tile_pos_rear;
-		ob.front_abs_pos = pl1[ship_id]->front_abs_pos;
-		ob.rear_abs_pos = pl1[ship_id]->rear_abs_pos;
-		ob.dir = pl1[ship_id]->dir;
+
 		ob.radius = pl1[ship_id]->radius;
-
-		ob.absolutePosition = pl1[ship_id]->absolutePosition;
-		ob.autopilot = pl1[ship_id]->autopilot;
-
 		ob.size_new_bullets = newBullets.size();
-		
+
 		for (int i = 0; i < newBullets.size(); i++)
 		{
 			bullet_data obb;
@@ -2052,7 +2123,7 @@ class control1
 		}
 
 		ob.size_del_bullets = pl1[ship_id]->del_bullets_client.size();
-		
+
 		for (int i = 0; i < pl1[ship_id]->del_bullets_client.size(); i++)
 		{
 
@@ -2060,27 +2131,24 @@ class control1
 		}
 
 		ob.size_old_bullet = pl1[ship_id]->old_bullet_pos.size();
-		
+
 		for (int i = 0; i < pl1[ship_id]->old_bullet_pos.size(); i++)
 		{
 			ob.old_bullet[i] = pl1[ship_id]->old_bullet_pos[i];
 		}
-		//sending the timeline 
-		unique_lock<mutex> lk(mutx->timeMutex[ship_id]);
-		ob.size_timeline = pl1[ship_id]->time_line.size();
-		for (int i = 0; i < pl1[ship_id]->time_line.size(); i++)
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		ob.size_navigation = pl1[ship_id]->nav_data.size();
+		for (int i = 0; i < pl1[ship_id]->nav_data.size(); i++)
 		{
-			ob.time[i] = pl1[ship_id]->time_line[i];
+			ob.nav_data[i] = pl1[ship_id]->nav_data[i];
 		}
-		pl1[ship_id]->time_line.clear();
 
+		pl1[ship_id]->nav_data.clear();
 
 	}
 	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
 	{
-	
-		
-
+			
 		for (int i = 0; i < ob.size_new_bullets; i++)//adding the new bullets to the list and updating them side by side
 		{
 			Greed::bullet bull;
@@ -2105,32 +2173,28 @@ class control1
 			
 		}
 		//accepting timeline events
-		
-		for (int i = 0; i < ob.size_timeline; i++)
+		for (int i = 0; i < ob.size_navigation; i++)
 		{
-			pl1[ship_id]->time_line.push_back(ob.time[i]);
-
+			pl1[ship_id]->nav_data.push_back(ob.nav_data[i]);
 		}
+
+
 		
 
 		pl1[ship_id]->ship_id = ob.ship_id;
-		pl1[ship_id]->motion = ob.motion;
+		
 		pl1[ship_id]->isFiring = ob.isFiring;
 		pl1[ship_id]->isFiring = ob.isFiring;
 		pl1[ship_id]->threshold_health = ob.threshold_health;
 		pl1[ship_id]->threshold_ammo = ob.threshold_ammo;
 		pl1[ship_id]->threshold_fuel = ob.threshold_fuel;
 
-		pl1[ship_id]->tile_pos_front = ob.tile_pos_front;
-		pl1[ship_id]->tile_pos_rear = ob.tile_pos_rear;
-		pl1[ship_id]->front_abs_pos = ob.front_abs_pos;
-		pl1[ship_id]->rear_abs_pos = ob.rear_abs_pos;
-		pl1[ship_id]->dir = ob.dir;
+		
 		pl1[ship_id]->radius = ob.radius;
-		pl1[ship_id]->absolutePosition = ob.absolutePosition;
-		pl1[ship_id]->autopilot = ob.autopilot;
+	
+		
 		pl1[ship_id]->ammo = ob.ammo;
-		pl1[ship_id]->health = ob.health;
+		//pl1[ship_id]->health = ob.health;
 		//pl1[ship_id]->fuel = ob.fuel;
 
 	}

@@ -37,7 +37,7 @@
 #define SOCKET int
 #define GETSOCKETERRNO() (errno)
 #endif
-
+#include<ctime>
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 sf::RenderWindow window(sf::VideoMode(::cx(1970), ::cy(1190)), "GREED");
@@ -345,7 +345,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 		}
 	}
 	
-
+	window.setFramerateLimit(50);
 	while (window.isOpen())
 	{
 		read = master;
@@ -474,8 +474,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 				//getPointPath has to be protected by a mutex
 				if (pl1[i]->died == 1)
 				{
+
 					continue;
 				}
+				//doing the navigation stuff
+
 				if (pl1[i]->isFiring)
 				{
 					gui_renderer.firing_icon[i]->setVisible(true);
@@ -488,8 +491,37 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 						gui_renderer.firing_icon[i]->setVisible(false);
 					}
 				}
-				/*code to detect the collision
-				*/
+				//assigning the navigation stuff here
+				if (pl1[i]->nav_data.size() > 0)
+				{
+					if (pl1[i]->nav_data[0].type == 0)//for target type
+					{
+						if (pl1[i]->nav_data[0].target != Greed::coords(-1, -1))
+						{
+							Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].target);
+							pl1[i]->setPath(path.getPath());
+						}
+						else if (pl1[i]->nav_data[0].s_id != -1)
+						{
+							Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].s_id);
+							pl1[i]->setPath(path.getPath());
+						}
+					}
+					else if (pl1[i]->nav_data[0].type == 1)
+					{
+						pl1[i]->sail(pl1[i]->nav_data[0].dir, pl1[i]->nav_data[0].n);
+					}
+					else if (pl1[i]->nav_data[0].type == 2)
+					{
+						pl1[i]->chaseShip(pl1[i]->nav_data[0].s_id);
+						//cout << "\n " << i << " ship is chasing=>" << pl1[i]->nav_data[0].s_id;
+					}
+					else if (pl1[i]->nav_data[0].type == 3)
+					{
+						pl1[i]->anchorShip();
+					}
+					pl1[i]->nav_data.pop_front();
+				}
 				for (int j = 0; j < pl1.size(); j++)
 				{
 					if (i != j && pl1[j]->died == 0)
@@ -497,23 +529,55 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 
 						if (pl1[i]->collide(j, pl1[i]->tile_pos_front))
 						{
+							//adding in queue of 
+
+							pl1[i]->collided_ships.clear();
 							pl1[i]->collided_ships.push_back(j);
+
+							mutx->m[i].unlock();
+							pl1[i]->anchorShip_collision();
+							mutx->m[i].lock();
+							//pl1[j]->anchorShip_collision();
+							//cout << "\n location of ship2==>" << pl1[1]->absolutePosition.x+length << " " << pl1[1]->absolutePosition.y+length;
 						}
 					}
 				}
 				/*code to detect the collision ends*/
-				
-				pl1[i]->rect.setPosition(sf::Vector2f(::cx(pl1[i]->absolutePosition.x + origin_x), ::cy(pl1[i]->absolutePosition.y + origin_y)));
-				if (pl1[i]->fuel > 0)
+				List<Greed::abs_pos>& l1 = pl1[i]->getPathList(2369);
+
+				if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 1 != pl1[i]->getPointPath(2369))
 				{
 					// cout << "\n fuel " << i << " now=>" << pl1[i]->fuel;
+					pl1[i]->motion = 1;
 
+					pl1[i]->update_pointPath(pl1[i]->getPointPath(2369) + 1, 2369);
+
+					pl1[i]->rect.setPosition(::cx(l1[pl1[i]->getPointPath(2369)].x + origin_x), ::cy(l1[pl1[i]->getPointPath(2369)].y + origin_y));
+
+					pl1[i]->update_tile_pos(l1[pl1[i]->getPointPath(2369)].x, l1[pl1[i]->getPointPath(2369)].y);
 
 					if (prev[i] != pl1[i]->tile_pos_front)//updating the fuel here
 					{
 						prev[i] = pl1[i]->tile_pos_front;
 						pl1[i]->fuel -= pl1[i]->globalMap[pl1[i]->tile_pos_front.r * columns + pl1[i]->tile_pos_front.c].b.cost;
+						if (pl1[i]->fuel <= 0)
+						{
+							mutx->m[pl1[i]->mutex_id].unlock();
+							pl1[i]->anchorShip();
+							mutx->m[pl1[i]->mutex_id].lock();
+
+						}
+
 					}
+					//pl1[i]->fuel -= pl1[i]->globalMap[pl1[i]->tile_pos_front.r * columns + pl1[i]->tile_pos_front.c].b.cost;
+					/*
+					if (pl1[i]->ship_id == 1)
+					{
+						cout << "\n position is==>" << pl1[1]->getShipEntity().c1.x << " " << pl1[1]->getShipEntity().c1.y;
+					}
+					*/
+
+
 
 					//setting the appropriate sprite for the ship
 					if (pl1[i]->dir == Direction::NORTH)
@@ -549,7 +613,16 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 					{
 						pl1[i]->rect.setTexture(tex_sw);
 					}
+					//cout << "\n rectangle position according to game==>" << rect1.getPosition().x - 17 << " " << rect1.getPosition().y - 19 << endl;
+					//cout << "\n tile position is==>" << pl1.tile_pos.r << " " << pl1.tile_pos.c << endl;
+
 				}
+				else
+				{
+					pl1[i]->motion = 0;
+				}
+			
+			
 				for (int j = 0; j < pl1[i]->cannon_ob.legal_bullets.size(); j++)
 				{
 					auto it = pl1[i]->cannon_ob.legal_bullets.begin();
@@ -699,10 +772,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 					}
 					if (j >= 0 && it->second.hit_cannon != -1 && it->second.ttl == 15)//this condition is specially for the cannon
 					{
-						/*
-						* a ship always aims for the middle of the cannon, hence we wait for 15 frames for the animation
-						* of explosion since the cannon is static there should be no problem
-						*/
+						
 						//here the cannon will suffer a  loss
 
 						if (cannon_list[it->second.hit_cannon].health >= it->second.power)
@@ -749,7 +819,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 					gui_renderer.player_panels[i]->getRenderer()->setOpacity(0.6);
 				}
 			}
-
+			
 
 
 
@@ -1079,7 +1149,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 		control.pl_to_packet(data1.shipdata_exceptMe, pl1);
 		
 		select(max_socket, 0, &write, 0, &timeout);
-		for (int i = 1; i <= max_socket; i++)
+		for (int i =1; i<=max_socket;i++)
 		{
 			if (FD_ISSET(i, &write))
 			{
@@ -1097,6 +1167,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 				}
 				//data is sent
 			}
+			
 		}
 
 		//drawing and animation part starts here
@@ -1176,9 +1247,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 					{
 						if (!gameOver)
 						{
-							cannon_list[i].fireCannon(cannon_list[i].current_ship);//this is the only place where we have to fire
+							//cannon_list[i].fireCannon(cannon_list[i].current_ship);//this is the only place where we have to fire
 
-							animation_list.add_rear(animator(sf::Vector2f(cannon_list[i].absolute_position.x + origin_x, cannon_list[i].absolute_position.y + origin_y), elapsed_time, ANIMATION_TYPE::CANNON_FIRE, cannon_list[i].cannon_id));
+						//animation_list.add_rear(animator(sf::Vector2f(cannon_list[i].absolute_position.x + origin_x, cannon_list[i].absolute_position.y + origin_y), elapsed_time, ANIMATION_TYPE::CANNON_FIRE, cannon_list[i].cannon_id));
 						}
 					}
 				}
@@ -1318,13 +1389,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 		
 	
 		select(max_socket, &read, 0, 0, &timeout);
-		for (int i = 1; i <= max_socket; i++)
+		for (int i = 1; i<=max_socket; i++)
 		{
 			if (FD_ISSET(i, &read))
 			{
 				send_data data2;
 				memset((void*)&data2, 0, sizeof(data2));
-				
+
 				auto it = socket_id.find(i);
 				int sid = it->second;
 				int bytes = recv(i, (char*)&data2, sizeof(data2), 0);
@@ -1332,14 +1403,16 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector
 				{
 					bytes += recv(i, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
 				}
-				
+
 				//data is received now convert it to appropriate form
-				
+
 				if (bytes > 0)
 				{
 					control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 				}
-				cout << "\n server frame=>" << total_time << " " << "received frame=>" << data2.packet_id;
+		
+				std::time_t result = std::time(nullptr);
+				cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec << " server frame=>" << total_time << " " << "received frame=>" << data2.packet_id;
 			}
 		}
 
@@ -1357,7 +1430,7 @@ int main()
 
 
 	unordered_map<int, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,2);
+	connector(sockets, socket_id,5);
 	//connector is called
 	const int no_of_players = socket_id.size();
 	cout << "\n number of players==>" << no_of_players;
@@ -1403,7 +1476,7 @@ int main()
 	{
 
 		spawn.push_back(Greed::coords(1, 0));
-		spawn.push_back(Greed::coords(1, 23));
+		spawn.push_back(Greed::coords(10, 23));
 
 	}
 	else if (no_of_players == 3)
@@ -1449,21 +1522,10 @@ int main()
 	}
 	for (int i = 0; i < no_of_players; i++)
 	{
-		if (i == 0)
-			player[i].initialize_player(i,"hawk", &mutx, silist, code, 5, spawn[i]);//last element is the tile pos of the player
 
-		else if (i == 1)
-		{
-			player[i].initialize_player(i,"dodger", &mutx, silist, code, 5, spawn[i]);
-		}
-		else if (i == 2)
-		{
-			player[i].initialize_player(i,"normal", &mutx, silist, code, 5, spawn[i]);
-		}
-		else if (i == 3)
-		{
-			player[i].initialize_player(i,"silent_killer", &mutx, silist, code, 5, spawn[i]);
-		}
+		player[i].initialize_player(i,"hawk", &mutx, silist, code, 5, spawn[i]);//last element is the tile pos of the player
+
+
 	}
 	//sending the startup data to all the connected clients
 	cout << "\n sending the data to the clients=>";

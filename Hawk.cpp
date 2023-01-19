@@ -28,7 +28,7 @@ namespace user1
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob);
 		if (index >= 0)
-			ob.chaseShip(index);
+			ob.Greed_chaseShip(index);
 
 		while (1)
 		{
@@ -43,7 +43,7 @@ namespace user1
 				if (index >= 0 && shipList[index].getDiedStatus() == 1)
 				{
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
-					ob.chaseShip(index);
+					ob.Greed_chaseShip(index);
 				}
 				if (e.eventType == Event::EventType::ShipCollision)
 				{
