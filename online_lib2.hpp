@@ -1074,6 +1074,7 @@ public:
 	friend class graphics;
 	friend class control1;
 };
+
 class Startup_info_client
 {
 	/*
@@ -1113,21 +1114,29 @@ class GameState
 };
 class bullet_data//new bullet data
 {
-	/* this class has the data of those bullets that had hit you*/
-	int id;
-	double power;//power of the bullet
-	double damage;
-	int launch_ship;//if bullet is fired by ship then id of ship is stored else -1
-	int launch_cannon;//if bullet is fired by cannon then id of the cannon is stored else -1
-	int target_ship;//id of the ship that launched the bullet this is the id of the ship provided by the launch ship but the bullet might not strike at that ship since everything is in motion
-	int hit_ship;//id of the ship that really hit the bullet
-	int target_cannon;//if the target is cannon then id of cannon is stored else -1
-	int hit_cannon;
-	bool isActive;//is the bullet active
-	bool isSuccess;//if the bullet hit the target
-	::cannon can;//side of the firing ship
-	ShipSide s;//side of the enemy ship
-	Greed::abs_pos absolute_position;//abs position of the  bullet sprite according to the game screen, not the monitor screen
+	int type;
+	/*
+	* 0 for fireCannon or fire at ship
+	* 1 for fireAtCannon or fire at cannon
+	*/
+	cannon can;
+	int s_id;
+	ShipSide s;
+	int c_id;
+public:
+	bullet_data()
+	{
+
+	}
+	bullet_data(int type,cannon can,int s_id,ShipSide s,int c_id)
+	{
+		this->type = type;
+		this->can = can;
+		this->s_id = s_id;
+		this->s = s;
+		this->c_id = c_id;
+	}
+	friend class graphics;
 	friend class control1;
 };
 class old_bullet_data//bullet data for old bullets that are clinging in the field
@@ -1177,8 +1186,7 @@ class shipData_forServer
 	int autopilot = 0;//bit to check if the ship is moving in autopilot or not
 
 	/*bullets that are introduced for the first time in that frame*/
-	int size_new_bullets;
-	bullet_data new_bullets[50];
+
 	/*bullets that were introduced in past frames but has to be updated in the current frame*/
 	int size_old_bullet;
 	old_bullet_data old_bullet[50];
@@ -1188,6 +1196,9 @@ class shipData_forServer
 
 	int size_navigation;
 	navigation nav_data[10];
+
+	int size_bulletData;
+	bullet_data b_data[10];
 public:
 	shipData_forServer()
 	{
@@ -1360,7 +1371,7 @@ private:
 	deque<navigation> nav_data;
 	List<Greed::bullet> bullet_hit;//the list of the bullets that had ever hit the ship
 	deque<Greed::bullet> bullet_hit_tempo;//made solely for the purpose of events, here the objects will be deleted as they are inserted into the events
-
+	deque<bullet_data> bullet_info;//
 	static List<Greed::cannon> cannon_list;
 	Greed::abs_pos front_abs_pos;//topmost coordinates of the tip of the ship:: will be updated in update_tile_pos
 	Greed::abs_pos rear_abs_pos;//endmost coordinates of the ship ==> will be updated in update_tile_pos
@@ -1889,7 +1900,17 @@ public:
 		nav_data.push_back(nav);
 	}
 	//entity conversion functions
+	void Greed_fireCannon(cannon can, int s_id, ShipSide s)
+	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		bullet_info.push_back(bullet_data(0,can,s_id,s,-1));
 
+	}
+	void Greed_fireAtCannon(int c_id, cannon can = cannon::FRONT)
+	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		bullet_info.push_back(bullet_data(1,can,-1,ShipSide::NA,c_id));
+	}
 	bool upgradeHealth(int n);
 	bool upgradeAmmo(int n);
 	bool upgradeFuel(int n);
@@ -1961,39 +1982,7 @@ class control1
 			ob[i].absolutePosition = pl1[i]->absolutePosition;
 		}
 	}
-	void parse_bullet(bullet_data& ob, Greed::bullet& ob1)//from Greed::bullet to bullet_data
-	{
-		ob1.id = ob.id;
-		ob1.power = ob.power;
-		ob1.damage = ob.damage;
-		ob1.launch_ship = ob.launch_ship;
-		ob1.launch_cannon = ob.launch_cannon;
-		ob1.target_ship = ob.target_ship;
-		ob1.hit_ship = ob.hit_ship;
-		ob1.target_cannon = ob.target_cannon;
-		ob1.hit_cannon = ob.hit_cannon;
-		ob1.isActive = ob.isActive;
-		ob1.isSuccess = ob.isSuccess;
-		ob1.can = ob.can;
-		ob1.s = ob.s;
-	}
-	void parse_bullet_rev(bullet_data& ob1, Greed::bullet& ob)
-	{
-		ob1.id = ob.id;
-		ob1.power = ob.power;
-		ob1.damage = ob.damage;
-		ob1.launch_ship = ob.launch_ship;
-		ob1.launch_cannon = ob.launch_cannon;
-		ob1.target_ship = ob.target_ship;
-		ob1.hit_ship = ob.hit_ship;
-		ob1.target_cannon = ob.target_cannon;
-		ob1.hit_cannon = ob.hit_cannon;
-		ob1.isActive = ob.isActive;
-		ob1.isSuccess = ob.isSuccess;
-		ob1.can = ob.can;
-		ob1.s = ob.s;
-		ob1.absolute_position = ob.absolute_position;
-	}
+	
 	void packet_to_me(shipData_forMe& ob, int id, deque<ship*>& pl1)
 	{
 		//transfer each data member from ob to pl1
@@ -2024,14 +2013,7 @@ class control1
 		pl1[id]->absolutePosition = ob.absolute_position;
 
 		
-		for (int i = 0; i < ob.size_bullet_hit; i++)
-		{
-			Greed::bullet bullet;
-			parse_bullet(ob.bullet[i], bullet);
-			pl1[id]->bullet_hit.add_rear(bullet);
-			pl1[id]->bullet_hit_tempo.push_back(bullet);
-
-		}
+		
 
 		pl1[id]->collided_ships.clear();
 		for (int i = 0; i < ob.size_collide_ship; i++)
@@ -2079,7 +2061,7 @@ class control1
 		for (int i = 0; i < pl1[id]->hit_bullet.size(); i++)
 		{
 			bullet_data bull;
-			parse_bullet_rev(bull, pl1[id]->hit_bullet[i]);
+			
 			ob.bullet[i] = bull;
 		}
 		
@@ -2106,36 +2088,13 @@ class control1
 		ob.threshold_health = pl1[ship_id]->threshold_health;
 		ob.threshold_ammo = pl1[ship_id]->threshold_ammo;
 		ob.threshold_fuel = pl1[ship_id]->threshold_fuel;
-		ob.ammo = pl1[ship_id]->ammo;
-		ob.health = pl1[ship_id]->health;
-		ob.fuel = pl1[ship_id]->fuel;
+		
+		
 
 		ob.radius = pl1[ship_id]->radius;
-		ob.size_new_bullets = newBullets.size();
+		
 
-		for (int i = 0; i < newBullets.size(); i++)
-		{
-			bullet_data obb;
-
-			parse_bullet_rev(obb, newBullets[i]);
-
-			ob.new_bullets[i] = obb;
-		}
-
-		ob.size_del_bullets = pl1[ship_id]->del_bullets_client.size();
-
-		for (int i = 0; i < pl1[ship_id]->del_bullets_client.size(); i++)
-		{
-
-			ob.del_bullets[i] = pl1[ship_id]->del_bullets_client[i];
-		}
-
-		ob.size_old_bullet = pl1[ship_id]->old_bullet_pos.size();
-
-		for (int i = 0; i < pl1[ship_id]->old_bullet_pos.size(); i++)
-		{
-			ob.old_bullet[i] = pl1[ship_id]->old_bullet_pos[i];
-		}
+		
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		ob.size_navigation = pl1[ship_id]->nav_data.size();
 		for (int i = 0; i < pl1[ship_id]->nav_data.size(); i++)
@@ -2144,56 +2103,42 @@ class control1
 		}
 
 		pl1[ship_id]->nav_data.clear();
+		
+		ob.size_bulletData = pl1[ship_id]->bullet_info.size();
+		for (int i = 0; i < ob.size_bulletData; i++)
+		{
+			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
+		}
+		pl1[ship_id]->bullet_info.clear();
 
 	}
 	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
 	{
-			
-		for (int i = 0; i < ob.size_new_bullets; i++)//adding the new bullets to the list and updating them side by side
-		{
-			Greed::bullet bull;
-			parse_bullet(ob.new_bullets[i], bull);
-			
-			bull.bullet_entity.setPosition(sf::Vector2f(::cx(bull.absolute_position.x + origin_x), ::cy(bull.absolute_position.y + origin_y)));
-			pl1[ship_id]->cannon_ob.legal_bullets[ob.new_bullets[i].id] = bull;
+	
 
-		}
-		for (int i = 0; i < ob.size_old_bullet; i++)
-		{
-			if (pl1[ship_id]->cannon_ob.legal_bullets.find(ob.old_bullet[i].id) != pl1[ship_id]->cannon_ob.legal_bullets.end())
-			{
-				pl1[ship_id]->cannon_ob.legal_bullets[ob.old_bullet[i].id].absolute_position = ob.old_bullet[i].absolute_position;
-				pl1[ship_id]->cannon_ob.legal_bullets[ob.old_bullet[i].id].bullet_entity.setPosition(::cx(ob.old_bullet[i].absolute_position.x + origin_x), ::cy(ob.old_bullet[i].absolute_position.y + origin_y));
-			}
-		}
 
-		for (int i = 0; i < ob.size_del_bullets; i++)//erasing the bullets
-		{
-			pl1[ship_id]->cannon_ob.legal_bullets.erase(ob.del_bullets[i]);
-			
-		}
-		//accepting timeline events
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
 			pl1[ship_id]->nav_data.push_back(ob.nav_data[i]);
 		}
-
-
 		
+	
 
 		pl1[ship_id]->ship_id = ob.ship_id;
 		
-		pl1[ship_id]->isFiring = ob.isFiring;
-		pl1[ship_id]->isFiring = ob.isFiring;
 		pl1[ship_id]->threshold_health = ob.threshold_health;
 		pl1[ship_id]->threshold_ammo = ob.threshold_ammo;
 		pl1[ship_id]->threshold_fuel = ob.threshold_fuel;
 
 		
 		pl1[ship_id]->radius = ob.radius;
-	
 		
-		pl1[ship_id]->ammo = ob.ammo;
+		pl1[ship_id]->bullet_info.clear();
+		for (int i = 0; i < ob.size_bulletData; i++)
+		{
+			pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
+		}
+		
 		//pl1[ship_id]->health = ob.health;
 		//pl1[ship_id]->fuel = ob.fuel;
 

@@ -70,13 +70,13 @@ namespace user1
 						//if (frames % 60 == 0)
 						//{
 
-						ob.fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[0], ShipSide::FRONT);
+						ob.Greed_fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[0], ShipSide::FRONT);
 						//}
 
 					}
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
-						ob.fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
+						ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
 					}
 
 				}

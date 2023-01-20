@@ -63,12 +63,12 @@ namespace user1
 					{
 						for (int j = 0; j < q[i].radiusShip.getShipId().size(); j++)
 						{
-							ob.fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[j], ShipSide::FRONT);
+							ob.Greed_fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[j], ShipSide::FRONT);
 						}
 					}
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
-						ob.fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
+						ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
 					}
 
 				}

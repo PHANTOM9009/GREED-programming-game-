@@ -2497,6 +2497,7 @@ double shipInfo::getCurrentAmmo()
 {
 	return ob->getCurrentAmmo();
 }
+
 bool ship::fireAtCannon(int c_id, cannon can = cannon::FRONT)
 {
 	if (cannon_ob.activeBullets.size() <= 1 && isCannonInRadius(c_id, (ShipSide)(int)can) && ammo > 0 && cannon_list[c_id].isDead == false)//if cannon is in the provided radius of the firing ship
@@ -2508,18 +2509,18 @@ bool ship::fireAtCannon(int c_id, cannon can = cannon::FRONT)
 		bull.initialize(true, mutx, cannon_ob.current_bullet++, this->ship_id, cannon_ob.power, -1, this->ship_id, c_id, -1, true, can, ShipSide::NA);
 
 
-		mutx->m[ship_id].lock();
-		//cannon_ob.allBullets.add_rear(bull);
+		
 
 		// cout << "\n info=>" << cannon_ob.allBullets[0].starting_tile.r << " " << cannon_ob.allBullets[0].starting_tile.c;
 		cannon_ob.activeBullets.push_back(bull);//only the active bullets are kept here
 		//cout << "\n info=>" << cannon_ob.allBullets[0].starting_tile.r << " " << cannon_ob.allBullets[0].starting_tile.c;
 
-		mutx->m[ship_id].unlock();
+	
 
 	}
 	return true;
 }
+
 void ship::setBullet(Greed::bullet& bull, cannon can, int s_id, ShipSide s)
 {
 	if (can == cannon::FRONT)
@@ -2713,9 +2714,7 @@ bool ship::fireCannon(cannon can, int s_id, ShipSide s)//s_id and s are of targe
 		//if (ammo > 0 && (s == ShipSide::MIDDLE && (isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::FRONT) && isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::REAR))) || (s != ShipSide::MIDDLE && isShipInMyRadius(s_id, ShipSide((int)can), s)))
 	{
 
-		if (shipInfoList[s_id].ob->getDiedStatus() == 0)//fire only if the ship is still alive
-		{
-			mutx->m[ship_id].lock();
+	
 			Greed::bullet bull;
 
 			bull.initialize(true, mutx, cannon_ob.current_bullet++, this->ship_id, cannon_ob.power, -1, this->ship_id, -1, s_id, true, can, s);
@@ -2728,9 +2727,7 @@ bool ship::fireCannon(cannon can, int s_id, ShipSide s)//s_id and s are of targe
 			cannon_ob.activeBullets.push_back(bull);//only the active bullets are kept here
 			//cout << "\n info=>" << cannon_ob.allBullets[0].starting_tile.r << " " << cannon_ob.allBullets[0].starting_tile.c;
 
-			mutx->m[ship_id].unlock();
-		}
-
+			
 	}
 
 
