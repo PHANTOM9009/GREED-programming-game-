@@ -1460,6 +1460,7 @@ void ship::update_tile_pos(double x, double y)//this function is called under th
 		if (ret == -1)
 		{
 			cout << "\n----------------------------------------";
+			cout << "\n for the ship=>" << ship_id;
 			cout << "\n logs of if part";
 			cout << "\n error: getIndex of update_tile_pos returned -1";
 			cout << "\n the value of final is==>" << final.r << " " << final.c;
@@ -1579,6 +1580,7 @@ void ship::update_tile_pos(double x, double y)//this function is called under th
 		if (ret == -1)
 		{
 			cout << "\n----------------------------------------";
+			cout << "\n for the ship=>" << ship_id;
 			cout << "\n logs of else part";
 			cout << "\n error: getIndex of update_tile_pos returned -1";
 			cout << "\n the value of final is==>" << current_tile.r << " " << current_tile.c;
@@ -1786,7 +1788,7 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 			}
 			ob.mutx->mchase[ob.ship_id].unlock();
 		}
-		Sleep(100);
+		Sleep(200);
 	}
 
 
@@ -1836,7 +1838,7 @@ bool ship::setPath(List<Greed::coords> ob, int state)  //for adding the supplied
 			pointPath = 0;
 
 
-			mutx->m[mutex_id].unlock();
+		
 
 		}
 		else
@@ -1882,10 +1884,11 @@ bool ship::setPath(List<Greed::coords> ob, int state)  //for adding the supplied
 			}
 			pointPath = 0;
 			map_ob.deleteDuplicate(path);
-			mutx->m[mutex_id].unlock();
+			
 
 
 		}
+		mutx->m[mutex_id].unlock();
 		return true;
 	}
 	else//if the path list is empty
@@ -2711,7 +2714,7 @@ bool ship::fireCannon(cannon can, int s_id, ShipSide s)//s_id and s are of targe
 	//checking which part of the target ship is in the radius
 
 	if (getCurrentAmmo() > 0 && isShipInMyRadius_forFire(s_id, can, s) && cannon_ob.activeBullets.size() <= 1)
-		//if (ammo > 0 && (s == ShipSide::MIDDLE && (isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::FRONT) && isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::REAR))) || (s != ShipSide::MIDDLE && isShipInMyRadius(s_id, ShipSide((int)can), s)))
+     //if (ammo > 0 && (s == ShipSide::MIDDLE && (isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::FRONT) && isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::REAR))) || (s != ShipSide::MIDDLE && isShipInMyRadius(s_id, ShipSide((int)can), s)))
 	{
 
 	
@@ -3242,12 +3245,12 @@ bool ship::anchorShip_collision()
 	setPath_collision();
 	update_pos_collision();
 
-	mutx->timeMutex[ship_id].lock();
+	//mutx->timeMutex[ship_id].lock();
 	timeline t;
 	t.timestamp = graphics::getTotalTime();
 	t.eventype = timeline::EventType::ANCHOR_SHIP;
 	time_line.push_back(t);
-	mutx->timeMutex[ship_id].unlock();
+	//mutx->timeMutex[ship_id].unlock();
 	return true;
 }
 bool ship::anchorShip()

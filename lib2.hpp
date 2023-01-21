@@ -1140,7 +1140,7 @@ private:
 	Greed::abs_pos absolutePosition;
 	int autopilot = 0;//bit to check if the ship is moving in autopilot or not
 
-	vector<int> collided_ships;//ships that have collided with the given ship at one frame
+	//vector<int> collided_ships;//ships that have collided with the given ship at one frame
 	
 	List<Greed::vertex> localMap;
 	deque<shipInfo> shipInfoList;

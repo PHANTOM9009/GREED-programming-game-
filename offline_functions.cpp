@@ -218,7 +218,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob)//taki
 		t2 += deltime.asSeconds();
 		if (t2 >= 1 && t2 <= 1.15)
 		{
-			//cout << "\n frame rate is==>" << c;
+			cout << "\n frame rate is==>" << c;
 			c = 0;
 			t2 = 0;
 		}
@@ -1937,7 +1937,7 @@ int main()
 {
 	//extracting the data
 
-	const int no_of_players = 4;
+	const int no_of_players = 7;
 	cout << "\n number of players==>" << no_of_players;
 
 

@@ -375,7 +375,7 @@ class Mutex//class protecting all the mutexes
 	///mutex m is for protecting the path data structure
 	mutex event_mutex[20];
 	mutex mchase[20];//mutex for follow up function of ship class
-
+	mutex updating_data;//for server only
 
 
 
@@ -1048,6 +1048,7 @@ public:
 
 
 };
+
 class navigation
 {
 	int type;
@@ -1073,6 +1074,7 @@ public:
 	}
 	friend class graphics;
 	friend class control1;
+
 };
 
 class Startup_info_client
@@ -1163,42 +1165,19 @@ class shipData_forServer
 	*/
 
 	int ship_id;//id of the ship
-	int motion;
-	bool isFiring;
+	
+	
 	double threshold_health;
 	double threshold_ammo;
 	double threshold_fuel;
-	int ammo;
-	double health;
-	double fuel;
-
-
-	Greed::coords tile_pos_front;
-	Greed::coords tile_pos_rear;
-	Greed::abs_pos front_abs_pos;//topmost coordinates of the tip of the ship:: will be updated in update_tile_pos
-	Greed::abs_pos rear_abs_pos;//endmost coordinates of the ship ==> will be updated in update_tile_pos
-	//Map::abs_pos absolutePosition;//always stores the top left coordinate of the ship tile
-	Direction dir;
+	
 	int radius;//square radius
-	//int bullet_radius;//radius of the bullet...initially this value is equal to the radius of the ship
-
-	Greed::abs_pos absolutePosition;
-	int autopilot = 0;//bit to check if the ship is moving in autopilot or not
-
-	/*bullets that are introduced for the first time in that frame*/
-
-	/*bullets that were introduced in past frames but has to be updated in the current frame*/
-	int size_old_bullet;
-	old_bullet_data old_bullet[50];
-	/* bullets that have completed their trajectory so tell the server that they have to be removed*/
-	int size_del_bullets;
-	int del_bullets[50];//bullets that the server has to delete because there is nothing left to update.
 
 	int size_navigation;
 	navigation nav_data[10];
 
 	int size_bulletData;
-	bullet_data b_data[10];
+	bullet_data b_data[100];
 public:
 	shipData_forServer()
 	{
@@ -1237,16 +1216,6 @@ class shipData_forMe
 	Greed::abs_pos absolute_position;
 	Direction dir;
 	int motion;
-
-	//if you are hit by a ship's bullet: sending that  bullet's information
-	int size_bullet_hit;
-	bullet_data bullet[100];//you will add this object after parsing in your bullet_hit and bullet_hit_tempo
-	
-	int size_del_bullets;
-	int del_bullets[100];//bullets that have to be deleted
-
-	int size_collide_ship;
-	int collide_ship[20];
 
 	friend class graphics;
 	friend class control1;
@@ -1308,8 +1277,7 @@ public:
 bool get(ship* a, ship* b);
 class pack_ship;
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
-//some networking classes
-
+//some networking classes*/
 class ship//this class will be used to initialize the incoming player and give it a ship. and then keep tracking of that ship
 {
 
@@ -1356,10 +1324,7 @@ public: //this will be public the user will be able to access this object freely
 	int passive_event_point;//pointer to getNextPassiveEvent..to tell which event to send
 private:
 	int seconds;//seconds lived
-	vector<int> collided_ships;//ship id's that have collided with the ship per frame
-	vector<int> del_bullets;//id of the bullet that will be deleted in that frame to be sent by server
-	vector<int> del_bullets_client;//id of the bullet that will be deleted in that frame to be sent by client to the server
-	vector<old_bullet_data> old_bullet_pos;
+	
 	vector<Greed::bullet> hit_bullet;//stores the hit bullets on the ship for that frame
 	int minutes;//minutes lived
 	int killer_ship_id;//the ship that killed you if that is the case
@@ -1927,11 +1892,11 @@ public:
 	friend class shipInfo;
 	friend void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
 	friend class control1;
-
-
+	
 };
 class control1
 {
+	void nav_data_processor(deque<ship*>& pl1,Mutex *mutx);
 	void packet_to_pl(shipData_exceptMe ob[20], int s, int ship_id, deque<ship*>& pl1)//from network structure to game structure
 	{
 		for (int i = 0; i < s; i++)
@@ -2015,17 +1980,7 @@ class control1
 		
 		
 
-		pl1[id]->collided_ships.clear();
-		for (int i = 0; i < ob.size_collide_ship; i++)
-		{
-			pl1[id]->collided_ships.push_back(ob.collide_ship[i]);
-		}
-		//deleting the bullets that are obsolete
-		for (int i = 0; i < ob.size_del_bullets; i++)
-		{
-			
-			pl1[id]->cannon_ob.legal_bullets.erase(ob.del_bullets[i]);
-		}
+		
 
 
 	}
@@ -2048,8 +2003,6 @@ class control1
 		ob.fuel = pl1[id]->fuel;
 		ob.invisible = pl1[id]->invisible;
 
-		ob.size_bullet_hit = pl1[id]->hit_bullet.size();
-
 		ob.front_tile = pl1[id]->tile_pos_front;
 		ob.rear_tile = pl1[id]->tile_pos_rear;
 		ob.front_abs_pos = pl1[id]->front_abs_pos;
@@ -2058,33 +2011,14 @@ class control1
 		ob.motion = pl1[id]->motion;
 		ob.absolute_position = pl1[id]->absolutePosition;
 
-		for (int i = 0; i < pl1[id]->hit_bullet.size(); i++)
-		{
-			bullet_data bull;
-			
-			ob.bullet[i] = bull;
-		}
 		
-		ob.size_del_bullets = pl1[id]->del_bullets.size();
-		for (int i = 0; i < pl1[id]->del_bullets.size(); i++)
-		{
-			ob.del_bullets[i] = pl1[id]->del_bullets[i];
-		}
-		
-
-		ob.size_collide_ship = pl1[id]->collided_ships.size();
-		for (int i = 0; i < pl1[id]->collided_ships.size(); i++)
-		{
-			ob.collide_ship[i] = pl1[id]->collided_ships[i];
-		}
 	}
 	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx)
 	{
 		//transfer data members from pl1 to shipData_forServer
 		ob.ship_id = pl1[ship_id]->ship_id;
 
-		ob.isFiring = pl1[ship_id]->isFiring;
-		ob.isFiring = pl1[ship_id]->isFiring;
+		
 		ob.threshold_health = pl1[ship_id]->threshold_health;
 		ob.threshold_ammo = pl1[ship_id]->threshold_ammo;
 		ob.threshold_fuel = pl1[ship_id]->threshold_fuel;
@@ -2092,12 +2026,10 @@ class control1
 		
 
 		ob.radius = pl1[ship_id]->radius;
-		
-
-		
+			
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		ob.size_navigation = pl1[ship_id]->nav_data.size();
-		for (int i = 0; i < pl1[ship_id]->nav_data.size(); i++)
+		for (int i = 0; i < pl1[ship_id]->nav_data.size() && i<10; i++)
 		{
 			ob.nav_data[i] = pl1[ship_id]->nav_data[i];
 		}
@@ -2105,7 +2037,7 @@ class control1
 		pl1[ship_id]->nav_data.clear();
 		
 		ob.size_bulletData = pl1[ship_id]->bullet_info.size();
-		for (int i = 0; i < ob.size_bulletData; i++)
+		for (int i = 0; i < ob.size_bulletData && i<100; i++)
 		{
 			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
 		}
@@ -2115,32 +2047,23 @@ class control1
 	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
 	{
 	
-
-
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
 			pl1[ship_id]->nav_data.push_back(ob.nav_data[i]);
 		}
-		
 	
-
 		pl1[ship_id]->ship_id = ob.ship_id;
-		
 		pl1[ship_id]->threshold_health = ob.threshold_health;
 		pl1[ship_id]->threshold_ammo = ob.threshold_ammo;
 		pl1[ship_id]->threshold_fuel = ob.threshold_fuel;
-
-		
 		pl1[ship_id]->radius = ob.radius;
-		
 		pl1[ship_id]->bullet_info.clear();
+		
 		for (int i = 0; i < ob.size_bulletData; i++)
 		{
 			pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
 		}
 		
-		//pl1[ship_id]->health = ob.health;
-		//pl1[ship_id]->fuel = ob.fuel;
 
 	}
 	friend class graphics;

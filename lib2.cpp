@@ -6,6 +6,9 @@
 #include "dodger.cpp"
 #include "normal.cpp"
 #include "silent_killer.cpp"
+#include "Source1.cpp"
+#include "Source2.cpp"
+#include "Source3.cpp"
 #include "proxy_file.cpp"
 
 using namespace std;

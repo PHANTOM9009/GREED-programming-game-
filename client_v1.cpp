@@ -36,7 +36,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "hawk.cpp"
+#include "silent_killer.cpp"
 #include<ctime>
 /*
 * what am i doing here?
@@ -191,7 +191,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			struct timeval timeout;
 			timeout.tv_sec = 0;
 			timeout.tv_usec = 50;
-			select(peer_socket + 1, &reads, 0, 0, &timeout);
+			//select(peer_socket + 1, &reads, 0, 0, &timeout);
 			recv_data data1;
 			int bytes_recv = -1;
 			
@@ -225,79 +225,15 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			if (!gameOver)
 			{
 				//clearing the buffers
-				pl1[ship_id]->old_bullet_pos.clear();
-				pl1[ship_id]->del_bullets_client.clear();
-				newBullets.clear();
+			
+				
 				//getPointPath has to be protected by a mutex
 					if (pl1[ship_id]->died == 1)
 					{
-						break;//break if the ship is dead
+						continue;//break if the ship is dead
 					}
 
-					if (mutx->m[pl1[ship_id]->getMutexId(2369)].try_lock())
-					{
-						
-						//no fucking need to manage the fucking motion!
-
-						
-						if (pl1[ship_id]->ammo > 0 && pl1[ship_id]->cannon_ob.activeBullets.size() > 0 && frames % 30 == 0)
-						{
-							frames = 0;
-
-							Greed::bullet bull = pl1[ship_id]->cannon_ob.activeBullets[0];
-							auto it = pl1[ship_id]->cannon_ob.activeBullets.begin();
-							pl1[ship_id]->cannon_ob.activeBullets.erase(it);
-							if (bull.target_ship != -1)
-								pl1[ship_id]->setBullet(bull, bull.can, bull.target_ship, bull.s);
-							else if (bull.target_cannon != -1)
-							{
-								pl1[ship_id]->setBullet_forCannon(bull);
-							}
-							pl1[ship_id]->cannon_ob.legal_bullets[bull.id] = bull;
-							pl1[ship_id]->isFiring = true;
-							pl1[ship_id]->ammo--;
-							newBullets.push_back(bull);
-
-
-						}
-						else
-						{
-							pl1[ship_id]->isFiring = false;
-						}
-						//firing managing starts here
-						for (int i = 0; i < pl1[ship_id]->cannon_ob.legal_bullets.size(); i++)
-						{
-							auto it = pl1[ship_id]->cannon_ob.legal_bullets.begin();
-							advance(it, i);
-
-							if (it->second.bullet_trajectory.size() > 0)
-							{
-								it->second.absolute_position = Greed::abs_pos(it->second.bullet_trajectory[0].x, it->second.bullet_trajectory[0].y);
-								it->second.bullet_entity.setPosition(sf::Vector2f(::cx(it->second.bullet_trajectory[0].x + origin_x), ::cy(it->second.bullet_trajectory[0].y + origin_y)));
-								pl1[ship_id]->old_bullet_pos.push_back(old_bullet_data(it->first, it->second.absolute_position));
-								for (int l = 1; l <= 3; l++)//this is speed of bullet. skipping 3 pixels per frame, speed is 180 frames(pixels) per sec
-								{
-									if (it->second.bullet_trajectory.size() > 0)
-									{
-										it->second.bullet_trajectory.erase(it->second.bullet_trajectory.begin());
-									}
-								}
-							}
-							else //when bullet's trajectory is over and nothing happend
-							{
-								
-								pl1[ship_id]->del_bullets_client.push_back(it->first);
-								pl1[ship_id]->cannon_ob.legal_bullets.erase(it);
-								i--;
-								continue;
-							}
-						
-
-						}
-						mutx->m[ship_id].unlock();
-						/* ends */
-
-					}
+				
 					
 				//here we are starting to manage the events
 				//checking and deleting events from passive_event queue
@@ -948,7 +884,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 						//adding the event of colliding of ships
 						Event e12;
-
+						/*
 						if (pl1[ship_id]->collided_ships.size() > 0)//if the event of collision has happend
 						{
 							e12.initialize(total_time, Event::EventType::ShipCollision, pl1[ship_id]->ship_id);
@@ -958,7 +894,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							pl1[ship_id]->collided_ships.clear();
 
 						}
-
+						*/
 
 
 

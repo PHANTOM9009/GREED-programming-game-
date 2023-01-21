@@ -1,4 +1,4 @@
-namespace user1
+namespace user2
 {
 
 	int find_ship_to_kill2(deque<shipInfo>& shipList, int myid)
@@ -24,7 +24,7 @@ namespace user1
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill2(shipList, ob.getShipId());
 		if (index >= 0)
-			ob.Greed_chaseShip(index);
+			ob.chaseShip(index);
 		//updating the cannon costs
 		vector <Greed::cannon> cannonList = ob.getCannonList();
 		for (int j = 0; j < cannonList.size(); j++)
@@ -51,7 +51,7 @@ namespace user1
 				if (index >= 0 && shipList[index].getDiedStatus() == 1)
 				{
 					index = find_ship_to_kill2(shipList, ob.getShipId());
-					ob.Greed_chaseShip(index);
+					ob.chaseShip(index);
 				}
 				if (e.eventType == Event::EventType::LowHealth)
 				{
@@ -70,13 +70,13 @@ namespace user1
 						//if (frames % 60 == 0)
 						//{
 
-						ob.Greed_fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[0], ShipSide::FRONT);
+						ob.fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[0], ShipSide::FRONT);
 						//}
 
 					}
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
-						ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
+						ob.fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
 					}
 
 				}
