@@ -1806,8 +1806,9 @@ bool ship::setPath(List<Greed::coords> ob, int state)  //for adding the supplied
 	if (path.howMany() > 0)
 	{
 
-		mutx->m[mutex_id].lock();
+		//mutx->m[ship_id].lock();
 		//setting the tile_path list here
+		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (state == 1)
 		{
 			int temp = tile_path.howMany();
@@ -1888,14 +1889,14 @@ bool ship::setPath(List<Greed::coords> ob, int state)  //for adding the supplied
 
 
 		}
-		mutx->m[mutex_id].unlock();
+		//mutx->m[ship_id].unlock();
 		return true;
 	}
 	else//if the path list is empty
 	{
 		if (state == 1)
 		{
-			mutx->m[mutex_id].lock();
+			//mutx->m[ship_id].lock();
 			//for the tile_path list
 			int temp = tile_path.howMany();
 			for (int i = 0; i < temp; i++)
@@ -1910,7 +1911,7 @@ bool ship::setPath(List<Greed::coords> ob, int state)  //for adding the supplied
 			path = map_ob.makeList(ob);
 
 
-			mutx->m[mutex_id].unlock();
+			//mutx->m[ship_id].unlock();
 			return true;
 		}
 		pointPath = 0;
@@ -2135,12 +2136,12 @@ Greed::path_attribute ship::setTarget(Greed::coords ob)
 {
 	//this function will return the path_attribute object containing information about the exact path to take
 	Greed::path_attribute ob1;//to be returned
-	mutx->m[mutex_id].lock();
-	mutx->m_global_map.lock();
+	mutx->m[ship_id].lock();
+	//mutx->m_global_map.lock();
 	map_ob.path(tile_pos_front, ob, localMap, ob1, localMap);
 
-	mutx->m_global_map.unlock();
-	mutx->m[mutex_id].unlock();
+	//mutx->m_global_map.unlock();
+	mutx->m[ship_id].unlock();
 	ob1.target.add_front(tile_pos_front);// starting from the current position
 
 	return ob1;
@@ -2712,8 +2713,8 @@ bool ship::fireCannon(cannon can, int s_id, ShipSide s)//s_id and s are of targe
 	* firing at the middle will only happen when both rear and front part of the ship will be in radius of the attacking ship
 	*/
 	//checking which part of the target ship is in the radius
-
-	if (getCurrentAmmo() > 0 && isShipInMyRadius_forFire(s_id, can, s) && cannon_ob.activeBullets.size() <= 1)
+	
+	if (shipInfoList[s_id].getDiedStatus()==0 && getCurrentAmmo() > 0 && isShipInMyRadius_forFire(s_id, can, s) && cannon_ob.activeBullets.size() <= 1)
      //if (ammo > 0 && (s == ShipSide::MIDDLE && (isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::FRONT) && isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::REAR))) || (s != ShipSide::MIDDLE && isShipInMyRadius(s_id, ShipSide((int)can), s)))
 	{
 
@@ -2814,30 +2815,19 @@ int Greed::cannon::getVictimShip()
 	*/
 	Control con;
 	deque<ship*> ship_list = con.ship_list;
-	int ship_id = current_ship;
-	/*
-	for (int i = 0; i < ship_list.size(); i++)
-	{
-		if (ship_list[i]->getCurrentHealth() > 0)
-		{
-			if (isShipInMyRadius(ship_list[i]->getShipId(), ShipSide::FRONT))//second parameter is for the opponent side
-			{
-				ship_id = ship_list[i]->getShipId();
-				ss = ShipSide::FRONT;
-				break;
-			}
-			else if (isShipInMyRadius(ship_list[i]->getShipId(), ShipSide::REAR))
-			{
-				ship_id = ship_list[i]->getShipId();
-				ss = ShipSide::REAR;
-				break;
-			}
-		}
-	}
-	current_ship = ship_id;
-	return ship_id;
-	*/
 
+	int ship_id;
+	if (current_ship >=0 && ship_list[current_ship]->getDiedStatus() == 0)
+	{
+		ship_id = current_ship;
+
+	}
+	else
+	{
+		ship_id = -1;
+		current_ship = -1;
+	}
+	
 	/*
 	* this is concept2
 	* this law dictates that the ship having more health will be beaten first
@@ -3145,6 +3135,7 @@ bool ship::upgradeAmmo(int n)//1 ammo in 1 money
 }
 void ship::setPath_collision()
 {
+	unique_lock<mutex> lk(mutx->m[ship_id]);
 	int temp1 = path.howMany();
 	for (int i = 0; i < temp1; i++)
 	{

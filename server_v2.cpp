@@ -48,13 +48,16 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex *mutx)
 	unique_lock<mutex> lk(mutx->updating_data);
 	for (int i = 0; i < pl1.size(); i++)
 	{
-		
+		if (pl1[i]->died == 1)
+		{
+			continue;
+		}
 		
 		if (pl1[i]->nav_data.size() > 0)
 		{
 			if (pl1[i]->nav_data[0].type == 0)//for target type
 			{
-				if (pl1[i]->nav_data[0].target != Greed::coords(-1, -1))
+				if (pl1[i]->nav_data[0].target.r != -1 && pl1[i]->nav_data[0].target.c!=-1)
 				{
 					Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].target);
 					pl1[i]->setPath(path.getPath());
@@ -65,11 +68,11 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex *mutx)
 					pl1[i]->setPath(path.getPath());
 				}
 			}
-			else if (pl1[i]->nav_data[0].type == 1)
+			else if (pl1[i]->nav_data[0].type == 1 && pl1[i]->nav_data[0].n>0 && pl1[i]->nav_data[0].dir!=Direction::NA)
 			{
 				pl1[i]->sail(pl1[i]->nav_data[0].dir, pl1[i]->nav_data[0].n);
 			}
-			else if (pl1[i]->nav_data[0].type == 2)
+			else if (pl1[i]->nav_data[0].type == 2 && pl1[i]->nav_data[0].s_id >= 0)
 			{
 				if (pl1[pl1[i]->nav_data[0].s_id]->died == 0)
 				{
@@ -498,6 +501,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 			for (int i = 0; i < pl1.size(); i++)
 			{
+				if (pl1[i]->died == 1)
+				{
+					continue;
+				}
 				for (int j = 0; j < pl1[i]->bullet_info.size(); j++)
 				{
 
@@ -856,6 +863,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 							pl1[i]->cannon_ob.activeBullets.erase(it);
 							j--;
 							pl1[i]->bullet_pointer--;
+							continue;
 
 						}
 						if (j >= 0 && pl1[i]->cannon_ob.activeBullets[j].hit_cannon != -1 && pl1[i]->cannon_ob.activeBullets[j].ttl == 15)//this condition is specially for the cannon
@@ -887,6 +895,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 							pl1[i]->cannon_ob.activeBullets.erase(it);
 							j--;
 							pl1[i]->bullet_pointer--;
+							continue;
 						}
 						else if (j >= 0 && pl1[i]->cannon_ob.activeBullets[j].hit_or_not)
 						{
@@ -953,7 +962,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 							 //cout << "\n ship 0 has position==>" << pl1[0]->getCurrentTile().r << " " << pl1[0]->getCurrentTile().c;
 							for (int u = 0; u < pl1.size(); u++)
 							{
-
+								if (pl1[u]->died == 1)
+								{
+									continue;
+								}
 								if (checkCollision(u, cannon_list[j].bullet_list[k]))//collision is there
 								{
 									//cannon_list[j].allBullets[cannon_list[j].bullet_list[k].id].set_after_data(5, pl1[u]->ship_id, true);
@@ -994,13 +1006,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 							pl1[id]->gold -= ch;
 
 							pl1[id]->killer_cannon_id = j;
-							mutx->timeMutex[id].lock();
+							//mutx->timeMutex[id].lock();
 							timeline t1;
 							t1.eventype = timeline::EventType::SHIP_DIED;
 							t1.timestamp = total_secs;
 
 							pl1[id]->time_line.push_back(t1);
-							mutx->timeMutex[id].unlock();
+							//mutx->timeMutex[id].unlock();
 
 						}
 
@@ -1326,7 +1338,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					int val = cannon_list[i].current_ship;
 					if (val >= 0 && pl1[val]->died == 0 && (cannon_list[i].isShipInMyRadius(cannon_list[i].current_ship, ShipSide::FRONT)))
 					{
-						if (!gameOver)
+						if (!gameOver && cannon_list[i].current_ship!=-1 && pl1[cannon_list[i].current_ship]->died==0)
 						{
 							cannon_list[i].fireCannon(cannon_list[i].current_ship);//this is the only place where we have to fire
 
@@ -1512,7 +1524,7 @@ int main()
 
 
 	unordered_map<int, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,5);
+	connector(sockets, socket_id,7);
 	//connector is called
 	const int no_of_players = socket_id.size();
 	cout << "\n number of players==>" << no_of_players;
@@ -1601,6 +1613,18 @@ int main()
 		spawn.push_back(Greed::coords(10, 0));
 		spawn.push_back(Greed::coords(10, 11));
 		spawn.push_back(Greed::coords(10, 23));
+	}
+	else if (no_of_players == 8)
+	{
+		spawn.push_back(Greed::coords(1, 0));
+		spawn.push_back(Greed::coords(1, 23));
+		spawn.push_back(Greed::coords(6, 0));
+		spawn.push_back(Greed::coords(6, 23));
+		spawn.push_back(Greed::coords(10, 0));
+		spawn.push_back(Greed::coords(10, 11));
+		spawn.push_back(Greed::coords(10, 23));
+		spawn.push_back(Greed::coords(0, 5));
+
 	}
 	for (int i = 0; i < no_of_players; i++)
 	{
