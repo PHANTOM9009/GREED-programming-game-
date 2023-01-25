@@ -578,7 +578,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					{
 						List<Greed::abs_pos>& l1 = pl1[i]->getPathList(2369);
 
-						if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 1 != pl1[i]->getPointPath(2369))
+						if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 1 != pl1[i]->getPointPath(2369) &&pl1[i]->tile_path.howMany()>0)
 						{
 							// cout << "\n fuel " << i << " now=>" << pl1[i]->fuel;
 							pl1[i]->motion = 1;

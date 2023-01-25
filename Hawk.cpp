@@ -28,7 +28,7 @@ namespace user1
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob);
 		if (index >= 0)
-			ob.chaseShip(index);
+			ob.Greed_chaseShip(index);
 
 		while (1)
 		{
@@ -43,7 +43,7 @@ namespace user1
 				if (index >= 0 && shipList[index].getDiedStatus() == 1)
 				{
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
-					ob.chaseShip(index);
+					ob.Greed_chaseShip(index);
 				}
 				if (e.eventType == Event::EventType::ShipCollision)
 				{
@@ -61,14 +61,20 @@ namespace user1
 				{
 					if (q[i].eventType == Event::EventType::ShipsInMyRadius)
 					{
+						
 						for (int j = 0; j < q[i].radiusShip.getShipId().size(); j++)
 						{
-							ob.fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[j], ShipSide::FRONT);
+							
+							if (q[i].radiusShip.getShipId()[j] == -1)
+							{
+								cout << "\n ShipInMyRadius is wrong";
+							}
+							ob.Greed_fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[j], ShipSide::FRONT);
 						}
 					}
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
-						ob.fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
+						ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
 					}
 
 				}

@@ -1579,6 +1579,17 @@ void ship::update_tile_pos(double x, double y)//this function is called under th
 		int ret = getIndex(tile_path, current_tile);
 		if (ret == -1)
 		{
+			deque<Greed::coords> uml;
+			for (int i = 0; i < tile_path.howMany(); i++)
+			{
+				uml.push_back(tile_path[i]);
+
+			}
+			deque<Greed::abs_pos> bml;
+			for (int i = 0; i < path.howMany(); i++)
+			{
+				bml.push_back(path[i]);
+			}
 			cout << "\n----------------------------------------";
 			cout << "\n for the ship=>" << ship_id;
 			cout << "\n logs of else part";

@@ -36,7 +36,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "silent_killer.cpp"
+#include "hawk.cpp"
 #include<ctime>
 /*
 * what am i doing here?
@@ -153,8 +153,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	
 	thread t(user1::GreedMain, ref(player));
 	t.detach();
-	cout << "\n before while=> pl1[0]=>" << pl1[0]->ship_id << " " << pl1[0]->mutex_id;
-	cout << "\n before while=>pl1[1]=>" << pl1[1]->ship_id << " " << pl1[1]->mutex_id;
+
 	while (1)
 	{
 		/*NOTES:
@@ -220,7 +219,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 			}
 			std::time_t result = std::time(nullptr);
-			cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
+		//	cout << "\n----------------------------------------------------------";
+			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
 			
 			if (!gameOver)
 			{
