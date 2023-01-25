@@ -203,11 +203,11 @@ void Greed::deleteDuplicate(List<abs_pos>& ob)
 		}
 	}
 }
-List<Greed::abs_pos> Greed::makeList(deque<coords> &ob) //makes a list of continous coordinates in x and y using the row and column information.
+List<Greed::abs_pos> Greed::makeList(List<coords> ob) //makes a list of continous coordinates in x and y using the row and column information.
 {
 	List<abs_pos> l;
 
-	for (int i = 0; i < ob.size() - 1; i++)
+	for (int i = 0; i < ob.howMany() - 1; i++)
 	{
 
 
@@ -395,7 +395,7 @@ int Greed::find_index(coords b, List<vertex> graph)//for vertex class only
 void Greed::find_path(coords origin, coords goal, List<A>& closed, Greed::path_attribute& ob, List<vertex>& rmap)//takes in the closed list and returns the path
 {
 
-	ob.target.push_front(goal);
+	ob.target.add_front(goal);
 
 	int index = isThere(goal, closed);
 
@@ -1288,8 +1288,8 @@ void ship::update_tile_pos(double x, double y)//this function is called under th
 
 	absolutePosition.x = x;
 	absolutePosition.y = y;
-	int temp = tile_path.size();
-	if (path.howMany() - 2 >= pointPath && tile_path.size() - 1 >= pointTilePath + 1)
+
+	if (path.howMany() - 2 >= pointPath + 1 && tile_path.howMany() - 1 >= pointTilePath + 1)
 	{
 
 		Greed::abs_pos next = path[pointPath + 1];
@@ -1483,7 +1483,6 @@ void ship::update_tile_pos(double x, double y)//this function is called under th
 
 
 	}
-	
 	else
 	{
 		Greed::coords final1;//for the tile_pos_rear
@@ -1597,7 +1596,6 @@ void ship::update_tile_pos(double x, double y)//this function is called under th
 		}
 
 	}
-	
 
 
 
@@ -1643,13 +1641,13 @@ int aux1(List<Greed::cannon>& cannon, Greed::coords ob)
 	return index;
 }
 
-void filter(deque<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship sob)//function for removing the coords which are out of range
+void filter(List<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship sob)//function for removing the coords which are out of range
 {
 	/*
 	* here range is the number of columns-1 and number of rows-1 and row and column must be greater than 0
 	*/
 
-	for (int i = 0; i < ob.size(); i++)
+	for (int i = 0; i < ob.howMany(); i++)
 	{
 		if (ob[i].r >= 0 && ob[i].r < rows && ob[i].c >= 0 && ob[i].c < columns)
 		{
@@ -1657,17 +1655,15 @@ void filter(deque<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship so
 		}
 		else
 		{
-			auto it = ob.begin();
-			advance(it, i);
-			ob.erase(it);
+			ob.delAt(i);
 			i--;
 		}
 	}
 
-	deque<Greed::coords> temp;
+	List<Greed::coords> temp;
 	int found = 0;
 
-	temp.push_back(ob[0]);
+	temp.add_rear(ob[0]);
 
 	/*
 	for (int i = 0; i < opaque_coords.howMany(); i++)
@@ -1675,7 +1671,7 @@ void filter(deque<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship so
 		cout << opaque_coords[i].r << " " << opaque_coords[i].c << endl;
 	}
 	*/
-	for (int i = 0; i < ob.size() - 1; i++)//break the loop when we find the first obstacle
+	for (int i = 0; i < ob.howMany() - 1; i++)//break the loop when we find the first obstacle
 	{
 		//cout << "\n for=>" << ob[i].r << " " << ob[i].c;
 		if (sob.getShipDirection() == Direction::NORTH_EAST)
@@ -1689,7 +1685,7 @@ void filter(deque<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship so
 			if (found != -1)
 				break;
 			if (getIndex < Greed::coords>(opaque_coords, Greed::coords(ob[i + 1].r, ob[i + 1].c)) == -1)
-				temp.push_back(ob[i + 1]);
+				temp.add_rear(ob[i + 1]);
 			else
 				break;
 		}
@@ -1704,7 +1700,7 @@ void filter(deque<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship so
 			if (found != -1)
 				break;
 			if (getIndex < Greed::coords>(opaque_coords, Greed::coords(ob[i + 1].r, ob[i + 1].c)) == -1)
-				temp.push_back(ob[i + 1]);
+				temp.add_rear(ob[i + 1]);
 			else
 				break;
 		}
@@ -1720,7 +1716,7 @@ void filter(deque<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship so
 				break;
 			// cout << "\n checking for==>" << ob[i+1].r << " " << ob[i+1].c;
 			if (getIndex < Greed::coords>(opaque_coords, Greed::coords(ob[i + 1].r, ob[i + 1].c)) == -1)
-				temp.push_back(ob[i + 1]);
+				temp.add_rear(ob[i + 1]);
 			else
 				break;
 		}
@@ -1734,7 +1730,7 @@ void filter(deque<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship so
 			if (found != -1)
 				break;
 			if (getIndex < Greed::coords>(opaque_coords, Greed::coords(ob[i + 1].r, ob[i + 1].c)) == -1)
-				temp.push_back(ob[i + 1]);
+				temp.add_rear(ob[i + 1]);
 			else
 				break;
 		}
@@ -1746,15 +1742,15 @@ void filter(deque<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship so
 				break;
 			}
 			if (getIndex < Greed::coords>(opaque_coords, Greed::coords(ob[i + 1].r, ob[i + 1].c)) == -1)
-				temp.push_back(ob[i + 1]);
+				temp.add_rear(ob[i + 1]);
 			else
 				break;
 		}
 	}
 
-	ob.clear();
+	ob.erase();
 	cout << "\n elements in temp is==>";
-	for (int i = 0; i < temp.size(); i++)
+	for (int i = 0; i < temp.howMany(); i++)
 	{
 		cout << temp[i].r << " " << temp[i].c << endl;
 	}
@@ -1775,7 +1771,6 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 	Greed::coords temp = l[s_id].getCurrentTile();
 	while (1)
 	{
-		deque<shipInfo> l1 = ob.getShipList();
 		if (ob.mutx->mchase[ob.ship_id].try_lock())
 		{
 			if (!ob.isInShipRadius(s_id, temp) && ob.autopilot == 1)//not in the ships radius now
@@ -1786,7 +1781,7 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 				temp = l[s_id].getCurrentTile();
 				//cout << "\nlap at==>" << ob.getCurrentTile().r << " " << ob.getCurrentTile().c;
 			}
-			else if (ob.autopilot == 0 || l1[s_id].getDiedStatus()==1)
+			else if (ob.autopilot == 0)
 			{
 				ob.mutx->mchase[ob.ship_id].unlock();
 				break;
@@ -1800,7 +1795,7 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 
 
 }
-bool ship::setPath(deque<Greed::coords> ob, int state)  //for adding the supplied list to  the Linked list of the user movement
+bool ship::setPath(List<Greed::coords> ob, int state)  //for adding the supplied list to  the Linked list of the user movement
 {
 	/*if state is:
 	* 1-> it means a destination is set
@@ -1816,10 +1811,10 @@ bool ship::setPath(deque<Greed::coords> ob, int state)  //for adding the supplie
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (state == 1)
 		{
-			int temp = tile_path.size();
+			int temp = tile_path.howMany();
 			for (int i = 0; i < temp; i++)
 			{
-				tile_path.pop_front();
+				tile_path.del_front();
 			}
 
 			tile_path = ob;
@@ -1903,10 +1898,10 @@ bool ship::setPath(deque<Greed::coords> ob, int state)  //for adding the supplie
 		{
 			//mutx->m[ship_id].lock();
 			//for the tile_path list
-			int temp = tile_path.size();
+			int temp = tile_path.howMany();
 			for (int i = 0; i < temp; i++)
 			{
-				tile_path.pop_front();
+				tile_path.del_front();
 			}
 
 			pointTilePath = 0;
@@ -2052,63 +2047,63 @@ bool ship::sail(Direction d, int tiles = 1)//number of tiles to be moved at a pa
 	if (d != Direction::NA && tiles >= 1)
 	{
 		//deleting the old coords path
-		deque<Greed::coords> tile_path;
-		tile_path.push_back(tile_pos_front);
+		List<Greed::coords> tile_path;
+		tile_path.add_rear(tile_pos_front);
 		if (d == Direction::NORTH)
 		{
 
 			for (int i = 1; i <= tiles; i++)
 			{
-				tile_path.push_back(Greed::coords(tile_pos_front.r - i, tile_pos_front.c));
+				tile_path.add_rear(Greed::coords(tile_pos_front.r - i, tile_pos_front.c));
 			}
 		}
 		else if (d == Direction::EAST)
 		{
 			for (int i = 1; i <= tiles; i++)
 			{
-				tile_path.push_back(Greed::coords(tile_pos_front.r, tile_pos_front.c + i));
+				tile_path.add_rear(Greed::coords(tile_pos_front.r, tile_pos_front.c + i));
 			}
 		}
 		else if (d == Direction::WEST)
 		{
 			for (int i = 1; i <= tiles; i++)
 			{
-				tile_path.push_back(Greed::coords(tile_pos_front.r, tile_pos_front.c - i));
+				tile_path.add_rear(Greed::coords(tile_pos_front.r, tile_pos_front.c - i));
 			}
 		}
 		else if (d == Direction::SOUTH)
 		{
 			for (int i = 1; i <= tiles; i++)
 			{
-				tile_path.push_back(Greed::coords(tile_pos_front.r + i, tile_pos_front.c));
+				tile_path.add_rear(Greed::coords(tile_pos_front.r + i, tile_pos_front.c));
 			}
 		}
 		else if (d == Direction::NORTH_EAST)
 		{
 			for (int i = 1; i <= tiles; i++)
 			{
-				tile_path.push_back(Greed::coords(tile_pos_front.r - i, tile_pos_front.c + i));
+				tile_path.add_rear(Greed::coords(tile_pos_front.r - i, tile_pos_front.c + i));
 			}
 		}
 		else if (d == Direction::NORTH_WEST)
 		{
 			for (int i = 1; i <= tiles; i++)
 			{
-				tile_path.push_back(Greed::coords(tile_pos_front.r - i, tile_pos_front.c - i));
+				tile_path.add_rear(Greed::coords(tile_pos_front.r - i, tile_pos_front.c - i));
 			}
 		}
 		else if (d == Direction::SOUTH_EAST)
 		{
 			for (int i = 1; i <= tiles; i++)
 			{
-				tile_path.push_back(Greed::coords(tile_pos_front.r + i, tile_pos_front.c + i));
+				tile_path.add_rear(Greed::coords(tile_pos_front.r + i, tile_pos_front.c + i));
 			}
 		}
 		else if (d == Direction::SOUTH_WEST)
 		{
 			for (int i = 1; i <= tiles; i++)
 			{
-				tile_path.push_back(Greed::coords(tile_pos_front.r + i, tile_pos_front.c - i));
+				tile_path.add_rear(Greed::coords(tile_pos_front.r + i, tile_pos_front.c - i));
 			}
 		}
 		//sending the list to the setPath funtion
@@ -2147,7 +2142,7 @@ Greed::path_attribute ship::setTarget(Greed::coords ob)
 
 	//mutx->m_global_map.unlock();
 	mutx->m[ship_id].unlock();
-	ob1.target.push_front(tile_pos_front);// starting from the current position
+	ob1.target.add_front(tile_pos_front);// starting from the current position
 
 	return ob1;
 
@@ -3146,10 +3141,10 @@ void ship::setPath_collision()
 	{
 		path.del_front();
 	}
-	int temp2 = tile_path.size();
+	int temp2 = tile_path.howMany();
 	for (int i = 0; i < temp2; i++)
 	{
-		tile_path.pop_front();
+		tile_path.del_front();
 	}
 	pointPath = 0;
 	pointTilePath = 0;
@@ -3256,7 +3251,7 @@ bool ship::anchorShip()
 
 	autopilot = 0;
 	mutx->mchase[ship_id].unlock();
-	deque<Greed::coords> ob;
+	List<Greed::coords> ob;
 	setPath(ob, 0);
 
 
