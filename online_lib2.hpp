@@ -251,7 +251,7 @@ protected:
 
 public:
 	void deleteDuplicate(List<abs_pos>& ob);
-	List<abs_pos> makeList(List<coords> ob);
+	List<abs_pos> makeList(deque<coords> &ob);
 	List<abs_pos> makeTrajectory(double x1, double y1, double x2, double y2);
 
 	class vertex//object for the map //or known  as the node in a graph
@@ -306,7 +306,7 @@ public:
 		List<Greed::abs_pos> way;
 	public:
 		double resources;
-		List<Greed::coords> target;
+		deque<Greed::coords> target;
 
 		path_attribute()//default ctor for initial NULL values
 		{
@@ -317,26 +317,26 @@ public:
 		{
 			return resources;
 		}
-		List<Greed::coords> getPath()//errorsome stuff
+		deque<Greed::coords> getPath()//errorsome stuff
 		{
-			List<Greed::coords> cop;
-			for (int i = 0; i < target.howMany(); i++)
+			deque<Greed::coords> cop;
+			for (int i = 0; i < target.size(); i++)
 			{
-				cop.add_rear(target[i]);
+				cop.push_front(target[i]);
 			}
 			return target;
 		}
 		void operator=(path_attribute ob)
 		{
 			resources = ob.resources;
-			int temp = target.howMany();
+			int temp = target.size();
 			for (int i = 0; i < temp; i++)
 			{
-				target.del_front();
+				target.pop_front();
 			}
-			for (int i = 0; i < ob.target.howMany(); i++)
+			for (int i = 0; i < ob.target.size(); i++)
 			{
-				target.add_rear(ob.target[i]);
+				target.push_back(ob.target[i]);
 			}
 		}
 
@@ -1360,7 +1360,7 @@ private:
 	int shield;//if this is on, then no bullet can damage the ship...this is given for a limited time
 	//data structure responsible for movement
 
-	List<Greed::coords> tile_path;// path of the user tile by tile //path returned by A*
+	deque<Greed::coords> tile_path;// path of the user tile by tile //path returned by A*
 
 	Greed::coords tile_pos_front;
 	Greed::coords tile_pos_rear;
@@ -1746,7 +1746,7 @@ public:
 	//functions for updating some values of the game
 
 	//starting of the API
-	bool setPath(List<Greed::coords> ob, int state = 1); //set the path of coords
+	bool setPath(deque<Greed::coords> ob, int state = 1); //set the path of coords
 
 
 
@@ -1790,10 +1790,10 @@ public:
 
 
 
-	int getIndex(List<Greed::coords> ob, Greed::coords val)
+	int getIndex(deque<Greed::coords> &ob, Greed::coords val)
 	{
 		int index = -1;
-		for (int i = 0; i < ob.howMany(); i++)
+		for (int i = 0; i < ob.size(); i++)
 		{
 			if (val.c == ob[i].c && val.r == ob[i].r)
 			{
@@ -1837,14 +1837,20 @@ public:
 	void Greed_sail(Direction d, int tiles = 1)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		navigation nav(1, Greed::coords(-1, -1), -1, tiles, d);
-		nav_data.push_back(nav);
+		if (d != Direction::NA && tiles >= 1)
+		{
+			navigation nav(1, Greed::coords(-1, -1), -1, tiles, d);
+			nav_data.push_back(nav);
+		}
 	}
 	void Greed_setPath(int s_id)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		navigation nav(0, Greed::coords(-1, -1), s_id, -1, Direction::NA);
-		nav_data.push_back(nav);
+		if (s_id >= 0 && s_id < this->shipInfoList.size())
+		{
+			navigation nav(0, Greed::coords(-1, -1), s_id, -1, Direction::NA);
+			nav_data.push_back(nav);
+		}
 	}
 	void Greed_setPath(Greed::coords ob)
 	{
@@ -1855,8 +1861,11 @@ public:
 	void Greed_chaseShip(int s_id)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
-		nav_data.push_back(nav);
+		if (s_id >= 0 && s_id < shipInfoList.size())
+		{
+			navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
+			nav_data.push_back(nav);
+		}
 	}
 	void Greed_anchorShip()
 	{
@@ -2032,6 +2041,7 @@ class control1
 		for (int i = 0; i < pl1[ship_id]->nav_data.size() && i<10; i++)
 		{
 			ob.nav_data[i] = pl1[ship_id]->nav_data[i];
+				
 		}
 
 		pl1[ship_id]->nav_data.clear();
@@ -2039,6 +2049,12 @@ class control1
 		ob.size_bulletData = pl1[ship_id]->bullet_info.size();
 		for (int i = 0; i < ob.size_bulletData && i<100; i++)
 		{
+			
+			if (pl1[ship_id]->bullet_info[i].type == 0 && pl1[ship_id]->bullet_info[i].s_id == ship_id || pl1[ship_id]->bullet_info[i].s_id < 0 || pl1[ship_id]->bullet_info[i].s_id >= pl1.size())
+			{
+				continue;
+			}
+			
 			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
 		}
 		pl1[ship_id]->bullet_info.clear();
@@ -2057,6 +2073,7 @@ class control1
 		pl1[ship_id]->threshold_ammo = ob.threshold_ammo;
 		pl1[ship_id]->threshold_fuel = ob.threshold_fuel;
 		pl1[ship_id]->radius = ob.radius;
+
 		pl1[ship_id]->bullet_info.clear();
 		
 		for (int i = 0; i < ob.size_bulletData; i++)
