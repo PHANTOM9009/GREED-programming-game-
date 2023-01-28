@@ -1249,6 +1249,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			{
 				auto it = socket_id.find(i);
 				int sid = it->second;
+				if (pl1[sid]->getDiedStatus() == 1)
+				{
+					continue;
+				}
 				shipData_forMe sdfm;
 				control.me_to_packet(sdfm, sid, pl1);
 				data1.shipdata_forMe = sdfm;
@@ -1493,6 +1497,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 				auto it = socket_id.find(i);
 				int sid = it->second;
+				if (pl1[sid]->getDiedStatus() == 1)
+				{
+					continue;
+				}
 				int bytes = recv(i, (char*)&data2, sizeof(data2), 0);
 				while (bytes < sizeof(data2))
 				{
