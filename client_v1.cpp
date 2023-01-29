@@ -884,9 +884,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 						//adding the event of colliding of ships
 						Event e12;
-						/*
+						
 						if (pl1[ship_id]->collided_ships.size() > 0)//if the event of collision has happend
 						{
+							cout << "\n adding to the event";
 							e12.initialize(total_time, Event::EventType::ShipCollision, pl1[ship_id]->ship_id);
 							e12.setEventId();
 							e12.shipCollision = Event::ShipCollision(pl1[ship_id]->collided_ships);
@@ -894,7 +895,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							pl1[ship_id]->collided_ships.clear();
 
 						}
-						*/
+						
 
 
 

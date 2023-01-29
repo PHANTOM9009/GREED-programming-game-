@@ -48,7 +48,7 @@ namespace user1
 				if (e.eventType == Event::EventType::ShipCollision)
 				{
 					//write collision code here
-
+					cout << "\n collision occured=>";
 
 				}
 				if (e.eventType == Event::EventType::LowHealth)

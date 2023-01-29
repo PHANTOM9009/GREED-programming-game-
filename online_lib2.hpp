@@ -1217,6 +1217,8 @@ class shipData_forMe
 	Direction dir;
 	int motion;
 
+	int size_collided_ships;
+	int collided_ships[10];
 	friend class graphics;
 	friend class control1;
 };
@@ -1294,6 +1296,8 @@ private:
 	int ship_id;//id of the ship
 	deque<timeline> time_line;
 	
+	vector<int> collided_ships;
+
 	void update_pos_collision();//function to update tile_pos and abs_pos of the ship after the collision occured
 	//for maintaining the frame rate of the user function
 	std::chrono::high_resolution_clock::time_point current_time;
@@ -1977,10 +1981,11 @@ class control1
 		pl1[id]->motion = ob.motion;
 		pl1[id]->absolutePosition = ob.absolute_position;
 
-		
-		
-
-		
+		pl1[id]->collided_ships.clear();
+		for (int i = 0; i < ob.size_collided_ships; i++)
+		{
+			pl1[id]->collided_ships.push_back(ob.collided_ships[i]);
+		}
 
 
 	}
@@ -2011,6 +2016,19 @@ class control1
 		ob.motion = pl1[id]->motion;
 		ob.absolute_position = pl1[id]->absolutePosition;
 
+		if (pl1[id]->collided_ships.size() <= 10)
+		{
+			ob.size_collided_ships = pl1[id]-> collided_ships.size();
+		}
+		else
+		{
+			ob.size_collided_ships = 10;
+		}
+		for (int i = 0; i < ob.size_collided_ships; i++)
+		{
+			ob.collided_ships[i] = pl1[id]->collided_ships[i];
+		}
+		pl1[id]->collided_ships.clear();
 		
 	}
 	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx)

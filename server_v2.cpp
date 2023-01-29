@@ -566,9 +566,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 							if (pl1[i]->collide(j, pl1[i]->tile_pos_front))
 							{
 								//adding in queue of 
+								pl1[i]->collided_ships.push_back(j);
 								//mutx->m[i].unlock();
 								pl1[i]->anchorShip_collision();
 								//mutx->m[i].lock();
+								
 								//pl1[j]->anchorShip_collision();
 								//cout << "\n location of ship2==>" << pl1[1]->absolutePosition.x+length << " " << pl1[1]->absolutePosition.y+length;
 							}
