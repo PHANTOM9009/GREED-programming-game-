@@ -1,3 +1,1 @@
-if client doesn't send data to the server retain its previous position
-
-make a thread do the work of assigning the paths to the ships
+set a lock for upgrading ammo,fuel and heal

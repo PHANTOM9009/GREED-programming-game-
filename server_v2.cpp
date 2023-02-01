@@ -163,6 +163,7 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 		}
 	}
 }
+
 void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id)//taking the ship object so as to access the list of the player
 {
 	deque<int> dying_ships;
@@ -505,6 +506,24 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 				{
 					continue;
 				}
+				//upgrading the fuel, health, or anything else
+				for (int j = 0; j < pl1[i]->udata.size(); j++)
+				{
+					if (pl1[i]->udata[j].type == 0)
+					{
+						pl1[i]->upgradeAmmo(pl1[i]->udata[j].n);
+					}
+					else if (pl1[i]->udata[j].type == 1)
+					{
+						pl1[i]->upgradeHealth(pl1[i]->udata[j].n);
+					}
+					else if (pl1[i]->udata[j].type == 2)
+					{
+						pl1[i]->upgradeFuel(pl1[i]->udata[j].n);
+					}
+				}
+				pl1[i]->udata.clear();
+
 				for (int j = 0; j < pl1[i]->bullet_info.size(); j++)
 				{
 
@@ -1174,7 +1193,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					gui_renderer.stats_view->changeSubItem(13, 2, str);
 				}
 				//done updating the stats about the ship
-				/*
+				
 				if (mutx->timeMutex[gui_renderer.s_id].try_lock())
 				{
 
@@ -1231,7 +1250,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					}
 					mutx->timeMutex[i].unlock();
 				}
-				*/
+				
 
 			}
 			gui_renderer.m.unlock();

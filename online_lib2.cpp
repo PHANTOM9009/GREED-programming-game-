@@ -1033,6 +1033,9 @@ bool ship::frame_rate_limiter()
 
 ship::ship()//default ctor for now
 {
+	lock_ammo = 0;
+	lock_fuel = 0;
+	lock_health = 0;
 	frame_rate_limit = 200;
 	elapsed_time = 0;
 	current_frame_no = -1;
@@ -1060,6 +1063,7 @@ ship::ship()//default ctor for now
 	killer_ship_id = -1;
 	killer_cannon_id = -1;
 	threshold_health = 10;
+	threshold_ammo = 10;
 	score = 0;
 	minutes = INT_MAX;
 	seconds = INT_MAX;
@@ -3076,7 +3080,7 @@ bool ship::upgradeHealth(int n)// 1 health in 5 money
 {
 	if (died == 0)
 	{
-		unique_lock<std::mutex> lk(mutx->m[ship_id]);
+		//unique_lock<std::mutex> lk(mutx->m[ship_id]);
 
 
 		if (n * 5 <= gold)
@@ -3093,6 +3097,7 @@ bool ship::upgradeHealth(int n)// 1 health in 5 money
 			gold -= 5 * n;
 			t.h.n = health;
 			this->time_line.push_back(t);
+			unlock.push_back(1);
 			return true;
 		}
 	}
@@ -3103,7 +3108,7 @@ bool ship::upgradeFuel(int n)// 1 fuel in 5 money
 {
 	if (died == 0)
 	{
-		unique_lock<std::mutex> lk(mutx->m[mutex_id]);
+		//unique_lock<std::mutex> lk(mutx->m[mutex_id]);
 		if (n * 5 <= gold)
 		{
 			unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
@@ -3116,6 +3121,7 @@ bool ship::upgradeFuel(int n)// 1 fuel in 5 money
 			gold -= 5 * n;
 			t.f.n = fuel;
 			time_line.push_back(t);
+			unlock.push_back(2);
 			return true;
 		}
 	}
@@ -3126,7 +3132,7 @@ bool ship::upgradeAmmo(int n)//1 ammo in 1 money
 {
 	if (died == 0)
 	{
-		unique_lock<std::mutex> lk(mutx->m[mutex_id]);
+		//unique_lock<std::mutex> lk(mutx->m[mutex_id]);
 		if (n <= gold)
 		{
 			unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
@@ -3139,6 +3145,7 @@ bool ship::upgradeAmmo(int n)//1 ammo in 1 money
 			gold -= n;
 			t.a.n = ammo;
 			time_line.push_back(t);
+			unlock.push_back(0);
 			return true;
 		}
 	}

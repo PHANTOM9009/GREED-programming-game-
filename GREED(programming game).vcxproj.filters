@@ -114,9 +114,6 @@
     <ClCompile Include="server_v2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="client_v2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">

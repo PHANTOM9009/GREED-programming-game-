@@ -1,4 +1,4 @@
-
+#include "online_lib2.hpp"
 namespace user1
 {
 
@@ -48,12 +48,27 @@ namespace user1
 				if (e.eventType == Event::EventType::ShipCollision)
 				{
 					//write collision code here
-					cout << "\n collision occured=>";
+					
 
 				}
 				if (e.eventType == Event::EventType::LowHealth)
 				{
-					ob.upgradeHealth(20);
+					ob.Greed_upgradeHealth(20);
+
+					std::time_t result = std::time(nullptr);
+					cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec;
+				}
+				if (e.eventType == Event::EventType::ShipFire)
+				{
+					
+					for (auto it : e.shipFire.getShipId())
+					{
+						ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::REAR);
+					}
+				}
+				if (e.eventType == Event::EventType::LowAmmo)
+				{
+					//ob.Greed_upgradeAmmo(20);
 				}
 				deque<Event> q = ob.getPassiveEvent();
 
@@ -67,7 +82,7 @@ namespace user1
 							
 							if (q[i].radiusShip.getShipId()[j] == -1)
 							{
-								cout << "\n ShipInMyRadius is wrong";
+								continue;
 							}
 							ob.Greed_fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[j], ShipSide::FRONT);
 						}
@@ -79,11 +94,13 @@ namespace user1
 
 				}
 
-
-				if (ob.getCurrentAmmo() < 5)
+				
+				if (ob.getCurrentAmmo() < 10)
 				{
-					ob.upgradeAmmo(10);
+					
+					ob.Greed_upgradeAmmo(10);
 				}
+				
 
 
 			}
