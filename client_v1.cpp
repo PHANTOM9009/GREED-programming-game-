@@ -205,6 +205,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				if (bytes_recv < 1)//connection is broken
 				{
 					//try to reconnect to the server
+					cout << "\n average bullets are==>" << avg_bullet / no_of_times;
 					cout << "\n connection disconnected to the server..retrying to connect";
 					peer_socket = connect_to_server();
 					cout << "\n connection is back.";
@@ -887,7 +888,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						
 						if (pl1[ship_id]->collided_ships.size() > 0)//if the event of collision has happend
 						{
-							cout << "\n adding to the event";
+							//cout << "\n adding to the event";
 							e12.initialize(total_time, Event::EventType::ShipCollision, pl1[ship_id]->ship_id);
 							e12.setEventId();
 							e12.shipCollision = Event::ShipCollision(pl1[ship_id]->collided_ships);
@@ -1025,6 +1026,7 @@ int main()
 	
 	graphics cg;
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, sock,player[start_data.ship_id]);
+	
 
 }
 

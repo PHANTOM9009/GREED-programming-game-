@@ -1360,11 +1360,16 @@ private:
 	int lock_ammo;
 	int lock_fuel;
 	int lock_health;
+	int lock_chase_ship;
 
 public: //this will be public the user will be able to access this object freely
 	//object 
 	bool isFiring;
-
+	int isShipInMotion()
+	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		return motion;
+	}
 	List<Greed::abs_pos> path;
 	bool frame_rate_limiter();//function to maintain the frame rate of the user function
 	double threshold_health;
@@ -1912,9 +1917,12 @@ public:
 	}
 	void Greed_chaseShip(int s_id)
 	{
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-		navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
-		nav_data.push_back(nav);
+		
+			unique_lock<mutex> lk(mutx->m[ship_id]);
+			navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
+			nav_data.push_back(nav);
+			lock_chase_ship = 1;
+		
 	}
 	void Greed_anchorShip()
 	{
@@ -1979,6 +1987,8 @@ public:
 	friend class control1;
 	
 };
+double avg_bullet = 0;
+int no_of_times = 0;
 class control1
 {
 	void bullet_to_data(Greed::bullet& ob, bullet_data_client& ob1)
@@ -2095,7 +2105,7 @@ class control1
 		pl1[id]->dir = ob.dir;
 		pl1[id]->motion = ob.motion;
 		pl1[id]->absolutePosition = ob.absolute_position;
-
+	
 		pl1[id]->collided_ships.clear();
 		for (int i = 0; i < ob.size_collided_ships; i++)
 		{
@@ -2210,15 +2220,39 @@ class control1
 		ob.radius = pl1[ship_id]->radius;
 			
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		ob.size_navigation = pl1[ship_id]->nav_data.size();
+
+		if (pl1[ship_id]->nav_data.size() <= 10)
+		{
+			ob.size_navigation = pl1[ship_id]->nav_data.size();
+		}
+		else 
+		{
+			ob.size_navigation = 10;
+		}
+		
 		for (int i = 0; i < pl1[ship_id]->nav_data.size() && i<10; i++)
 		{
 			ob.nav_data[i] = pl1[ship_id]->nav_data[i];
+			//cout << "\n type is=>" << pl1[ship_id]->nav_data[i].type;
+			
 		}
 
 		pl1[ship_id]->nav_data.clear();
 		
-		ob.size_bulletData = pl1[ship_id]->bullet_info.size();
+		//ob.size_bulletData = pl1[ship_id]->bullet_info.size();
+		if (pl1[ship_id]->bullet_info.size() <= 100)
+		{
+			ob.size_bulletData = pl1[ship_id]->bullet_info.size();
+		}
+		else
+		{
+			ob.size_bulletData = 100;
+		}
+		if (ob.size_bulletData > 0)
+		{
+			avg_bullet += ob.size_bulletData;
+			no_of_times++;
+		}
 		for (int i = 0; i < ob.size_bulletData && i<100; i++)
 		{
 			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
@@ -2244,12 +2278,17 @@ class control1
 		pl1[ship_id]->udata.clear();
 
 	}
+
 	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
 	{
 	
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
 			pl1[ship_id]->nav_data.push_back(ob.nav_data[i]);
+			if (pl1[ship_id]->nav_data[i].type == 0)
+			{
+				cout << "\n 0 is received by =>" << ship_id;
+			}
 		}
 	
 		pl1[ship_id]->ship_id = ob.ship_id;
@@ -2258,10 +2297,17 @@ class control1
 		pl1[ship_id]->threshold_fuel = ob.threshold_fuel;
 		pl1[ship_id]->radius = ob.radius;
 		pl1[ship_id]->bullet_info.clear();
-		
+
+		if (ob.size_bulletData > 0 && ship_id==0) 
+		{
+			avg_bullet += ob.size_bulletData;
+			no_of_times++;
+		}
+			
 		for (int i = 0; i < ob.size_bulletData; i++)
 		{
 			pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
+			//cout << "\n firing";
 		}
 		int found = 0;
 		for (int i = 0; i < ob.size_upgrade_data; i++)

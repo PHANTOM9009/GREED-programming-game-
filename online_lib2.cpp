@@ -1036,7 +1036,9 @@ ship::ship()//default ctor for now
 	lock_ammo = 0;
 	lock_fuel = 0;
 	lock_health = 0;
-	frame_rate_limit = 200;
+	lock_chase_ship = 0;
+
+	frame_rate_limit = 60;
 	elapsed_time = 0;
 	current_frame_no = -1;
 	current_time = chrono::high_resolution_clock::time_point();
@@ -2455,13 +2457,14 @@ bool ship::isShipInMyRadius(int s_id, ShipSide oppSide)//to check if s_id is in 
 }
 bool ship::chaseShip(int s_id)
 {
-
+	//cout << "\n i came in=>" << this->ship_id;
 	if (autopilot == 0)
 	{
-
+	
+		//cout << "\n i ran=>"<<this->ship_id;
 		thread t(chaseShip1, s_id, ref(*this));
 		t.detach();
-
+		lock_chase_ship = 0;
 
 	}
 	//Sleep(300);

@@ -45,52 +45,74 @@ sf::RenderWindow window(sf::VideoMode(::cx(1970), ::cy(1190)), "GREED");
 */
 void control1::nav_data_processor(deque<ship*>& pl1, Mutex *mutx)
 {
-	unique_lock<mutex> lk(mutx->updating_data);
-	for (int i = 0; i < pl1.size(); i++)
+	int cur_frame = -1;
+	int next_frame = -1;
+	double elapsed_time = 0;
+	sf::Clock clock;
+	while (1)
 	{
-		if (pl1[i]->died == 1)
+		sf::Time time = clock.restart();
+		elapsed_time += time.asSeconds();
+		next_frame = elapsed_time * 30;
+		if (elapsed_time > 1)
 		{
-			continue;
+			elapsed_time = 0;
 		}
-		
-		if (pl1[i]->nav_data.size() > 0)
+		if (next_frame != cur_frame)
 		{
-			if (pl1[i]->nav_data[0].type == 0)//for target type
+			cur_frame = next_frame;
+
+			unique_lock<mutex> lk(mutx->updating_data);
+			for (int i = 0; i < pl1.size(); i++)
 			{
-				if (pl1[i]->nav_data[0].target.r != -1 && pl1[i]->nav_data[0].target.c!=-1)
+				if (pl1[i]->died == 1)
 				{
-					Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].target);
-					pl1[i]->setPath(path.getPath());
+					continue;
 				}
-				else if (pl1[i]->nav_data[0].s_id != -1)
+
+				if (pl1[i]->nav_data.size() > 0)
 				{
-					Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].s_id);
-					pl1[i]->setPath(path.getPath());
+					if (pl1[i]->nav_data[0].type == 0)//for target type
+					{
+						if (pl1[i]->nav_data[0].target.r != -1 && pl1[i]->nav_data[0].target.c != -1)
+						{
+							Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].target);
+							pl1[i]->setPath(path.getPath());
+							//	cout << "\n in type 0 in target=>" << pl1[i]->nav_data[0].target.r << " " << pl1[i]->nav_data[0].target.c;
+						}
+						else if (pl1[i]->nav_data[0].s_id != -1)
+						{
+							Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].s_id);
+							pl1[i]->setPath(path.getPath());
+							cout << "\n in type 0 for ship_id=>" << pl1[i]->nav_data[0].s_id;
+						}
+
+					}
+					else if (pl1[i]->nav_data[0].type == 1 && pl1[i]->nav_data[0].n > 0 && pl1[i]->nav_data[0].dir != Direction::NA)
+					{
+						pl1[i]->sail(pl1[i]->nav_data[0].dir, pl1[i]->nav_data[0].n);
+						cout << "\n in sail";
+					}
+					else if (pl1[i]->nav_data[0].type == 2 && pl1[i]->nav_data[0].s_id >= 0)
+					{
+						if (pl1[pl1[i]->nav_data[0].s_id]->died == 0)
+						{
+							//cout << "\n in chaseShip";
+							pl1[i]->chaseShip(pl1[i]->nav_data[0].s_id);
+							//cout << "\n " << i << " ship is chasing=>" << pl1[i]->nav_data[0].s_id;
+						}
+					}
+					else if (pl1[i]->nav_data[0].type == 3)
+					{
+						pl1[i]->anchorShip();
+					}
+					pl1[i]->nav_data.pop_front();
+
 				}
+
 			}
-			else if (pl1[i]->nav_data[0].type == 1 && pl1[i]->nav_data[0].n>0 && pl1[i]->nav_data[0].dir!=Direction::NA)
-			{
-				pl1[i]->sail(pl1[i]->nav_data[0].dir, pl1[i]->nav_data[0].n);
-			}
-			else if (pl1[i]->nav_data[0].type == 2 && pl1[i]->nav_data[0].s_id >= 0)
-			{
-				if (pl1[pl1[i]->nav_data[0].s_id]->died == 0)
-				{
-					pl1[i]->chaseShip(pl1[i]->nav_data[0].s_id);
-					cout << "\n " << i << " ship is chasing=>" << pl1[i]->nav_data[0].s_id;
-				}
-			}
-			else if (pl1[i]->nav_data[0].type == 3)
-			{
-				pl1[i]->anchorShip();
-			}
-			pl1[i]->nav_data.pop_front();
-			
 		}
 	}
-	
-
-
 }
 void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
 {
@@ -163,6 +185,7 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 		}
 	}
 }
+
 
 void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id)//taking the ship object so as to access the list of the player
 {
@@ -388,8 +411,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			max_socket = sockets[i];
 		}
 	}
+	thread t(&control1::nav_data_processor, &con, ref(pl1), mutx);
+	t.detach();
 
 	window.setFramerateLimit(60);
+
+
 	while (window.isOpen())
 	{
 		read = master;
@@ -498,7 +525,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			//thread t(&control1::nav_data_processor, &con, ref(pl1), mutx);
 			//t.detach();
 
-			con.nav_data_processor(pl1, mutx);
+			//con.nav_data_processor(pl1, mutx);
 
 			for (int i = 0; i < pl1.size(); i++)
 			{
@@ -533,7 +560,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 						if (pl1[i]->bullet_info[j].s_id >= 0 && pl1[i]->bullet_info[j].s_id < pl1.size() && pl1[i]->bullet_info[j].s_id != i && (int)pl1[i]->bullet_info[j].can >=0 && (int)pl1[i]->bullet_info[j].can <=1 && (int)pl1[i]->bullet_info[j].s >=0 && (int)pl1[i]->bullet_info[j].s<=2)
 						{
 							pl1[i]->fireCannon(pl1[i]->bullet_info[j].can, pl1[i]->bullet_info[j].s_id, pl1[i]->bullet_info[j].s);
-							//cout << "\n" << i << " is firing !";
+							
 						}
 					}
 					else if (pl1[i]->bullet_info[j].type == 1)
@@ -542,7 +569,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 						if (pl1[i]->bullet_info[j].c_id >= 0 && pl1[i]->bullet_info[j].c_id < cannon_list.howMany() && (int)pl1[i]->bullet_info[j].c_id >=0 && (int)pl1[i]->bullet_info[j].c_id<=1)
 						{
 							pl1[i]->fireAtCannon(pl1[i]->bullet_info[j].c_id, pl1[i]->bullet_info[j].can);
-							//cout << "\n" << i << " is firing !";
+							
 						}
 					}
 				}
@@ -575,8 +602,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					}
 
 
-				if (mutx->updating_data.try_lock())
-				{
+				
+				
 					for (int j = 0; j < pl1.size(); j++)
 					{
 						if (i != j && pl1[j]->died == 0)
@@ -679,7 +706,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 						mutx->m[i].unlock();
 					}
 					mutx->updating_data.unlock();
-				}
+				
 				
 				if (pl1[i]->ammo > 0 && pl1[i]->cannon_ob.activeBullets.size() > 0 && frames % 30 == 0)
 				{
@@ -1544,7 +1571,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 	}
 
-
+	
 }
 int main()
 {
@@ -1553,7 +1580,7 @@ int main()
 
 
 	unordered_map<int, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,7);
+	connector(sockets, socket_id,6);
 	//connector is called
 	const int no_of_players = socket_id.size();
 	cout << "\n number of players==>" << no_of_players;
@@ -1700,7 +1727,7 @@ int main()
 	graphics cg;
 	cg.callable(&mutx, code, map1, sockets, socket_id);
 
-
+	cout << "\n avg bulle count per frame is=>" << avg_bullet / no_of_times;
 
 
 
