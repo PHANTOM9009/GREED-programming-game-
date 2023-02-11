@@ -1322,7 +1322,8 @@ public:
 	friend class graphics;
 };
 
-
+double avg_chase_ship = 0;
+int no_of_chase = 0;
 bool get(ship* a, ship* b);
 class pack_ship;
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
@@ -1346,6 +1347,8 @@ private:
 	vector<int> collided_ships;
 
 	deque<upgrade_data> udata;
+	
+
 	vector<int> unlock;
 	void update_pos_collision();//function to update tile_pos and abs_pos of the ship after the collision occured
 	//for maintaining the frame rate of the user function
@@ -1397,6 +1400,7 @@ private:
 	string name;
 	int current_event_point;//pointer to current_event
 	deque<navigation> nav_data;
+	deque<navigation> nav_data_final;//data that will be sent
 	List<Greed::bullet> bullet_hit;//the list of the bullets that had ever hit the ship
 	deque<Greed::bullet> bullet_hit_tempo;//made solely for the purpose of events, here the objects will be deleted as they are inserted into the events
 	deque<bullet_data> bullet_info;//
@@ -2082,11 +2086,13 @@ class control1
 		//transfer each data member from ob to pl1
 		pl1[id]->seconds = ob.seconds;
 		pl1[id]->minutes = ob.minutes;
+		/*
 		pl1[id]->killer_ship_id = ob.killer_ship_id;
 		for (int i = 0; i < ob.killed_ships_size; i++)
 		{
 			pl1[id]->killed_ships.push_back(ob.killed_ships[i]);
 		}
+		*/
 		pl1[id]->score = ob.score;
 	
 	
@@ -2145,10 +2151,20 @@ class control1
 		ob.seconds = pl1[id]->seconds;
 		ob.minutes = pl1[id]->minutes;
 		ob.killer_ship_id = pl1[id]->killer_ship_id;
-		for (int i = 0; i < pl1[id]->killed_ships.size(); i++)
+		if (pl1[id]->killed_ships.size() <= 20)
+		{
+			ob.killed_ships_size = pl1[id]->killed_ships.size();
+		}
+		else
+		{
+			ob.killed_ships_size = 20;
+		}
+		for (int i = 0; i < ob.killed_ships_size; i++)
 		{
 			ob.killed_ships[i] = pl1[id]->killed_ships[i];
 		}
+		pl1[id]->killed_ships.clear();
+
 		ob.score = pl1[id]->score;
 
 	    ob.radius = pl1[id]->radius;
@@ -2180,9 +2196,15 @@ class control1
 			ob.collided_ships[i] = pl1[id]->collided_ships[i];
 		}
 		pl1[id]->collided_ships.clear();
-		
-		ob.size_hit_bullet = pl1[id]->bullet_hit_tempo.size();
-		for (int i = 0; i < pl1[id]->bullet_hit_tempo.size(); i++)
+		if (pl1[id]->bullet_hit_tempo.size() <= 100)
+		{
+			ob.size_hit_bullet = pl1[id]->bullet_hit_tempo.size();
+		}
+		else
+		{
+			ob.size_hit_bullet = 100;
+		}
+		for (int i = 0; i < ob.size_hit_bullet; i++)
 		{
 			bullet_data_client b;
 			bullet_to_data(pl1[id]-> bullet_hit_tempo[i], b);
@@ -2221,23 +2243,23 @@ class control1
 			
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 
-		if (pl1[ship_id]->nav_data.size() <= 10)
+		if (pl1[ship_id]->nav_data_final.size() <= 10)
 		{
-			ob.size_navigation = pl1[ship_id]->nav_data.size();
+			ob.size_navigation = pl1[ship_id]->nav_data_final.size();
 		}
 		else 
 		{
 			ob.size_navigation = 10;
 		}
 		
-		for (int i = 0; i < pl1[ship_id]->nav_data.size() && i<10; i++)
+		for (int i = 0; i < ob.size_navigation && i<10; i++)
 		{
-			ob.nav_data[i] = pl1[ship_id]->nav_data[i];
+			ob.nav_data[i] = pl1[ship_id]->nav_data_final[i];
 			//cout << "\n type is=>" << pl1[ship_id]->nav_data[i].type;
 			
 		}
 
-		pl1[ship_id]->nav_data.clear();
+		pl1[ship_id]->nav_data_final.clear();
 		
 		//ob.size_bulletData = pl1[ship_id]->bullet_info.size();
 		if (pl1[ship_id]->bullet_info.size() <= 100)
@@ -2281,7 +2303,7 @@ class control1
 
 	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
 	{
-	
+		unique_lock<mutex> lk(mutx->updating_data);
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
 			pl1[ship_id]->nav_data.push_back(ob.nav_data[i]);

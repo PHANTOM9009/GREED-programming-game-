@@ -2465,6 +2465,9 @@ bool ship::chaseShip(int s_id)
 		thread t(chaseShip1, s_id, ref(*this));
 		t.detach();
 		lock_chase_ship = 0;
+		
+			avg_chase_ship++;
+		
 
 	}
 	//Sleep(300);

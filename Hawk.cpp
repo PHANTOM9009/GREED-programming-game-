@@ -39,6 +39,7 @@ namespace user1
 				//ob.chaseShip(2);
 				deque<shipInfo> shipList = ob.getShipList();
 				Event e;
+				
 				ob.getNextCurrentEvent(e);
 				if (index >= 0 && shipList[index].getDiedStatus() == 1)
 				{
@@ -54,13 +55,14 @@ namespace user1
 					
 
 				}
-				*/
+				
 				if (ob.isShipInMotion()==0)
 				{
 				//	cout << "\n not in motion";
-					//index = find_ship_to_kill(shipList, ob.getShipId(), ob);
-					//ob.Greed_chaseShip(index);
+					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
+					ob.Greed_chaseShip(index);
 				}
+				*/
 				if (e.eventType == Event::EventType::LowHealth)
 				{
 					ob.Greed_upgradeHealth(20);
@@ -99,7 +101,11 @@ namespace user1
 					}
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
-						ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
+						vector<Greed::cannon> ls = ob.getCannonList();
+						if (ls[q[i].radiusCannon.getCannonId()[0]].isCannonDead() == 0)
+						{
+							ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
+						}
 					}
 
 				}

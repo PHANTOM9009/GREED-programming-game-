@@ -153,7 +153,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	
 	thread t(user1::GreedMain, ref(player));
 	t.detach();
-
+	int frame_no = 0;
 	while (1)
 	{
 		/*NOTES:
@@ -186,6 +186,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			total_time++;
 			frame_number++;
 			frames++;
+			frame_no++;//for nav data
 			//we will wait for 50 microseconds for the select to return
 			struct timeval timeout;
 			timeout.tv_sec = 0;
@@ -220,13 +221,26 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 			}
 			std::time_t result = std::time(nullptr);
-		//	cout << "\n----------------------------------------------------------";
+		    //cout << "\n----------------------------------------------------------";
 			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
 			
 			if (!gameOver)
 			{
-				//clearing the buffers
-			
+				//using nav_data
+				if (pl1[ship_id]->nav_data.size() > 0 && frame_no % 60 == 0)//once every two frame
+				{
+					if (ship_id == 2 || ship_id == 1)
+					{
+						cout << "\n going to chase=>" << pl1[ship_id]->nav_data[0].s_id;
+						if (pl1[pl1[ship_id]->nav_data[0].s_id]->died == 1)
+						{
+							cout << " but the ship is dead";
+						}
+					}
+					frame_no = 0;
+					pl1[ship_id]->nav_data_final.push_back(pl1[ship_id]->nav_data[0]);
+					pl1[ship_id]->nav_data.clear();
+				}
 				
 				//getPointPath has to be protected by a mutex
 					if (pl1[ship_id]->died == 1)
@@ -918,14 +932,20 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			
 			if (FD_ISSET(peer_socket, &writes))
 			{
-				control_ob.mydata_to_server(pl1, ship_id,shipdata,newBullets,mutx);
-				data2.packet_id = frame_number;
-				data2.shipdata_forServer = shipdata;
-				//sending the data
-				int bytes = send(peer_socket, (char*)&data2, sizeof(data2), 0);
-				while (bytes < sizeof(data2))
+				if (pl1[ship_id]->getDiedStatus() == 0)
 				{
-					bytes += send(peer_socket, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
+					control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
+					data2.packet_id = frame_number;
+					data2.shipdata_forServer = shipdata;
+					//sending the data
+
+
+
+					int bytes = send(peer_socket, (char*)&data2, sizeof(data2), 0);
+					while (bytes < sizeof(data2))
+					{
+						bytes += send(peer_socket, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
+					}
 				}
 				
 				

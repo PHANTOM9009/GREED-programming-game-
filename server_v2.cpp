@@ -62,54 +62,57 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex *mutx)
 		{
 			cur_frame = next_frame;
 
-			unique_lock<mutex> lk(mutx->updating_data);
-			for (int i = 0; i < pl1.size(); i++)
+			if (mutx->updating_data.try_lock())
 			{
-				if (pl1[i]->died == 1)
+				for (int i = 0; i < pl1.size(); i++)
 				{
-					continue;
+					if (pl1[i]->died == 1)
+					{
+						continue;
+					}
+
+					if (pl1[i]->nav_data.size() > 0)
+					{
+						if (pl1[i]->nav_data[0].type == 0)//for target type
+						{
+							if (pl1[i]->nav_data[0].target.r != -1 && pl1[i]->nav_data[0].target.c != -1)
+							{
+								Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].target);
+								pl1[i]->setPath(path.getPath());
+								//	cout << "\n in type 0 in target=>" << pl1[i]->nav_data[0].target.r << " " << pl1[i]->nav_data[0].target.c;
+							}
+							else if (pl1[i]->nav_data[0].s_id != -1)
+							{
+								Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].s_id);
+								pl1[i]->setPath(path.getPath());
+								cout << "\n in type 0 for ship_id=>" << pl1[i]->nav_data[0].s_id;
+							}
+
+						}
+						else if (pl1[i]->nav_data[0].type == 1 && pl1[i]->nav_data[0].n > 0 && pl1[i]->nav_data[0].dir != Direction::NA)
+						{
+							pl1[i]->sail(pl1[i]->nav_data[0].dir, pl1[i]->nav_data[0].n);
+							cout << "\n in sail";
+						}
+						else if (pl1[i]->nav_data[0].type == 2 && pl1[i]->nav_data[0].s_id >= 0)
+						{
+							if (pl1[pl1[i]->nav_data[0].s_id]->died == 0)
+							{
+								//cout << "\n in chaseShip";
+								pl1[i]->chaseShip(pl1[i]->nav_data[0].s_id);
+								//cout << "\n " << i << " ship is chasing=>" << pl1[i]->nav_data[0].s_id;
+							}
+						}
+						else if (pl1[i]->nav_data[0].type == 3)
+						{
+							pl1[i]->anchorShip();
+						}
+						pl1[i]->nav_data.pop_front();
+
+					}
+
 				}
-
-				if (pl1[i]->nav_data.size() > 0)
-				{
-					if (pl1[i]->nav_data[0].type == 0)//for target type
-					{
-						if (pl1[i]->nav_data[0].target.r != -1 && pl1[i]->nav_data[0].target.c != -1)
-						{
-							Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].target);
-							pl1[i]->setPath(path.getPath());
-							//	cout << "\n in type 0 in target=>" << pl1[i]->nav_data[0].target.r << " " << pl1[i]->nav_data[0].target.c;
-						}
-						else if (pl1[i]->nav_data[0].s_id != -1)
-						{
-							Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].s_id);
-							pl1[i]->setPath(path.getPath());
-							cout << "\n in type 0 for ship_id=>" << pl1[i]->nav_data[0].s_id;
-						}
-
-					}
-					else if (pl1[i]->nav_data[0].type == 1 && pl1[i]->nav_data[0].n > 0 && pl1[i]->nav_data[0].dir != Direction::NA)
-					{
-						pl1[i]->sail(pl1[i]->nav_data[0].dir, pl1[i]->nav_data[0].n);
-						cout << "\n in sail";
-					}
-					else if (pl1[i]->nav_data[0].type == 2 && pl1[i]->nav_data[0].s_id >= 0)
-					{
-						if (pl1[pl1[i]->nav_data[0].s_id]->died == 0)
-						{
-							//cout << "\n in chaseShip";
-							pl1[i]->chaseShip(pl1[i]->nav_data[0].s_id);
-							//cout << "\n " << i << " ship is chasing=>" << pl1[i]->nav_data[0].s_id;
-						}
-					}
-					else if (pl1[i]->nav_data[0].type == 3)
-					{
-						pl1[i]->anchorShip();
-					}
-					pl1[i]->nav_data.pop_front();
-
-				}
-
+				mutx->updating_data.unlock();
 			}
 		}
 	}
@@ -284,6 +287,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	*/
 	double t2 = 0;
 	int frames = 0;
+	no_of_chase++;
 	Greed::coords* prev = new Greed::coords[pl1.size()];
 	for (int i = 0; i < pl1.size(); i++)//setting the previous position
 	{
@@ -416,6 +420,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 	window.setFramerateLimit(60);
 
+	double avg_send = 0;
+	double avg_recv = 0;
+	double avg_processing = 0;
+	double avg_rendering = 0;
+	int total_frames = 0;
 
 	while (window.isOpen())
 	{
@@ -426,13 +435,16 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 		timeout.tv_usec = 0;
 		c++;
 		frames++;
+		total_frames++;
 		sf::Event event;
+
 		sf::Time deltime = clock.restart();
 		elapsed_time += deltime.asSeconds();
 		total_secs += deltime.asSeconds();
 		//total_time += deltime.asSeconds();
 		total_time++;
 		t2 += deltime.asSeconds();
+		no_of_chase++;
 		if (t2 >= 1)
 		{
 			cout << "\n frame rate is==>" << c;
@@ -526,7 +538,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			//t.detach();
 
 			//con.nav_data_processor(pl1, mutx);
-
+			sf::Clock processing;
+			processing.restart();
 			for (int i = 0; i < pl1.size(); i++)
 			{
 				if (pl1[i]->died == 1)
@@ -705,7 +718,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 						mutx->m[i].unlock();
 					}
-					mutx->updating_data.unlock();
+				
 				
 				
 				if (pl1[i]->ammo > 0 && pl1[i]->cannon_ob.activeBullets.size() > 0 && frames % 30 == 0)
@@ -883,6 +896,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 								pl1[i]->killed_ships.push_back(pl1[i]->cannon_ob.activeBullets[j].hit_ship);
 								pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->died = 1;
 								//gui_renderer.player_panels[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->getRenderer()->setBackgroundColor(sf::Color::Red);
+								//the ship is dead turn off the autopilot mode now
+								mutx->mchase[pl1[i]->cannon_ob.activeBullets[j].hit_ship].lock();
+								pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->autopilot = 0;
+								mutx->mchase[pl1[i]->cannon_ob.activeBullets[j].hit_ship].unlock();
+
 								mutx->timeMutex[i].lock();
 								timeline t;
 								t.eventype = timeline::EventType::DEFEATED_SHIP;
@@ -1047,6 +1065,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 							int id = cannon_list[j].bullet_list[k].hit_ship;
 							pl1[id]->died = 1;
 
+							mutx->mchase[id].lock();
+							pl1[id]->autopilot = 0;
+							mutx->mchase[id].unlock();
 
 							pl1[id]->minutes = total_secs / 60;
 							pl1[id]->seconds = (int)total_secs % 60;
@@ -1079,8 +1100,48 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 				}
 
 			}
+			sf::Time time= processing.getElapsedTime();
+			avg_processing += time.asSeconds();
 		}
 
+		sf::Clock sending;
+		sending.restart();
+			//sending the data over here
+		recv_data data1;
+		memset((void*)&data1, 0, sizeof(data1));
+		data1.packet_id = total_time;
+		data1.s1 = pl1.size();
+		shipData_exceptMe sdem[20];
+		control.pl_to_packet(data1.shipdata_exceptMe, pl1);
+
+		select(max_socket, 0, &write, 0, &timeout);
+		for (int i = 1; i <= max_socket; i++)
+		{
+			if (FD_ISSET(i, &write))
+			{
+				auto it = socket_id.find(i);
+				int sid = it->second;
+
+				shipData_forMe sdfm;
+				control.me_to_packet(sdfm, sid, pl1);
+				data1.shipdata_forMe = sdfm;
+				//sending the data
+				data1.packet_id = total_time;
+				int bytes = send(i, (char*)&data1, sizeof(data1), 0);
+				while (bytes < sizeof(data1))
+				{
+					bytes += send(i, (char*)&data1 + bytes, sizeof(data1) - bytes, 0);
+				}
+				//data is sent
+			}
+
+		}
+		sf::Time time2 = sending.getElapsedTime();
+		avg_send += time2.asSeconds();
+		//rendering starts from here
+
+		sf::Clock rendering;
+		rendering.restart();
 		for (int i = 0; i < pl1.size(); i++)
 		{
 			string s = to_string((int)pl1[i]->getCurrentHealth());
@@ -1283,38 +1344,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			gui_renderer.m.unlock();
 		}//for updat
 		//sending data here
-		recv_data data1;
-		memset((void*)&data1, 0, sizeof(data1));
-		data1.packet_id = total_time;
-		data1.s1 = pl1.size();
-		shipData_exceptMe sdem[20];
-		control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-
-		select(max_socket, 0, &write, 0, &timeout);
-		for (int i = 1; i <= max_socket; i++)
-		{
-			if (FD_ISSET(i, &write))
-			{
-				auto it = socket_id.find(i);
-				int sid = it->second;
-				if (pl1[sid]->getDiedStatus() == 1)
-				{
-					continue;
-				}
-				shipData_forMe sdfm;
-				control.me_to_packet(sdfm, sid, pl1);
-				data1.shipdata_forMe = sdfm;
-				//sending the data
-				data1.packet_id = total_time;
-				int bytes = send(i, (char*)&data1, sizeof(data1), 0);
-				while (bytes < sizeof(data1))
-				{
-					bytes += send(i, (char*)&data1 + bytes, sizeof(data1) - bytes, 0);
-				}
-				//data is sent
-			}
-
-		}
+		
 		window.clear();
 
 		window.draw(ob.tile, s);
@@ -1532,8 +1562,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 
 		window.display();
-		//recv the data here and update for the next frame
 
+		sf::Time time3 = rendering.getElapsedTime();
+		avg_rendering += time3.asSeconds();
+
+		//recv the data here and update for the next frame
+		sf::Clock recv_data;
+		recv_data.restart();
 
 		select(max_socket, &read, 0, 0, &timeout);
 		for (int i = 1; i <= max_socket; i++)
@@ -1554,9 +1589,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 				{
 					bytes += recv(i, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
 				}
-
 				//data is received now convert it to appropriate form
-
 				if (bytes > 0)
 				{
 					control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
@@ -1566,11 +1599,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 				//cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec << " server frame=>" << total_time << " " << "received frame=>" << data2.packet_id;
 			}
 		}
-
-
-
+		sf::Time time4 = recv_data.getElapsedTime();
+		avg_recv += time4.asSeconds();
 	}
-
+	cout << "\n avg_processing=>" << avg_processing / total_frames;
+	cout << "\n avg_sendinng=>" << avg_send / total_frames;
+	cout << "\n avg_rendering=>" << avg_rendering / total_frames;
+	cout << "\n avg_recv=>" << avg_recv / total_frames;
 	
 }
 int main()
@@ -1727,7 +1762,8 @@ int main()
 	graphics cg;
 	cg.callable(&mutx, code, map1, sockets, socket_id);
 
-	cout << "\n avg bulle count per frame is=>" << avg_bullet / no_of_times;
+	cout << "\n avg bulle count per frame is=>" << avg_bullet/no_of_times;
+	cout << "\n avg chase ship=>" << avg_chase_ship/6;
 
 
 
