@@ -1585,10 +1585,17 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					continue;
 				}
 				int bytes = recv(i, (char*)&data2, sizeof(data2), 0);
+				if (bytes < 1)
+				{
+					//close the socket
+					CLOSESOCKET(i);
+					FD_CLR(i, &master);
+				}
 				while (bytes < sizeof(data2))
 				{
 					bytes += recv(i, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
 				}
+
 				//data is received now convert it to appropriate form
 				if (bytes > 0)
 				{
@@ -1602,11 +1609,21 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 		sf::Time time4 = recv_data.getElapsedTime();
 		avg_recv += time4.asSeconds();
 	}
+	//closing all the left sockets
+	for (int i = 1; i <= max_socket; i++)
+	{
+		if (FD_ISSET(i, &master))
+		{
+			CLOSESOCKET(i);
+			FD_CLR(i, &master);
+		}
+	}
+	WSACleanup();
 	cout << "\n avg_processing=>" << avg_processing / total_frames;
 	cout << "\n avg_sendinng=>" << avg_send / total_frames;
 	cout << "\n avg_rendering=>" << avg_rendering / total_frames;
 	cout << "\n avg_recv=>" << avg_recv / total_frames;
-	
+	cout << "\n avg chase ship=>" << avg_chase_ship / (6 * total_frames);
 }
 int main()
 {
@@ -1763,7 +1780,7 @@ int main()
 	cg.callable(&mutx, code, map1, sockets, socket_id);
 
 	cout << "\n avg bulle count per frame is=>" << avg_bullet/no_of_times;
-	cout << "\n avg chase ship=>" << avg_chase_ship/6;
+	
 
 
 

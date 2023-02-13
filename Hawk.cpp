@@ -55,20 +55,20 @@ namespace user1
 					
 
 				}
-				
+				*/
 				if (ob.isShipInMotion()==0)
 				{
 				//	cout << "\n not in motion";
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
 					ob.Greed_chaseShip(index);
 				}
-				*/
+				
 				if (e.eventType == Event::EventType::LowHealth)
 				{
 					ob.Greed_upgradeHealth(20);
 
 					std::time_t result = std::time(nullptr);
-					cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec;
+					//cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec;
 				}
 				if (e.eventType == Event::EventType::ShipFire)
 				{

@@ -1038,7 +1038,7 @@ ship::ship()//default ctor for now
 	lock_health = 0;
 	lock_chase_ship = 0;
 
-	frame_rate_limit = 60;
+	frame_rate_limit = 30;
 	elapsed_time = 0;
 	current_frame_no = -1;
 	current_time = chrono::high_resolution_clock::time_point();

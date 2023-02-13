@@ -154,6 +154,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	thread t(user1::GreedMain, ref(player));
 	t.detach();
 	int frame_no = 0;
+	double avg_nav_req = 0;
+	int total_frames = 0;
+	int tot = 0;
 	while (1)
 	{
 		/*NOTES:
@@ -187,6 +190,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			frame_number++;
 			frames++;
 			frame_no++;//for nav data
+			tot++;
 			//we will wait for 50 microseconds for the select to return
 			struct timeval timeout;
 			timeout.tv_sec = 0;
@@ -207,6 +211,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				{
 					//try to reconnect to the server
 					cout << "\n average bullets are==>" << avg_bullet / no_of_times;
+					cout << "\n jab aaye toh itne aaye=>" << avg_nav_req / total_frames;
+					cout << "\n avg_nav_req over total frames=>" << avg_nav_req / tot;
 					cout << "\n connection disconnected to the server..retrying to connect";
 					peer_socket = connect_to_server();
 					cout << "\n connection is back.";
@@ -220,7 +226,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				}
 
 			}
-			std::time_t result = std::time(nullptr);
+			//std::time_t result = std::time(nullptr);
 		    //cout << "\n----------------------------------------------------------";
 			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
 			
@@ -229,27 +235,15 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				//using nav_data
 				if (pl1[ship_id]->nav_data.size() > 0 && frame_no % 60 == 0)//once every two frame
 				{
-					if (ship_id == 2 || ship_id == 1)
-					{
-						cout << "\n going to chase=>" << pl1[ship_id]->nav_data[0].s_id;
-						if (pl1[pl1[ship_id]->nav_data[0].s_id]->died == 1)
-						{
-							cout << " but the ship is dead";
-						}
-					}
+					total_frames++;
+					avg_nav_req += pl1[ship_id]->nav_data.size();
 					frame_no = 0;
 					pl1[ship_id]->nav_data_final.push_back(pl1[ship_id]->nav_data[0]);
 					pl1[ship_id]->nav_data.clear();
 				}
 				
 				//getPointPath has to be protected by a mutex
-					if (pl1[ship_id]->died == 1)
-					{
-						continue;//break if the ship is dead
-					}
-
-				
-					
+								
 				//here we are starting to manage the events
 				//checking and deleting events from passive_event queue
 			    // /*
@@ -954,6 +948,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		}
 			
 	}
+	
+	CLOSESOCKET(peer_socket);
+	WSACleanup();
 
 }
 
