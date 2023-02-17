@@ -187,83 +187,10 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 
 		}
 	}
-	CLOSESOCKET(socket_listen);
-}
-void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
-{
-	//accepting the connections
-#if defined(_WIN32)
-	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d))
-	{
-		cout << "\n failed to initialize";
-	}
-#endif // defined
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_socktype = SOCK_STREAM;
-
-	hints.ai_flags = AI_PASSIVE;
-
-
-	struct addrinfo* bind_address;
-	getaddrinfo(0, "8080", &hints, &bind_address);
-	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
-	if (!ISVALIDSOCKET(socket_listen))
-	{
-		cout << "\n socket not created==>" << GETSOCKETERRNO();
-	}
-
-	int option = 0;
-	if (setsockopt(socket_listen, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&option, sizeof(option)))//for accepting ipv6 as well
-	{
-		cout << "\n problem in setting the flag==>";
-	}
-	int yes = 1;
-	if (setsockopt(socket_listen, IPPROTO_TCP, TCP_NODELAY, (char*)&yes, sizeof(yes)) < 0) //disabling nagle's algorithm for speed in sending the data
-	{
-		fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
-	}
-
-
-	cout << "\n binding the socket==>";
-	if (bind(socket_listen, (const sockaddr*)bind_address->ai_addr, (int)bind_address->ai_addrlen))
-	{
-		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO();
-	}
-
-	if (listen(socket_listen, 20) < 0)
-	{
-		cout << "\n socket failed";
-	}
-	freeaddrinfo(bind_address);
-	int count = 0;
-	SOCKET max_socket = socket_listen;
-	FD_SET master;
-	FD_ZERO(&master);
-	FD_SET(socket_listen, &master);
-	while (count < n)
-	{
-		FD_SET reads;
-		reads = master;
-		select(max_socket + 1, &reads, 0, 0, 0);
-		if (FD_ISSET(socket_listen, &reads))
-		{
-			struct sockaddr_storage client_address;
-			socklen_t client_len = sizeof(client_address);
-			SOCKET sock = accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
-			socks.push_back(sock);
-			sockets_id[sock] = count;//id's are being given countwise
-			cout << "\n connection established for client shower=>" << count;
-			count++;
-
-		}
-	}
-	CLOSESOCKET(socket_listen);
 }
 
 
-void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id)//taking the ship object so as to access the list of the player
+void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id)//taking the ship object so as to access the list of the player
 {
 	deque<int> dying_ships;
 	int ran = 0;
@@ -433,10 +360,7 @@ void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_o
 	gui_renderer.final_window_renderer(gui);
 	gui_renderer.firing_renderer(firing_tex);
 
-	FD_SET master2, temp;
-	FD_ZERO(&master2);
-	FD_ZERO(&temp);
-	//FD_SET(socket_display[0], &master2);//
+
 
 
 
@@ -513,8 +437,6 @@ void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_o
 		frames++;
 		total_frames++;
 		sf::Event event;
-
-		temp = master2;
 
 		sf::Time deltime = clock.restart();
 		elapsed_time += deltime.asSeconds();
@@ -1181,92 +1103,6 @@ void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_o
 			sf::Time time= processing.getElapsedTime();
 			avg_processing += time.asSeconds();
 		}
-		top_layer ship_packet;
-		////////////////////////////////additional code
-		/*
-		
-		memset((void*)&ship_packet, 0, sizeof(ship_packet));
-		for (int i = 0; i < pl1.size(); i++)
-		{
-
-			//	unique_lock<mutex> lk(mutx->timeMutex[i]);
-
-			if (pl1[i]->time_line.size() > 0)
-			{
-				ship_packet.ob[i].isthere = true;
-
-				ship_packet.ob[i].time_line = pl1[i]->time_line[0];
-				pl1[i]->time_line.pop_front();
-			}
-
-			//	lk.unlock();
-		}
-		ship_packet.packet_no = total_time;
-		ship_packet.no_of_players = pl1.size();
-		int bullet_no = 0;//number of total bullets
-
-		for (int i = 0; i < pl1.size(); i++)
-		{
-			ship_packet.ob[i].ship_id = i;
-			ship_packet.ob[i].name = pl1[i]->name;
-			ship_packet.ob[i].seconds = pl1[i]->seconds;
-			ship_packet.ob[i].minutes = pl1[i]->minutes;
-			//initialize all the members of class pack_ship
-			ship_packet.ob[i].killer_ship_id = pl1[i]->killer_ship_id;
-			if (pl1[i]->killed_ships.size() <= 10)
-			{
-				ship_packet.ob[i].killed_ships_size = pl1[i]->killed_ships.size();
-			}
-			else
-			{
-				ship_packet.ob[i].killed_ships_size = 10;
-			}
-			for (int j = 0; j < ship_packet.ob[i].killed_ships_size; j++)
-			{
-				ship_packet.ob[i].killed_ships[j] = pl1[i]->killed_ships[j];
-			}
-			ship_packet.ob[i].score = pl1[i]->score;
-			ship_packet.ob[i].front_abs_pos = pl1[i]->front_abs_pos;
-			ship_packet.ob[i].rear_abs_pos = pl1[i]->rear_abs_pos;
-			ship_packet.ob[i].dir = pl1[i]->dir;
-			ship_packet.ob[i].absolutePosition = pl1[i]->absolutePosition;
-
-			ship_packet.ob[i].radius = pl1[i]->radius;
-			ship_packet.ob[i].bullet_radius = pl1[i]->bullet_radius;
-
-
-			ship_packet.ob[i].health = pl1[i]->health;
-
-			ship_packet.ob[i].gold = pl1[i]->gold;
-			ship_packet.ob[i].died = pl1[i]->died;
-			ship_packet.ob[i].motion = pl1[i]->motion;
-			ship_packet.ob[i].fuel = pl1[i]->fuel;
-			ship_packet.ob[i].invisible = pl1[i]->invisible;
-			ship_packet.ob[i].ammo = pl1[i]->ammo;
-			ship_packet.ob[i].bullet_pointer = pl1[i]->bullet_pointer;
-
-			ship_packet.ob[i].died = pl1[i]->died;
-			ship_packet.ob[i].tile_pos_front = pl1[i]->tile_pos_front;
-			ship_packet.ob[i].tile_pos_rear = pl1[i]->tile_pos_rear;
-			for (int j = 0; j <= pl1[i]->bullet_pointer; j++)
-			{
-				bullet_no++;
-				ship_packet.bullet_pos[j] = pl1[i]->cannon_ob.activeBullets[j].absolute_position;
-
-			}
-		}
-		//adding the bullets of the cannons
-		for (int i = 0; i < cannon_list.howMany(); i++)
-		{
-			for (int j = 0; j < cannon_list[i].bullet_list.size(); j++)
-			{
-				ship_packet.bullet_pos[bullet_no] = cannon_list[i].bullet_list[j].absolute_position;
-				bullet_no++;
-			}
-		}
-		ship_packet.no_of_bullets = bullet_no;
-		*/
-	//////////////////////////////////additional code ends
 
 		sf::Clock sending;
 		sending.restart();
@@ -1576,7 +1412,6 @@ void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_o
 				}
 
 			}
-			//cout << "\n angle is=>" << cannon_list[2].current_angle;
 			if ((int)req_angle == (int)current_angle)
 			{
 
@@ -1599,20 +1434,7 @@ void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_o
 
 
 		}
-		///////////additional code
-		/*
-		for (int i = 0; i < cannon_list.howMany(); i++)
-		{
-			ship_packet.cannon_ob[i].cid = i;
-			ship_packet.cannon_ob[i].angle = cannon_list[i].current_angle;
 
-			ship_packet.cannon_ob[i].picture = 0;
-			ship_packet.cannon_ob[i].cannon_health = cannon_list[i].health;
-			ship_packet.cannon_ob[i].is_cannon_dead = cannon_list[i].isDead;
-		}
-		*/
-		//////////////////////additional code ends
-		
 		//setting the base sprite on the cannon
 		for (int i = 0; i < cannon_list.howMany(); i++)//setting the default texture of the cannon
 		{
@@ -1741,34 +1563,6 @@ void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_o
 
 		window.display();
 
-		//////additional code
-		/*
-		select(socket_display[0] + 1, 0, &temp, 0, &timeout);
-		SOCKET socket_client = socket_display[0];
-		if (FD_ISSET(socket_client, &temp))
-		{
-
-			ship_packet.total_secs = total_secs;
-
-			int bytes = send(socket_client, (char*)&ship_packet, sizeof(ship_packet), 0);
-			if (bytes < 1)
-			{
-
-				FD_CLR(socket_client, &master2);
-				CLOSESOCKET(socket_client);
-				continue;
-			}
-			while (bytes < sizeof(ship_packet))
-			{
-				bytes += send(socket_client, (char*)&ship_packet + bytes, sizeof(ship_packet) - bytes, 0);
-			}
-			//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
-		}
-		///////////////additinal code
-		*/
-
-
-		
 		sf::Time time3 = rendering.getElapsedTime();
 		avg_rendering += time3.asSeconds();
 
@@ -1838,14 +1632,11 @@ int main()
 
 
 	unordered_map<int, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,5);
+	connector(sockets, socket_id,6);
 	//connector is called
 	const int no_of_players = socket_id.size();
 	cout << "\n number of players==>" << no_of_players;
 
-	vector<int> socket_display;//vector of sockets for display unit of the client
-	unordered_map<int, int> socket_id_display;
-	//connector_show(socket_display, socket_id_display, 1);//connecting with display unit of the client
 
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
@@ -1986,7 +1777,7 @@ int main()
 
 
 	graphics cg;
-	cg.callable_server2(&mutx, code, map1, sockets, socket_id);
+	cg.callable(&mutx, code, map1, sockets, socket_id);
 
 	cout << "\n avg bulle count per frame is=>" << avg_bullet/no_of_times;
 	
