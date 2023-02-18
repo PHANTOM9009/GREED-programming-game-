@@ -142,13 +142,14 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	long double frame_number = -1;//this is for packet id that the client will send to the server
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	FD_SET master;
+	fd_set master;
 	FD_ZERO(&master);
 	FD_SET(peer_socket, &master);
-	FD_SET reads;
-	FD_SET writes;
+	fd_set reads;
+	fd_set writes;
 	FD_ZERO(&reads);
 	FD_ZERO(&writes);
+
 	vector<Greed::bullet> newBullets;
 	
 	thread t(user1::GreedMain, ref(player));

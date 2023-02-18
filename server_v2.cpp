@@ -43,6 +43,8 @@ sf::RenderWindow window(sf::VideoMode(::cx(1970), ::cy(1190)), "GREED");
 * 3. when all the clients have received the initial configuration, send message to every client to start thier functions
 * 4. This gets the game running
 */
+vector<int> socket_display;//vector of sockets for display unit of the client
+unordered_map<int, int> socket_id_display;
 void control1::nav_data_processor(deque<ship*>& pl1, Mutex *mutx)
 {
 	int cur_frame = -1;
@@ -187,10 +189,82 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 
 		}
 	}
+	CLOSESOCKET(socket_listen);
+}
+void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
+{
+	//accepting the connections
+#if defined(_WIN32)
+	WSADATA d;
+	if (WSAStartup(MAKEWORD(2, 2), &d))
+	{
+		cout << "\n failed to initialize";
+	}
+#endif // defined
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_socktype = SOCK_STREAM;
+
+	hints.ai_flags = AI_PASSIVE;
+
+
+	struct addrinfo* bind_address;
+	getaddrinfo(0, "8080", &hints, &bind_address);
+	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
+	if (!ISVALIDSOCKET(socket_listen))
+	{
+		cout << "\n socket not created==>" << GETSOCKETERRNO();
+	}
+
+	int option = 0;
+	if (setsockopt(socket_listen, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&option, sizeof(option)))//for accepting ipv6 as well
+	{
+		cout << "\n problem in setting the flag==>";
+	}
+	int yes = 1;
+	if (setsockopt(socket_listen, IPPROTO_TCP, TCP_NODELAY, (char*)&yes, sizeof(yes)) < 0) //disabling nagle's algorithm for speed in sending the data
+	{
+		fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
+	}
+
+
+	cout << "\n binding the socket==>";
+	if (bind(socket_listen, (const sockaddr*)bind_address->ai_addr, (int)bind_address->ai_addrlen))
+	{
+		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO();
+	}
+
+	if (listen(socket_listen, 20) < 0)
+	{
+		cout << "\n socket failed";
+	}
+	freeaddrinfo(bind_address);
+	int count = 0;
+	SOCKET max_socket = socket_listen;
+	FD_SET master;
+	FD_ZERO(&master);
+	FD_SET(socket_listen, &master);
+	while (count < n)
+	{
+		FD_SET reads;
+		reads = master;
+		select(max_socket + 1, &reads, 0, 0, 0);
+		if (FD_ISSET(socket_listen, &reads))
+		{
+			struct sockaddr_storage client_address;
+			socklen_t client_len = sizeof(client_address);
+			SOCKET sock = accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
+			socks.push_back(sock);
+			sockets_id[sock] = count;//id's are being given countwise
+			cout << "\n connection established for client shower=>" << count;
+			count++;
+
+		}
+	}
+	CLOSESOCKET(socket_listen);
 }
 
-
-void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id)//taking the ship object so as to access the list of the player
+void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id)//taking the ship object so as to access the list of the player
 {
 	deque<int> dying_ships;
 	int ran = 0;
@@ -398,7 +472,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	control1 con;
 
 
-	FD_SET master, read, write;
+	fd_set master, read, write;
 	FD_ZERO(&master);
 	FD_ZERO(&read);
 	FD_ZERO(&write);
@@ -1387,7 +1461,14 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			int si = cannon_list[i].getVictimShip();
 			double req_angle = cannon_list[i].get_required_angle();
 			double current_angle = cannon_list[i].current_angle;
-
+			/*
+			if (req_angle == current_angle && i==2)
+			{
+				cout << "\n target ship=>" << si;
+				cout << "\n req angle=>" << req_angle;
+				cout << "\n current angle=>" << current_angle;
+			}
+			*/
 			if ((int)current_angle != (int)req_angle)
 			{
 				double diff = abs(req_angle - current_angle);
@@ -1632,12 +1713,12 @@ int main()
 
 
 	unordered_map<int, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,6);
+	connector(sockets, socket_id,5);
 	//connector is called
 	const int no_of_players = socket_id.size();
 	cout << "\n number of players==>" << no_of_players;
 
-
+	
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
 	Mutex mutx;
@@ -1741,7 +1822,10 @@ int main()
 
 
 	}
-	//sending the startup data to all the connected clients
+	
+	connector_show(socket_display, socket_id_display, 1);
+
+	
 	cout << "\n sending the data to the clients=>";
 	for (int i = 0; i < no_of_players; i++)
 	{
@@ -1777,12 +1861,7 @@ int main()
 
 
 	graphics cg;
-	cg.callable(&mutx, code, map1, sockets, socket_id);
+	cg.callable_server2(&mutx, code, map1, sockets, socket_id);
 
 	cout << "\n avg bulle count per frame is=>" << avg_bullet/no_of_times;
-	
-
-
-
-
 }

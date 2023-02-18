@@ -5121,6 +5121,18 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob)//taki
 				for (int i = 0; i < pl1.size(); i++)
 				{
 					if (pl1[i]->died == 0)
+					{
+						window.draw(pl1[i]->rect);
+						//drawing the names of the ships over them 
+						name_of_ship.setPosition(::cx(pl1[i]->absolutePosition.x - 5 + origin_x), ::cy(pl1[i]->absolutePosition.y - 10 + origin_y));
+						name_of_ship.setString(static_cast<sf::String>(pl1[i]->name));
+						window.draw(name_of_ship);
+					}
+
+				}
+				for (int i = 0; i < pl1.size(); i++)
+				{
+					if (pl1[i]->died == 0)
 						window.draw(pl1[i]->rect);
 
 				}

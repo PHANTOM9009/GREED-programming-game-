@@ -1819,13 +1819,13 @@ bool ship::setPath(List<Greed::coords> ob, int state)  //for adding the supplied
 	* 0-> no destination is set and the ship wants to anchor
 	*/
 	//locking the mutex first
-
+	unique_lock<mutex> lk(mutx->m[ship_id]);
 	if (path.howMany() > 0)
 	{
 
 		//mutx->m[ship_id].lock();
 		//setting the tile_path list here
-		unique_lock<mutex> lk(mutx->m[ship_id]);
+	
 		if (state == 1)
 		{
 			int temp = tile_path.howMany();
@@ -2060,6 +2060,7 @@ bool ship::sail(Direction d, int tiles = 1)//number of tiles to be moved at a pa
 {
 	//here tile_path list is not associated with the tile_path variable in the ship class.
 	//no need to lock any mutex here
+	unique_lock<mutex> lk(mutx->m[ship_id]);
 	dir = d;
 	if (d != Direction::NA && tiles >= 1)
 	{
@@ -2876,159 +2877,163 @@ int Greed::cannon::getVictimShip()
 }
 double Greed::cannon::get_required_angle()//getVictimSHip has to be called in order set a new ship as target
 {
-	Control con;
-	deque<ship*> ship_list = con.ship_list;
-	Greed::coords ship_tile;
-	if (current_ship != -1 && ss == ShipSide::FRONT)
+	if (current_ship != -1)
 	{
-		ship_tile = ship_list[this->current_ship]->getCurrentTile();
+		Control con;
+		deque<ship*> ship_list = con.ship_list;
+		Greed::coords ship_tile;
+		if (current_ship != -1 && ss == ShipSide::FRONT)
+		{
+			ship_tile = ship_list[this->current_ship]->getCurrentTile();
+		}
+		else if (current_ship != -1 && ss == ShipSide::REAR)
+		{
+			ship_tile = ship_list[this->current_ship]->getCurrentRearTile();
+		}
+		Greed::abs_pos sabs((ship_tile.c * len) + (len / 2), (ship_tile.r * len) + (len / 2));
+		Greed::abs_pos cabs(tile.c * len + (len / 2), tile.r * len + (len / 2));
+		double thetha_r;//in radians
+		double thetha_d = current_angle;//in degree
+		if (cabs.x - sabs.x == 0)
+		{
+			if (cabs.y > sabs.y)
+			{
+				thetha_d = 0;
+
+				/*
+				double thetha2 = 360;
+				if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
+				{
+					thetha_d = thetha1;
+				}
+				else
+				{
+					thetha_d = thetha2;
+				}
+				*/
+			}
+			else if (cabs.y < sabs.y)
+			{
+				thetha_d = 180;
+
+				/*
+				double thetha2 = -180;
+				if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
+				{
+					thetha_d = thetha1;
+				}
+				else
+				{
+					thetha_d = thetha2;
+				}
+				*/
+			}
+		}
+		else
+		{
+			double slope = (sabs.y - cabs.y) / (cabs.x - sabs.x);
+			double val = atan(slope);
+
+			if (val < 0)
+			{
+				if (sabs.y < cabs.y)
+				{
+					thetha_r = abs(val);
+					double thetha1 = ((180 / PI) * thetha_r) - 90;
+					double thetha2 = 270 + ((180 / PI) * thetha_r);
+					if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
+					{
+						thetha_d = thetha1;
+					}
+					else
+					{
+						thetha_d = thetha2;
+					}
+				}
+				else if (sabs.y > cabs.y)
+				{
+					thetha_r = abs(val);
+					double thetha1 = ((180 / PI) * thetha_r) + 90;
+					double thetha2 = -270 + ((180 / PI) * thetha_r);
+					if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
+					{
+						thetha_d = thetha1;
+					}
+					else
+					{
+						thetha_d = thetha2;
+					}
+				}
+			}
+			else if (val > 0)
+			{
+				if (sabs.y < cabs.y)
+				{
+					double thetha1;
+					thetha_r = abs(val);
+					thetha1 = 90 - ((180 / PI) * thetha_r);
+					double thetha2 = -270 - ((180 / PI) * thetha_r);
+					if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
+					{
+						thetha_d = thetha1;
+					}
+					else
+					{
+						thetha_d = thetha2;
+					}
+				}
+				else if (sabs.y > cabs.y)
+				{
+					thetha_r = abs(val);
+
+					double thetha1 = -90 - ((180 / PI) * thetha_r);
+					double thetha2 = 270 - ((180 / PI) * thetha_r);
+					if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
+					{
+						thetha_d = thetha1;
+					}
+					else
+					{
+						thetha_d = thetha2;
+					}
+				}
+			}
+			else if (val == 0)
+			{
+				if (sabs.x > cabs.x)
+				{
+					double thetha1 = 90;
+					double thetha2 = -270;
+					if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
+					{
+						thetha_d = thetha1;
+					}
+					else
+					{
+						thetha_d = thetha2;
+					}
+
+				}
+				else if (sabs.x < cabs.x)
+				{
+					double thetha1 = -90;
+					double thetha2 = 270;
+					if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
+					{
+						thetha_d = thetha1;
+					}
+					else
+					{
+						thetha_d = thetha2;
+					}
+
+				}
+			}
+		}
+		req_angle = thetha_d;
+		return thetha_d;
 	}
-	else if (current_ship != -1 && ss == ShipSide::REAR)
-	{
-		ship_tile = ship_list[this->current_ship]->getCurrentRearTile();
-	}
-	Greed::abs_pos sabs((ship_tile.c * len) + (len / 2), (ship_tile.r * len) + (len / 2));
-	Greed::abs_pos cabs(tile.c * len + (len / 2), tile.r * len + (len / 2));
-	double thetha_r;//in radians
-	double thetha_d = current_angle;//in degree
-	if (cabs.x - sabs.x == 0)
-	{
-		if (cabs.y > sabs.y)
-		{
-			thetha_d = 0;
-
-			/*
-			double thetha2 = 360;
-			if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
-			{
-				thetha_d = thetha1;
-			}
-			else
-			{
-				thetha_d = thetha2;
-			}
-			*/
-		}
-		else if (cabs.y < sabs.y)
-		{
-			thetha_d = 180;
-
-			/*
-			double thetha2 = -180;
-			if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
-			{
-				thetha_d = thetha1;
-			}
-			else
-			{
-				thetha_d = thetha2;
-			}
-			*/
-		}
-	}
-	else
-	{
-		double slope = (sabs.y - cabs.y) / (cabs.x - sabs.x);
-		double val = atan(slope);
-
-		if (val < 0)
-		{
-			if (sabs.y < cabs.y)
-			{
-				thetha_r = abs(val);
-				double thetha1 = ((180 / PI) * thetha_r) - 90;
-				double thetha2 = 270 + ((180 / PI) * thetha_r);
-				if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
-				{
-					thetha_d = thetha1;
-				}
-				else
-				{
-					thetha_d = thetha2;
-				}
-			}
-			else if (sabs.y > cabs.y)
-			{
-				thetha_r = abs(val);
-				double thetha1 = ((180 / PI) * thetha_r) + 90;
-				double thetha2 = -270 + ((180 / PI) * thetha_r);
-				if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
-				{
-					thetha_d = thetha1;
-				}
-				else
-				{
-					thetha_d = thetha2;
-				}
-			}
-		}
-		else if (val > 0)
-		{
-			if (sabs.y < cabs.y)
-			{
-				double thetha1;
-				thetha_r = abs(val);
-				thetha1 = 90 - ((180 / PI) * thetha_r);
-				double thetha2 = -270 - ((180 / PI) * thetha_r);
-				if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
-				{
-					thetha_d = thetha1;
-				}
-				else
-				{
-					thetha_d = thetha2;
-				}
-			}
-			else if (sabs.y > cabs.y)
-			{
-				thetha_r = abs(val);
-
-				double thetha1 = -90 - ((180 / PI) * thetha_r);
-				double thetha2 = 270 - ((180 / PI) * thetha_r);
-				if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
-				{
-					thetha_d = thetha1;
-				}
-				else
-				{
-					thetha_d = thetha2;
-				}
-			}
-		}
-		else if (val == 0)
-		{
-			if (sabs.x > cabs.x)
-			{
-				double thetha1 = 90;
-				double thetha2 = -270;
-				if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
-				{
-					thetha_d = thetha1;
-				}
-				else
-				{
-					thetha_d = thetha2;
-				}
-
-			}
-			else if (sabs.x < cabs.x)
-			{
-				double thetha1 = -90;
-				double thetha2 = 270;
-				if (abs(current_angle - thetha1) < abs(current_angle - thetha2))
-				{
-					thetha_d = thetha1;
-				}
-				else
-				{
-					thetha_d = thetha2;
-				}
-
-			}
-		}
-	}
-	req_angle = thetha_d;
-	return thetha_d;
+	return current_angle;
 
 }
 void Greed::cannon::filter(List<Greed::abs_pos>& ob)

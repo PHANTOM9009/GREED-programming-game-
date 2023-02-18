@@ -55,14 +55,14 @@ namespace user1
 					
 
 				}
-				*/
+				
 				if (ob.isShipInMotion()==0)
 				{
 				//	cout << "\n not in motion";
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
 					ob.Greed_chaseShip(index);
 				}
-				
+				*/
 				if (e.eventType == Event::EventType::LowHealth)
 				{
 					ob.Greed_upgradeHealth(20);

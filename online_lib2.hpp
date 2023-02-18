@@ -1772,7 +1772,7 @@ public:
 	}
 	Greed::coords getCurrentRearTile()//returns the rear tile of the ship
 	{
-		unique_lock<mutex> lk(mutx->m[mutex_id]);
+		//unique_lock<mutex> lk(mutx->m[mutex_id]);
 		return tile_pos_rear;
 
 	}
@@ -2434,14 +2434,12 @@ class pack_ship
 {
 private:
 	int ship_id;//id of the ship
-
-
 	int seconds;//seconds lived
 	int minutes;//minutes lived
 	int killer_ship_id;//the ship that killed you if that is the case
 	int killer_cannon_id;//the cannon that killed you if that is the case
 	int killed_ships_size;
-	int killed_ships[1000];//the ships that you killed
+	int killed_ships[10];//the ships that you killed
 	int score;
 	string name;
 	Greed::abs_pos front_abs_pos;//topmost coordinates of the tip of the ship:: will be updated in update_tile_pos
@@ -2524,11 +2522,11 @@ public:
 	pack_ship ob[10];
 	//for the bullets
 	int no_of_bullets;
-	Greed::abs_pos bullet_pos[1000];
+	Greed::abs_pos bullet_pos[500];
 	//for cannons
 	cannon_data cannon_ob[3];//object for cannon
 	int no_of_animation;
-	animation_data animation_ob[1000];
+	animation_data animation_ob[500];
 
 
 };
@@ -2786,7 +2784,11 @@ public:
 	static long double getTotalTime();
 	bool check_game_over(deque<ship*>& pl1);
 	deque<ship*> findWinner(deque<ship*> l);
-	void callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector<int> &sockets,unordered_map<int,int> &);//taking the ship object so as to access the list of the player
+	void callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector<int> &sockets,unordered_map<int,int> &socker_id,vector<int> &socket_display);//taking the ship object so as to access the list of the player
 	void callable_client(int ship_id, Mutex* mutx, int code[rows][columns], Map& map_ob, int,ship&);
+	void callable_server(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id,vector<int> &socket_display);//taking the ship object so as to access the list of the player
+	
+	void callable_clientShow(Mutex* mutx, int code[rows][columns], Map& map_ob);
+
 };
 
