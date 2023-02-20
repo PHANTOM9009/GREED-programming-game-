@@ -126,13 +126,7 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
 {
 	//accepting the connections
-#if defined(_WIN32)
-	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d))
-	{
-		cout << "\n failed to initialize";
-	}
-#endif // defined
+
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
@@ -194,19 +188,13 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 		}
 	}
 	CLOSESOCKET(socket_listen);
+	
 }
 
 //making the connector number 2 to display the game to the client
 void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
 {
-	//accepting the connections
-#if defined(_WIN32)
-	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d))
-	{
-		cout << "\n failed to initialize";
-	}
-#endif // defined
+
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
@@ -268,6 +256,7 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 		}
 	}
 	CLOSESOCKET(socket_listen);
+	
 }
 
 
@@ -346,6 +335,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	thread t(&control1::nav_data_processor, &con, ref(pl1), mutx);
 	t.detach();
 	List<graphics::animator> animation_list;
+
+	vector<int> checker;
+
     double avg_send = 0;
 	double avg_recv = 0;
 	double avg_processing = 0;
@@ -999,6 +991,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 				{
 					ship_packet.bullet_pos[bullet_no] = cannon_list[i].bullet_list[j].absolute_position;
 					bullet_no++;
+					if (cannon_list[i].bullet_list[j].absolute_position.x == 0 && cannon_list[i].bullet_list[j].absolute_position.y == 0)
+					{
+						cout << "\n problem caused by cannon=>" << i;
+						cout << "\n bullet information is=>\n target ship=>" << cannon_list[i].bullet_list[j].target_ship;
+					}
 				}
 			}
 		}
@@ -1262,6 +1259,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 }
 int main()
 {
+#if defined(_WIN32)
+	WSADATA d;
+	if (WSAStartup(MAKEWORD(2, 2), &d))
+	{
+		cout << "\n failed to initialize";
+	}
+#endif // defined
 	//extracting the data
 	vector<int> sockets;//a vector of n
 	unordered_map<int, int> socket_id;//socket to ship id map
@@ -1291,12 +1295,9 @@ int main()
 	List<Greed::coords> l1;
 	ship* player = new ship[no_of_players];
 
-
-	//player[1].updateCost(Map::coords(10,0), 50);
-
-	//player[1].localMap[10 * columns + 0].b.cost = 50;
+	
 	deque<ship*> slist;
-
+	//vector<int> iop;
 	for (int i = 0; i < no_of_players; i++)
 	{
 		silist.push_back(shipInfo(&player[i]));
@@ -1377,7 +1378,6 @@ int main()
 
 	}
 	//sending the startup data to all the connected clients
-
 
 	
 	connector_show(socket_display, socket_id_display, 1);//connecting with display unit of the client

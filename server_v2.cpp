@@ -43,8 +43,8 @@ sf::RenderWindow window(sf::VideoMode(::cx(1970), ::cy(1190)), "GREED");
 * 3. when all the clients have received the initial configuration, send message to every client to start thier functions
 * 4. This gets the game running
 */
-vector<int> socket_display;//vector of sockets for display unit of the client
-unordered_map<int, int> socket_id_display;
+vector<SOCKET> socket_display;//vector of sockets for display unit of the client
+unordered_map<SOCKET, int> socket_id_display;
 void control1::nav_data_processor(deque<ship*>& pl1, Mutex *mutx)
 {
 	int cur_frame = -1;
@@ -119,16 +119,10 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex *mutx)
 		}
 	}
 }
-void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
+void connector(vector<SOCKET>& socks, unordered_map<SOCKET, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
 {
 	//accepting the connections
-#if defined(_WIN32)
-	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d))
-	{
-		cout << "\n failed to initialize";
-	}
-#endif // defined
+
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
@@ -191,16 +185,11 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 	}
 	CLOSESOCKET(socket_listen);
 }
-void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
+int sec = 0;
+void connector_show(vector<SOCKET>& socks, unordered_map<SOCKET, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
 {
 	//accepting the connections
-#if defined(_WIN32)
-	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d))
-	{
-		cout << "\n failed to initialize";
-	}
-#endif // defined
+
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
@@ -264,7 +253,7 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 	CLOSESOCKET(socket_listen);
 }
 
-void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id)//taking the ship object so as to access the list of the player
+void graphics::callable_server(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<SOCKET>& sockets, unordered_map<SOCKET, int>& socket_id,vector<SOCKET> &socket_display)//taking the ship object so as to access the list of the player
 {
 	deque<int> dying_ships;
 	int ran = 0;
@@ -602,7 +591,7 @@ void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_o
 
 			/*code to update the timer*/
 			int min = total_secs / 60;
-			int sec = (int)total_secs % 60;
+			 sec = (int)total_secs % 60;
 			gui_renderer.timer->setText(std::to_string(min) + ":" + std::to_string(sec));
 			/*code to update the timer ends*/
 
@@ -1459,7 +1448,9 @@ void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_o
 			}
 
 			int si = cannon_list[i].getVictimShip();
+		
 			double req_angle = cannon_list[i].get_required_angle();
+		
 			double current_angle = cannon_list[i].current_angle;
 			/*
 			if (req_angle == current_angle && i==2)
@@ -1708,17 +1699,26 @@ void graphics::callable_server2(Mutex* mutx, int code[rows][columns], Map& map_o
 }
 int main()
 {
+#if defined(_WIN32)
+	WSADATA d;
+	if (WSAStartup(MAKEWORD(2, 2), &d))
+	{
+		cout << "\n failed to initialize";
+	}
+#endif // defined
 	//extracting the data
-	vector<int> sockets;//a vector of n
+	vector<SOCKET> sockets;//a vector of n
 
-
-	unordered_map<int, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,5);
+	vector<int> work;
+	unordered_map<SOCKET, int> socket_id;//socket to ship id map
+	connector(sockets, socket_id,4);
 	//connector is called
 	const int no_of_players = socket_id.size();
 	cout << "\n number of players==>" << no_of_players;
 
-	
+	vector<int> checker;
+	vector<int> newer;
+	vector<int> fewer;
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
 	Mutex mutx;
@@ -1823,7 +1823,8 @@ int main()
 
 	}
 	
-	connector_show(socket_display, socket_id_display, 1);
+	vector<int> huha;
+	//connector_show(socket_display, socket_id_display, 1);
 
 	
 	cout << "\n sending the data to the clients=>";
@@ -1861,7 +1862,7 @@ int main()
 
 
 	graphics cg;
-	cg.callable_server2(&mutx, code, map1, sockets, socket_id);
+	cg.callable_server(&mutx, code, map1, sockets, socket_id,socket_display);
 
 	cout << "\n avg bulle count per frame is=>" << avg_bullet/no_of_times;
 }

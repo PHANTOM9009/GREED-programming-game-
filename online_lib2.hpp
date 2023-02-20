@@ -1766,13 +1766,13 @@ public:
 	}
 	Greed::coords getCurrentTile()//returns the front tile
 	{
-		//unique_lock<mutex> lk(mutx->m[mutex_id]);
+		unique_lock<mutex> lk(mutx->m[mutex_id]);
 		return tile_pos_front;
 
 	}
 	Greed::coords getCurrentRearTile()//returns the rear tile of the ship
 	{
-		//unique_lock<mutex> lk(mutx->m[mutex_id]);
+		unique_lock<mutex> lk(mutx->m[mutex_id]);
 		return tile_pos_rear;
 
 	}
@@ -2527,6 +2527,10 @@ public:
 	cannon_data cannon_ob[3];//object for cannon
 	int no_of_animation;
 	animation_data animation_ob[500];
+	top_layer()
+	{
+		no_of_bullets = 0;
+	}
 
 
 };
@@ -2786,7 +2790,7 @@ public:
 	deque<ship*> findWinner(deque<ship*> l);
 	void callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector<int> &sockets,unordered_map<int,int> &socker_id,vector<int> &socket_display);//taking the ship object so as to access the list of the player
 	void callable_client(int ship_id, Mutex* mutx, int code[rows][columns], Map& map_ob, int,ship&);
-	void callable_server(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id,vector<int> &socket_display);//taking the ship object so as to access the list of the player
+	void callable_server(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<SOCKET>& sockets, unordered_map<SOCKET, int>& socket_id,vector<SOCKET> &socket_display);//taking the ship object so as to access the list of the player
 	
 	void callable_clientShow(Mutex* mutx, int code[rows][columns], Map& map_ob);
 

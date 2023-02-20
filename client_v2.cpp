@@ -66,7 +66,7 @@ void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 	pl1[i]->fuel = ob.fuel;
 	pl1[i]->invisible = ob.invisible;
 	pl1[i]->ammo = ob.ammo;
-	pl1[i]->bullet_pointer = ob.bullet_pointer;
+	//pl1[i]->bullet_pointer = ob.bullet_pointer;
 	pl1[i]->tile_pos_front = ob.tile_pos_front;
 	pl1[i]->tile_pos_front = ob.tile_pos_front;
 	pl1[i]->absolutePosition = ob.absolutePosition;
@@ -341,10 +341,11 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	double previous = 0;
 	double previous_angle = 0;
 	double avg_bullet = 0;
+	top_layer ship_data;
 	while (window.isOpen())
 	{
 		temp_set = master;
-		top_layer ship_data;
+		
 
 		c++;
 		frames++;
@@ -449,7 +450,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 			struct timeval timeout;
 			timeout.tv_sec = 0;
-			timeout.tv_usec = 0;
+			timeout.tv_usec =10;
 
 			if (select(peer_socket + 1, &temp_set, NULL, NULL, &timeout) < 0)
 			{
@@ -779,8 +780,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 			}
 			//rendering the bullet here
-			if (bytes_received > 0)
-			{
+			
 				for (int i = 0; i < ship_data.no_of_bullets; i++)
 				{
 					if (!(ship_data.bullet_pos[i].x == 0 && ship_data.bullet_pos[i].y == 0))
@@ -790,9 +790,10 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 					
 						//cout << "\n mistake caught at=>" << i;
 					}
+					
 					window.draw(bullet_entity);
 				}
-			}
+			
 
 
 			//setting the base sprite on the cannon

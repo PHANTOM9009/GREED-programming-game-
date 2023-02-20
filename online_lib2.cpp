@@ -2882,18 +2882,21 @@ double Greed::cannon::get_required_angle()//getVictimSHip has to be called in or
 		Control con;
 		deque<ship*> ship_list = con.ship_list;
 		Greed::coords ship_tile;
-		if (current_ship != -1 && ss == ShipSide::FRONT)
+		if (current_ship != -1)//ss is corrupted!
 		{
 			ship_tile = ship_list[this->current_ship]->getCurrentTile();
 		}
+		/*
 		else if (current_ship != -1 && ss == ShipSide::REAR)
 		{
 			ship_tile = ship_list[this->current_ship]->getCurrentRearTile();
 		}
+		*/
 		Greed::abs_pos sabs((ship_tile.c * len) + (len / 2), (ship_tile.r * len) + (len / 2));
 		Greed::abs_pos cabs(tile.c * len + (len / 2), tile.r * len + (len / 2));
-		double thetha_r;//in radians
-		double thetha_d = current_angle;//in degree
+		double thetha_r = 0;//in radians
+		double thetha_d = 0;
+		thetha_d= current_angle;//in degree
 		if (cabs.x - sabs.x == 0)
 		{
 			if (cabs.y > sabs.y)
@@ -3033,7 +3036,7 @@ double Greed::cannon::get_required_angle()//getVictimSHip has to be called in or
 		req_angle = thetha_d;
 		return thetha_d;
 	}
-	return current_angle;
+	return 0;
 
 }
 void Greed::cannon::filter(List<Greed::abs_pos>& ob)
