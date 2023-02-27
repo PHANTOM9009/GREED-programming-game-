@@ -3100,7 +3100,7 @@ bool ship::upgradeHealth(int n)// 1 health in 5 money
 		if (n * 5 <= gold)
 		{
 
-			unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
+			//unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
 			//adding the event in the timeline
 			timeline t;
 			t.eventype = timeline::EventType::GOLD_TO_HEALTH;
@@ -3125,7 +3125,7 @@ bool ship::upgradeFuel(int n)// 1 fuel in 5 money
 		//unique_lock<std::mutex> lk(mutx->m[mutex_id]);
 		if (n * 5 <= gold)
 		{
-			unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
+			//unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
 			//adding the event in the timeline
 			timeline t;
 			t.eventype = timeline::EventType::GOLD_TO_FUEL;
@@ -3149,7 +3149,7 @@ bool ship::upgradeAmmo(int n)//1 ammo in 1 money
 		//unique_lock<std::mutex> lk(mutx->m[mutex_id]);
 		if (n <= gold)
 		{
-			unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
+			//unique_lock<std::mutex> lk1(mutx->timeMutex[ship_id]);
 			//adding the event in the timeline
 			timeline t;
 			t.eventype = timeline::EventType::GOLD_TO_AMMO;
@@ -3287,12 +3287,12 @@ bool ship::anchorShip()
 	setPath(ob, 0);
 
 
-	mutx->timeMutex[ship_id].lock();
+	//mutx->timeMutex[ship_id].lock();
 	timeline t;
 	t.timestamp = graphics::getTotalTime();
 	t.eventype = timeline::EventType::ANCHOR_SHIP;
 	time_line.push_back(t);
-	mutx->timeMutex[ship_id].unlock();
+	//mutx->timeMutex[ship_id].unlock();
 	return true;
 }
 //for now user2 follows user1

@@ -80,13 +80,7 @@ void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 }
 SOCKET connect_to_server()//first connection to the server
 {
-#if defined(_WIN32)
-	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d))
-	{
-		cout << "\n failed to initialize";
-	}
-#endif // defined
+
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	int res = 0;
@@ -356,7 +350,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 		//total_time += deltime.asSeconds();
 		total_time++;
 		t2 += deltime.asSeconds();
-		if (t2 >= 1 && t2 <= 1.15)
+		if (t2 >= 1)
 		{
 			cout << "\n frame rate is==>" << c;
 			c = 0;
@@ -483,9 +477,6 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				
 				previous = ship_data.packet_no;
 			}
-
-
-
 
 			/*code to update the timer*/
 			int min = ship_data.total_secs / 60;
@@ -890,8 +881,15 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 int main()
 {
+#if defined(_WIN32)
+	WSADATA d;
+	if (WSAStartup(MAKEWORD(2, 2), &d))
+	{
+		cout << "\n failed to initialize";
+	}
+#endif // defined
 	//extracting the data
-	const int no_of_players = 5;
+	const int no_of_players = 6;
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
 	Mutex mutx;

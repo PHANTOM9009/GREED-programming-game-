@@ -199,7 +199,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			//select(peer_socket + 1, &reads, 0, 0, &timeout);
 			recv_data data1;
 			int bytes_recv = -1;
-			
+			if (pl1[ship_id]->died == 1)
+			{
+				break;
+			}
 			if (FD_ISSET(peer_socket, &reads))//socket is ready to read from
 			{
 				memset((void*)&data1, 0, sizeof(data1));
@@ -215,8 +218,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					cout << "\n jab aaye toh itne aaye=>" << avg_nav_req / total_frames;
 					cout << "\n avg_nav_req over total frames=>" << avg_nav_req / tot;
 					cout << "\n connection disconnected to the server..retrying to connect";
-					peer_socket = connect_to_server();
+					//peer_socket = connect_to_server();
 					cout << "\n connection is back.";
+					break;
 				}
 				//we have received the data.. now parse the data in original class structure.
 				if (bytes_recv > 0)
@@ -234,7 +238,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			if (!gameOver)
 			{
 				//using nav_data
-				if (pl1[ship_id]->nav_data.size() > 0 && frame_no % 60 == 0)//once every two frame
+				if (pl1[ship_id]->nav_data.size() > 0 && frame_no % 120 == 0)//once every two frame
 				{
 					total_frames++;
 					avg_nav_req += pl1[ship_id]->nav_data.size();
@@ -918,32 +922,33 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 			}
 			//send the data over here
-			
-			send_data data2;
-			shipData_forServer shipdata;
-			memset((void*)&shipdata, 0, sizeof(shipdata));
-			memset((void*)&data2, 0, sizeof(data2));
-			select(peer_socket + 1, 0, &writes, 0, &timeout);
-			
-			if (FD_ISSET(peer_socket, &writes))
+			if (pl1[ship_id]->died == 0)//send the data only if the ship is alive
 			{
-				if (pl1[ship_id]->getDiedStatus() == 0)
+				send_data data2;
+				shipData_forServer shipdata;
+				memset((void*)&shipdata, 0, sizeof(shipdata));
+				memset((void*)&data2, 0, sizeof(data2));
+				//select(peer_socket + 1, 0, &writes, 0, &timeout);
+
+				if (FD_ISSET(peer_socket, &writes))
 				{
-					control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
-					data2.packet_id = frame_number;
-					data2.shipdata_forServer = shipdata;
-					//sending the data
+					
+						control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
+						data2.packet_id = frame_number;
+						data2.shipdata_forServer = shipdata;
+						//sending the data
 
 
 
-					int bytes = send(peer_socket, (char*)&data2, sizeof(data2), 0);
-					while (bytes < sizeof(data2))
-					{
-						bytes += send(peer_socket, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
-					}
+						int bytes = send(peer_socket, (char*)&data2, sizeof(data2), 0);
+						while (bytes < sizeof(data2))
+						{
+							bytes += send(peer_socket, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
+						}
+					
+
+
 				}
-				
-				
 			}
 			
 		}

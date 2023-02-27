@@ -1711,7 +1711,7 @@ int main()
 
 	vector<int> work;
 	unordered_map<SOCKET, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,4);
+	connector(sockets, socket_id,5);
 	//connector is called
 	const int no_of_players = socket_id.size();
 	cout << "\n number of players==>" << no_of_players;

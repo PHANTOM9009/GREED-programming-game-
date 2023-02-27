@@ -2061,7 +2061,7 @@ class control1
 	{
 		for (int i = 0; i < pl1.size(); i++)
 		{
-			unique_lock<mutex> lk(pl1[i]->mutx->m[i]);
+			//unique_lock<mutex> lk(pl1[i]->mutx->m[i]);
 			ob[i].ammo = pl1[i]->ammo;
 			ob[i].died = pl1[i]->died;
 			ob[i].dir = pl1[i]->dir;
