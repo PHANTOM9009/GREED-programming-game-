@@ -814,7 +814,7 @@ bool ship::isOverlapping(ship::shipEntity e1, ship::shipEntity e2, int axis)//ax
 bool ship::collide(int s, Greed::coords& pos)//function to check if this->ship_id collided with a ship having ship id s
 {
 	//dont use getShipEntity without mutex, for now its been called in graphics which is protecting it with mutex
-	shipEntity opp = shipInfoList[s].ob->getShipEntity();//its coordinates will be checked
+	shipEntity opp = shipInfoList[s].ob->getShipEntity_without_mutex();//its coordinates will be checked
 	shipEntity my = this->getShipEntity_without_mutex();//its entity will be checked
 	//cout << "\n opp entity received is==>" << opp.c1.x + 1 << " " << opp.c1.y + 1;
 	if (this->ship_id == 0 && s == 2)
@@ -869,7 +869,7 @@ bool ship::collide(int s, Greed::coords& pos)//function to check if this->ship_i
 bool ship::checkCollision(int sid, const Greed::bullet& ob)//sid is the ship id of  the victim ship.
 {
 	Direction dir = shipInfoList[sid].getShipDirection();//direction of the target ship
-	ship::shipEntity entity = shipInfoList[sid].ob->getShipEntity();//entity of the target ship
+	ship::shipEntity entity = shipInfoList[sid].ob->getShipEntity_without_mutex();//entity of the target ship
 	sf::FloatRect bullet_pos = ob.bullet_entity.getGlobalBounds();
 	Greed::abs_pos coord(::rx(bullet_pos.left) - origin_x, ::ry(bullet_pos.top) - origin_y);
 	int dis = (::cx(10) + ::cy(10)) / 2;
@@ -909,6 +909,14 @@ int shipInfo::getTotalShips()
 int shipInfo::getShipId()
 {
 	return ob->getShipId();
+}
+Greed::coords shipInfo::getCurrentTile_withoutMutex()
+{
+	return ob->getCurrenntTile_withoutMutex();
+}
+Greed::coords shipInfo::getCurrentRearTile_withoutMutex()
+{
+	return ob->getCurrentRearTile_withoutMutex();
 }
 int shipInfo::getShipRadius()
 {
@@ -2264,7 +2272,7 @@ bool ship::isInShipRadius(int s_id, Greed::coords ob, ShipSide opponent_side)//s
 	Control obb;
 	deque<ship*> l1;
 	l1 = obb.getShipList(2369);
-	if (l1[s_id]->getDiedStatus() == 1)
+	if (l1[s_id]->died== 1)
 	{
 		return false;
 	}
@@ -2272,10 +2280,10 @@ bool ship::isInShipRadius(int s_id, Greed::coords ob, ShipSide opponent_side)//s
 	Greed::coords position;
 	if (opponent_side == ShipSide::FRONT)
 	{
-		position = l1[s_id]->getCurrentTile();
+		position = l1[s_id]->getCurrenntTile_withoutMutex();
 	}
 	else if (opponent_side == ShipSide::REAR)
-		position = l1[s_id]->getCurrentRearTile();
+		position = l1[s_id]->getCurrentRearTile_withoutMutex();
 
 	int c1 = position.c - radius;
 	if (c1 < 0)
@@ -2385,13 +2393,13 @@ bool ship::isShipInMyRadius_forFire(int s_id, cannon myside, ShipSide oppSide)//
 	Control ob;
 	deque<ship*> l;
 	l = ob.getShipList(2369);
-	if (s_id <= l.size() - 1 && s_id >= 0 && l[s_id]->getDiedStatus() == 0)
+	if (s_id <= l.size() - 1 && s_id >= 0 && l[s_id]->died == 0)
 	{
 		Greed::coords pos;
 		//chekcing for front side of opponent first
 		if (oppSide == ShipSide::FRONT)
 		{
-			Greed::coords pos = l[s_id]->getCurrentTile();
+			Greed::coords pos = l[s_id]->getCurrenntTile_withoutMutex();
 			bool check = isInShipRadius(this->ship_id, pos, (ShipSide)(int)myside);
 			if (check)
 			{
@@ -2402,7 +2410,7 @@ bool ship::isShipInMyRadius_forFire(int s_id, cannon myside, ShipSide oppSide)//
 		}
 		else if (oppSide == ShipSide::REAR)
 		{
-			Greed::coords pos = l[s_id]->getCurrentRearTile();
+			Greed::coords pos = l[s_id]->getCurrentRearTile_withoutMutex();
 			bool check = isInShipRadius(this->ship_id, pos, (ShipSide)(int)myside);
 			if (check)
 			{
@@ -2422,13 +2430,13 @@ bool ship::isShipInMyRadius(int s_id, ShipSide oppSide)//to check if s_id is in 
 	Control ob;
 	deque<ship*> l;
 	l = ob.getShipList(2369);
-	if (s_id <= l.size() - 1 && s_id >= 0 && l[s_id]->getDiedStatus() == 0)
+	if (s_id <= l.size() - 1 && s_id >= 0 && l[s_id]->died == 0)
 	{
 		Greed::coords pos;
 		//chekcing for front side of opponent first
 		if (oppSide == ShipSide::FRONT)
 		{
-			Greed::coords pos = l[s_id]->getCurrentTile();
+			Greed::coords pos = l[s_id]->getCurrenntTile_withoutMutex();
 			bool check = isInShipRadius(this->ship_id, pos, ShipSide::FRONT);
 			bool check1 = isInShipRadius(this->ship_id, pos, ShipSide::REAR);
 			if (check || check1)
@@ -2440,7 +2448,7 @@ bool ship::isShipInMyRadius(int s_id, ShipSide oppSide)//to check if s_id is in 
 		}
 		else if (oppSide == ShipSide::REAR)
 		{
-			Greed::coords pos = l[s_id]->getCurrentRearTile();
+			Greed::coords pos = l[s_id]->getCurrentRearTile_withoutMutex();
 			bool check = isInShipRadius(this->ship_id, pos, ShipSide::FRONT);
 			bool check1 = isInShipRadius(this->ship_id, pos, ShipSide::REAR);
 			if (check || check1)
@@ -2562,11 +2570,11 @@ void ship::setBullet(Greed::bullet& bull, cannon can, int s_id, ShipSide s)
 	 //cout << "\n in func starting tile=>" << bull.starting_tile.r << " " << bull.starting_tile.c;
 	if (s == ShipSide::MIDDLE || s == ShipSide::FRONT)
 	{
-		bull.ending_tile = shipInfoList[s_id].getCurrentTile();
+		bull.ending_tile = shipInfoList[s_id].getCurrentTile_withoutMutex();
 	}
 	else if (s == ShipSide::REAR)
 	{
-		bull.ending_tile = shipInfoList[s_id].getCurrentRearTile();
+		bull.ending_tile = shipInfoList[s_id].getCurrentRearTile_withoutMutex();
 	}
 
 	//checking from where the bullet will be launched
@@ -2587,7 +2595,7 @@ void ship::setBullet(Greed::bullet& bull, cannon can, int s_id, ShipSide s)
 		launch_coords = Greed::abs_pos(getAbsolutePosition1(ShipSide((int)can)).x, getAbsolutePosition1(ShipSide((int)can)).y);
 	}
 	//checking for the target_coords now
-	shipEntity entity = shipInfoList[s_id].ob->getShipEntity();//eror here target ship's entity has to be found
+	shipEntity entity = shipInfoList[s_id].ob->getShipEntity_without_mutex();//eror here target ship's entity has to be found
 	if (target == Direction::EAST)
 	{
 		if (s == ShipSide::FRONT)
@@ -2736,7 +2744,7 @@ bool ship::fireCannon(cannon can, int s_id, ShipSide s)//s_id and s are of targe
 	*/
 	//checking which part of the target ship is in the radius
 	
-	if (shipInfoList[s_id].getDiedStatus()==0 && getCurrentAmmo() > 0 && isShipInMyRadius_forFire(s_id, can, s) && cannon_ob.activeBullets.size() <= 1)
+	if (shipInfoList[s_id].ob->died==0 && ammo > 0 && isShipInMyRadius_forFire(s_id, can, s) && cannon_ob.activeBullets.size() <= 1)
      //if (ammo > 0 && (s == ShipSide::MIDDLE && (isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::FRONT) && isShipInMyRadius(s_id, ShipSide((int)can), ShipSide::REAR))) || (s != ShipSide::MIDDLE && isShipInMyRadius(s_id, ShipSide((int)can), s)))
 	{
 
@@ -2773,10 +2781,10 @@ bool Greed::cannon::isShipInMyRadius(int s_id, ShipSide opponent_side)
 		Greed::coords position;
 		if (opponent_side == ShipSide::FRONT)
 		{
-			position = l1[s_id]->getCurrentTile();
+			position = l1[s_id]->getCurrenntTile_withoutMutex();
 		}
 		else if (opponent_side == ShipSide::REAR)
-			position = l1[s_id]->getCurrentRearTile();
+			position = l1[s_id]->getCurrentRearTile_withoutMutex();
 
 		int c1 = position.c - radius;
 		if (c1 < 0)
@@ -2839,7 +2847,7 @@ int Greed::cannon::getVictimShip()
 	deque<ship*> ship_list = con.ship_list;
 
 	int ship_id;
-	if (current_ship >=0 && ship_list[current_ship]->getDiedStatus() == 0)
+	if (current_ship >=0 && ship_list[current_ship]->died == 0)
 	{
 		ship_id = current_ship;
 
@@ -2859,13 +2867,13 @@ int Greed::cannon::getVictimShip()
 	int maxi = INT_MIN;
 	for (int i = 0; i < ship_list.size(); i++)
 	{
-		if (ship_list[i]->getDiedStatus() == 0 && isShipInMyRadius(ship_list[i]->getShipId(), ShipSide::FRONT))//the ship is alive
+		if (ship_list[i]->died == 0 && isShipInMyRadius(ship_list[i]->getShipId(), ShipSide::FRONT))//the ship is alive
 		{
 			//cout << "\nfor cannon ship_id==>" << ship_list[i]->getShipId();
-			if (maxi < ship_list[i]->getCurrentHealth())
+			if (maxi < ship_list[i]->health)
 			{
 				ship_id = i;
-				maxi = ship_list[i]->getCurrentHealth();
+				maxi = ship_list[i]->health;
 
 			}
 		}
@@ -2884,7 +2892,7 @@ double Greed::cannon::get_required_angle()//getVictimSHip has to be called in or
 		Greed::coords ship_tile;
 		if (current_ship != -1)//ss is corrupted!
 		{
-			ship_tile = ship_list[this->current_ship]->getCurrentTile();
+			ship_tile = ship_list[this->current_ship]->tile_pos_front;
 		}
 		/*
 		else if (current_ship != -1 && ss == ShipSide::REAR)
@@ -3051,9 +3059,9 @@ bool Greed::cannon::fireCannon(int s_id)//s_id and s are of target ship
 {
 	Control con;
 	deque<ship*> ship_list = con.getShipList(2369);
-	if (ship_list[s_id]->getCurrentHealth() > 0)
+	if (ship_list[s_id]->health > 0)
 	{
-		if (ship_list[s_id]->getDiedStatus() == 0 && isShipInMyRadius(s_id, ShipSide::FRONT))
+		if (ship_list[s_id]->died == 0 && isShipInMyRadius(s_id, ShipSide::FRONT))
 		{
 
 			Greed::bullet bull;
@@ -3185,7 +3193,7 @@ void ship::setPath_collision()
 void ship::update_pos_collision()
 {
 	//updating tile_pos_front here
-	unique_lock<mutex> lk(mutx->m[this->ship_id]);//locking the mutex
+	//unique_lock<mutex> lk(mutx->m[this->ship_id]);//locking the mutex
 	Greed::abs_pos current;
 	current.x = this->tile_pos_rear.c * len;
 	double x = current.x;
@@ -4042,7 +4050,7 @@ bool graphics::checkCollision(int sid, const Greed::bullet& ob)//sid is the ship
 	Control obb;
 	deque<ship*> shipInfoList = obb.getShipList(2369);
 	Direction dir = shipInfoList[sid]->getShipDirection();//direction of the target ship
-	ship::shipEntity entity = shipInfoList[sid]->getShipEntity();//entity of the target ship
+	ship::shipEntity entity = shipInfoList[sid]->getShipEntity_without_mutex();//entity of the target ship
 	sf::FloatRect bullet_pos = ob.bullet_entity.getGlobalBounds();
 	Greed::abs_pos coord(::rx(bullet_pos.left) - origin_x, ::ry(bullet_pos.top) - origin_y);
 

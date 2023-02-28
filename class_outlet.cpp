@@ -1099,6 +1099,14 @@ class shipInfo
 {
 
 	ship* ob;
+	Greed::coords getCurrentTile_withoutMutex()
+	{
+		return ob->getCurrentTile_withoutMutex();
+	}
+	Greed::coords getCurrentRearTile_wihoutMutex()
+	{
+		return ob->getCurrentRearTile_withoutMutex();
+	}
 public:
 
 	shipInfo()
@@ -2034,6 +2042,14 @@ public:
 		return tile_pos_front;
 
 	}
+	Greed::coords getCurrentTile_withoutMutex()
+	{
+		return tile_pos_front;
+	}
+	Greed::coords getCurrentRearTile_withoutMutex()
+	{
+		return tile_pos_rear;
+	}
 	Greed::coords getCurrentRearTile()//returns the rear tile of the ship
 	{
 		unique_lock<mutex> lk(mutx->m[mutex_id]);
@@ -2230,6 +2246,14 @@ void user1(ship& ob);
 int shipInfo::getTotalShips()
 {
 	return ob->getTotalShips();
+}
+Greed::coords shipInfo::getCurrentTile_withoutMutex()
+{
+	return ob->getCurrenntTile_withoutMutex();
+}
+Greed::coords shipInfo::getCurrentRearTile_withoutMutex()
+{
+	return ob->getCurrentRearTile_withoutMutex();
 }
 int shipInfo::getShipId()
 {
@@ -3894,7 +3918,7 @@ void ship::setBullet(Greed::bullet& bull,cannon can,int s_id,ShipSide s)
 	 //cout << "\n in func starting tile=>" << bull.starting_tile.r << " " << bull.starting_tile.c;
 	if (s == ShipSide::MIDDLE || s == ShipSide::FRONT)
 	{
-		bull.ending_tile = shipInfoList[s_id].getCurrentTile();
+		bull.ending_tile = shipInfoList[s_id].getCurrentTile_withoutMutex();
 	}
 	else if (s == ShipSide::REAR)
 	{

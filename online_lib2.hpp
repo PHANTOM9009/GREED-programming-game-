@@ -688,6 +688,10 @@ class shipInfo
 {
 
 	ship* ob;
+	Greed::coords getCurrentTile_withoutMutex();
+
+	Greed::coords getCurrentRearTile_withoutMutex();
+	
 public:
 
 	shipInfo()
@@ -1770,6 +1774,14 @@ public:
 		return tile_pos_front;
 
 	}
+	Greed::coords getCurrenntTile_withoutMutex()
+	{
+		return tile_pos_front;
+	}
+	Greed::coords getCurrentRearTile_withoutMutex()
+	{
+		return tile_pos_rear;
+	}
 	Greed::coords getCurrentRearTile()//returns the rear tile of the ship
 	{
 		unique_lock<mutex> lk(mutx->m[mutex_id]);
@@ -1982,7 +1994,7 @@ public:
 	friend class graphics;
 	friend class Control;
 	friend int main();
-
+	friend class Greed::cannon;
 
 	friend void chaseShip1(int s_id, ship& ob);
 	friend bool get(ship* a, ship* b);

@@ -117,7 +117,7 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 								pl1[i]->setPath(path.getPath());
 								//	cout << "\n in type 0 in target=>" << pl1[i]->nav_data[0].target.r << " " << pl1[i]->nav_data[0].target.c;
 							}
-							else if (pl1[i]->nav_data[0].s_id != -1)
+							else if (pl1[i]->nav_data[0].s_id != -1 && pl1[pl1[i]->nav_data[0].s_id]->getDiedStatus() == 0)
 							{
 								Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].s_id);
 								pl1[i]->setPath(path.getPath());
@@ -130,14 +130,11 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 							pl1[i]->sail(pl1[i]->nav_data[0].dir, pl1[i]->nav_data[0].n);
 							cout << "\n in sail";
 						}
-						else if (pl1[i]->nav_data[0].type == 2 && pl1[i]->nav_data[0].s_id >= 0)
+						else if (pl1[i]->nav_data[0].type == 2 && pl1[i]->nav_data[0].s_id >= 0 && pl1[pl1[i]->nav_data[0].s_id]->getDiedStatus()==0)
 						{
-							if (pl1[pl1[i]->nav_data[0].s_id]->died == 0)
-							{
-								//cout << "\n in chaseShip";
-								pl1[i]->chaseShip(pl1[i]->nav_data[0].s_id);
+							pl1[i]->chaseShip(pl1[i]->nav_data[0].s_id);
 								//cout << "\n " << i << " ship is chasing=>" << pl1[i]->nav_data[0].s_id;
-							}
+							
 						}
 						else if (pl1[i]->nav_data[0].type == 3)
 						{
@@ -555,14 +552,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 							if (pl1[i]->collide(j, pl1[i]->tile_pos_front))
 							{
-								//adding in queue of 
+								
 								pl1[i]->collided_ships.push_back(j);
-								//mutx->m[i].unlock();
+								
 								pl1[i]->anchorShip_collision();
-								//mutx->m[i].lock();
-
-								//pl1[j]->anchorShip_collision();
-								//cout << "\n location of ship2==>" << pl1[1]->absolutePosition.x+length << " " << pl1[1]->absolutePosition.y+length;
+								
 							}
 						}
 					}
@@ -1388,7 +1382,7 @@ int main()
 	//extracting the data
 	vector<int> sockets;//a vector of n
 	unordered_map<int, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,5);//connecting to the client terminal
+	connector(sockets, socket_id,4);//connecting to the client terminal
 
 
 	//connector is called
