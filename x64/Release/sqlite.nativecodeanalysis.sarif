@@ -1,0 +1,43 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+  "runs": [
+    {
+      "results": [],
+      "tool": {
+        "driver": {
+          "name": "PREfast",
+          "fullName": "PREfast Code Analysis",
+          "version": "14.35.32215.0",
+          "informationUri": "https://aka.ms/cpp/ca"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "artifacts": [
+        {
+          "location": {
+            "uri": "file:///f:/current projects/greed(programming game)/greed(programming game)/sqlite.cpp"
+          },
+          "roles": [
+            "analysisTarget"
+          ],
+          "hashes": {
+            "sha-256": "7c2e4ed36b6c43d6110c0182bb64bedd01d440907f506c20826e9f670e867e82"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/current projects/greed(programming game)/greed(programming game)/sqlite3.h"
+          },
+          "hashes": {
+            "sha-256": "10ff8c8842b5e6bb0555f39ce946b77d0f84acc9e33895d22242444d91900571"
+          }
+        }
+      ]
+    }
+  ]
+}
