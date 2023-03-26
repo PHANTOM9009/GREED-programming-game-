@@ -1,0 +1,2 @@
+F:\current projects\GREED(programming game)\x64\Release\GREED(programming game).exe.lastcodeanalysissucceeded
+F:\current projects\GREED(programming game)\GREED(programming game)\x64\Release\NativeCodeAnalysis.read.1.tlog
