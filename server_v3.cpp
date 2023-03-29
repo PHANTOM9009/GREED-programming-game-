@@ -264,7 +264,7 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 	freeaddrinfo(bind_address);
 	int count = 0;
 	SOCKET max_socket = socket_listen;
-	FD_SET master;
+	fd_set master;
 	FD_ZERO(&master);
 	FD_SET(socket_listen, &master);
 	while (count < n)
