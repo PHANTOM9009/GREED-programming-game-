@@ -60,7 +60,7 @@ class ship;
 class graphics;
 class Control;
 /*some networking libs*/
-
+void startup(vector<int> &sockets,unordered_map<int,int> &socket_id);
 class control1;
 void chaseShip1(int s_id, ship& ob);
 enum class map
@@ -624,6 +624,7 @@ public:
 	friend graphics;
 	friend int main();
 	friend class ship;
+	friend void startup(vector<int>& sockets, unordered_map<int, int>& socket_id);
 
 };
 class Greed::shipCannon
@@ -2001,6 +2002,7 @@ public:
 	friend class shipInfo;
 	friend void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
 	friend class control1;
+	friend void startup(vector<int> &sockets,unordered_map<int,int> &socket_id);
 	
 };
 double avg_bullet = 0;
@@ -2438,7 +2440,7 @@ public:
 	friend int main();
 	friend void filter();
 	friend class Greed::cannon;
-
+	friend void startup(vector<int> &sockets,unordered_map<int,int> &socket_id);
 
 };
 /*networking libs*/

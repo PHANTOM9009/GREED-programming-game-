@@ -1370,25 +1370,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	cout << "\n fire_ship=>" << fire_ship1 / total_frames;
 	cout << "\n fire _cannon=>" << fire_cannon1 / total_frames;
 }
-int main()
+void startup(vector<int> &sockets,unordered_map<int,int> &socket_id)
 {
-#if defined(_WIN32)
-	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d))
-	{
-		cout << "\n failed to initialize";
-	}
-#endif // defined
-	//extracting the data
-	vector<int> sockets;//a vector of n
-	unordered_map<int, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,4);//connecting to the client terminal
-
-
-	//connector is called
-	const int no_of_players = socket_id.size();
-	cout << "\n number of players==>" << no_of_players;
-
+	int no_of_players = sockets.size();
 
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
@@ -1408,7 +1392,7 @@ int main()
 	List<Greed::coords> l1;
 	ship* player = new ship[no_of_players];
 
-	
+
 	deque<ship*> slist;
 	//vector<int> iop;
 	for (int i = 0; i < no_of_players; i++)
@@ -1492,7 +1476,7 @@ int main()
 	}
 	//sending the startup data to all the connected clients
 
-	
+
 	connector_show(socket_display, socket_id_display, 1);//connecting with display unit of the client
 
 	cout << "\n sending the data to the clients=>";
@@ -1530,7 +1514,27 @@ int main()
 
 
 	graphics cg;
-	cg.callable(&mutx, code, map1, sockets, socket_id,socket_display);//dont call callable function its depricated
+	cg.callable(&mutx, code, map1, sockets, socket_id, socket_display);//dont call callable function its depricated
+}
+int main()
+{
+#if defined(_WIN32)
+	WSADATA d;
+	if (WSAStartup(MAKEWORD(2, 2), &d))
+	{
+		cout << "\n failed to initialize";
+	}
+#endif // defined
+	//extracting the data
+	vector<int> sockets;//a vector of n
+	unordered_map<int, int> socket_id;//socket to ship id map
+	connector(sockets, socket_id,4);//connecting to the client terminal
+
+	startup(sockets, socket_id);
+	//connector is called
+	const int no_of_players = socket_id.size();
+	cout << "\n number of players==>" << no_of_players;
+
 
 	cout << "\n avg bulle count per frame is=>" << avg_bullet / no_of_times;
 
