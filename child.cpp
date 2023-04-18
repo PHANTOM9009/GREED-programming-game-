@@ -23,8 +23,6 @@
 #define ISVALIDSOCKET(s) ((s) != INVALID_SOCKET)
 #define CLOSESOCKET(s) closesocket(s)
 #define GETSOCKETERRNO() WSAGetLastError()
-
-
 #else
 #define ISVALIDSOCKET(s) ((s) >= 0)
 #define CLOSESOCKET(s) close(s)
@@ -35,7 +33,13 @@
 #include<string>
 #include<Windows.h>
 using namespace std;
+class transfer_socket
+{
+public:
+    int len;
+    WSAPROTOCOL_INFO protocolInfo[100];
 
+};
 std::string GetLastErrorAsString()
 {
     //Get the error message ID, if any.
@@ -89,33 +93,52 @@ int main()
     int bytes = send(peer_socket, (char*)&val, sizeof(val), 0);
 
     // Create a socket using the protocol info
-    
-    WSAPROTOCOL_INFO protocolInfo;
-    int byte = recv(peer_socket, (char*)&protocolInfo, sizeof(protocolInfo),0);
+    int total = 0;
 
-    SOCKET childSocket = WSASocket(protocolInfo.iAddressFamily, protocolInfo.iSocketType, protocolInfo.iProtocol, &protocolInfo, 0, WSA_FLAG_OVERLAPPED);
-    if (childSocket == INVALID_SOCKET)
+    fd_set master;
+    FD_ZERO(&master);
+    FD_SET(peer_socket, &master);
+    timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+    SOCKET childSocket;
+    while (total < 2)
     {
-        std::cerr << "Failed to create child socket: " << WSAGetLastError() << std::endl;
-        return 1;
-    }
 
-    // Receive data from the client
-   
+        transfer_socket ob;
+        int byte = recv(peer_socket, (char*)&ob, sizeof(ob), 0);
+        for (int i = 0; i < ob.len; i++)
+        {
+            childSocket = WSASocket(ob.protocolInfo[i].iAddressFamily, ob.protocolInfo[i].iSocketType, ob.protocolInfo[i].iProtocol, &ob.protocolInfo[i], 0, WSA_FLAG_OVERLAPPED);
+            if (childSocket == INVALID_SOCKET)
+            {
+                std::cerr << "Failed to create child socket: " << WSAGetLastError() << std::endl;
+                return 1;
+            }
+            char response[100] = "Hello from child process!\0";
+            int sendResult = send(childSocket, (char*)&response, 100, 0);
+            if (sendResult == SOCKET_ERROR)
+            {
+                std::cerr << "Failed to send data: " << GetLastErrorAsString() << std::endl;
+                closesocket(childSocket);
+                //return 1;
+            }
 
-   
-     char response[100] = "Hello from child process!\0";
-    int sendResult = send(childSocket, response, 100, 0);
-    if (sendResult == SOCKET_ERROR)
-    {
-        std::cerr << "Failed to send data: " << GetLastErrorAsString() << std::endl;
-        closesocket(childSocket);
-        //return 1;
+            else
+            {
+                total++;
+                cout << "\n succesfully connected!";
+            }
+        }
+        // Receive data from the client
     }
+    int status = 0;
+    int by = send(peer_socket, (char*)&status, sizeof(status), 0);
+    cout << "\n lobby status sent to the server==>"<<by;
 
     // Close the socket in the child process
     closesocket(childSocket);
-
+    closesocket(peer_socket);
     // Clean up
     WSACleanup();
 while(1)

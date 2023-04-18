@@ -136,7 +136,8 @@ int main()
 
     //sending 
     WSAPROTOCOL_INFO protocolInfo;
-    if (WSADuplicateSocket(clientSocket,id, &protocolInfo) != 0) {
+    if (WSADuplicateSocket(clientSocket,id, &protocolInfo) != 0) 
+    {
         std::cerr << "Failed to duplicate socket handle: " << WSAGetLastError() << std::endl;
         cout << GetLastErrorAsString();
         closesocket(clientSocket);
