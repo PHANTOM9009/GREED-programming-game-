@@ -2257,7 +2257,10 @@ class control1
 		ob.radius = pl1[ship_id]->radius;
 			
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-
+		if (pl1[ship_id]->nav_data_final.size() > 0)
+		{
+			int a;
+		}
 		if (pl1[ship_id]->nav_data_final.size() <= 10)
 		{
 			ob.size_navigation = pl1[ship_id]->nav_data_final.size();

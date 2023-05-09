@@ -36,7 +36,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "hawk.cpp"
+#include "diff_file.cpp"
 #include<ctime>
 /*
 * what am i doing here?
@@ -85,7 +85,7 @@ SOCKET connect_to_server()//first connection to the server
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* server_add;
 	char buff[1000];
-	getaddrinfo("192.168.137.68", "8080", &hints, &server_add);
+	getaddrinfo("192.168.33.213", "8080", &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
@@ -110,6 +110,8 @@ SOCKET connect_to_server()//first connection to the server
 	//cout << "\n connected with the server..";
 	freeaddrinfo(server_add);
 	
+	int r = recv(peer_socket, (char*)&buff, sizeof(buff), 0);
+	cout << "\n the message is=>" << buff;
 	return peer_socket;
 }
 
@@ -207,6 +209,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			{
 				memset((void*)&data1, 0, sizeof(data1));
 				bytes_recv = recv(peer_socket, (char*)&data1, sizeof(data1), 0);
+				
+				
 				while (bytes_recv < sizeof(data1))
 				{
 					bytes_recv += recv(peer_socket, (char*)&data1 + bytes_recv, sizeof(data1) - bytes_recv,0);
@@ -226,9 +230,27 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				if (bytes_recv > 0)
 				{
 					//cout << "\n for frame=>" << total_time;
+					/*
+					cout << "\n the data received by the server is==>";
+					//print all the members of data1
+					cout << "\n the frame number is=>" << data1.packet_id;
+					cout << "\n the ship id is=>" << data1.s1;
+					cout << "\n ship_data for me=>";
+					cout << "\n ship id=>" << data1.shipdata_forMe.ship_id;
+					cout << "\n seconds=>" << data1.shipdata_forMe.seconds;
+					cout << "\n minutes=>" << data1.shipdata_forMe.minutes;
+					cout << "\n health=>" << data1.shipdata_forMe.health;
+					cout << "\n gold=>" << data1.shipdata_forMe.gold;
+					cout << "\n died=>" << data1.shipdata_forMe.died;
+					cout << "\n ammo=>" << data1.shipdata_forMe.ammo;
+					cout << "\n fuel=>" << data1.shipdata_forMe.fuel;
+					cout << "\n front tile=>" << data1.shipdata_forMe.front_tile.r << " " << data1.shipdata_forMe.front_tile.c;
+					cout << "\n position is=>" << data1.shipdata_forMe.absolute_position.x << " " << data1.shipdata_forMe.absolute_position.y;
+					*/
 					control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);
 					control_ob.packet_to_me(data1.shipdata_forMe, ship_id, pl1);
 				}
+				
 
 			}
 			//std::time_t result = std::time(nullptr);
@@ -937,6 +959,11 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						data2.packet_id = frame_number;
 						data2.shipdata_forServer = shipdata;
 						//sending the data
+						if (shipdata.size_navigation > 0)
+						{
+							cout << "\n navigation called at frame number==>" << frame_number;
+							
+						}
 
 
 

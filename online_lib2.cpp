@@ -2143,6 +2143,7 @@ bool ship::sail(Direction d, int tiles = 1)//number of tiles to be moved at a pa
 		}
 		*/
 		Control con;
+		lk.unlock();
 		::filter(tile_path, con.opaque_coords, *this);//function to filter out of range coordinates
 		/*
 		cout << "\n tile path after filtering is==>";
@@ -2151,7 +2152,7 @@ bool ship::sail(Direction d, int tiles = 1)//number of tiles to be moved at a pa
 			cout << tile_path[i].r << " " << tile_path[i].c << endl;
 		}
 		*/
-
+	
 		setPath(tile_path);
 		return true;
 	}

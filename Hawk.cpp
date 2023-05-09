@@ -86,6 +86,7 @@ namespace user1
 						ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::REAR);
 					}
 				}
+				ob.Greed_fireCannon(cannon::FRONT, 0, ShipSide::REAR);
 				if (e.eventType == Event::EventType::LowAmmo)
 				{
 					//ob.Greed_upgradeAmmo(20);

@@ -47,10 +47,12 @@ void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 	pl1[i]->killer_cannon_id = ob.killer_cannon_id;
 	
 	pl1[i]->killed_ships.clear();
-	for (int i = 0; i < ob.killed_ships_size; i++)
+	/*
+	for (int j = 0; j < ob.killed_ships_size; j++)
 	{
-		pl1[i]->killed_ships.push_back(ob.killed_ships[i]);
+		pl1[i]->killed_ships.push_back(ob.killed_ships[j]);
 	}
+	*/
 	
 	pl1[i]->score = ob.score;
 	//pl1[i]->name = ob.name;
@@ -87,7 +89,8 @@ SOCKET connect_to_server()//first connection to the server
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* server_add;
 	char buff[1000];
-	getaddrinfo("127.0.0.1", "8080", &hints, &server_add);
+
+	getaddrinfo("20.234.91.15", "8081", &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
@@ -458,11 +461,9 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				//receiving the data
 				gone = 1;
 				bytes_received = recv(peer_socket, (char*)&ship_data, sizeof(ship_data), 0);
-				while (bytes_received < sizeof(ship_data))
-				{
-
-					bytes_received += recv(peer_socket, (char*)&ship_data + bytes_received, sizeof(ship_data) - bytes_received, 0);
-				}
+				
+			
+				
 				if (bytes_received < 1)
 				{
 					cout << "\n server disconnected the connection";
@@ -472,7 +473,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				double diff = ship_data.packet_no - previous;
 				if (diff > 1)
 				{
-					cout << "\n difference is greater than 1=>" << diff << " " << previous;
+					//cout << "\n difference is greater than 1=>" << diff << " " << previous;
 				}
 				
 				previous = ship_data.packet_no;

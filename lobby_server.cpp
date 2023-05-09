@@ -41,9 +41,10 @@
 #include<algorithm>
 #include<vector>
 #include<unordered_map>
-#define max_player 2 //number of maximum players that can play simultaneously in a lobby
+//#define max_player 3 //number of maximum players that can play simultaneously in a lobby
 #define GAME_SERVER_COUNT 1
 using namespace std;
+int max_player;
 std::string GetLastErrorAsString()
 {
 	//Get the error message ID, if any.
@@ -361,23 +362,28 @@ int main()
 	}
 #endif // defined
 	//we need 2 connections to game servers
+	cout << "\n input the number of players=>";
+	cin >> max_player;
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* bind_address;
-	getaddrinfo(0, "8080", &hints, &bind_address);
+	getaddrinfo(0, "8080", &hints, &bind_address);//this server is running on port 8080
 
 	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_listen))
 	{
 		cout << "\n socket not created=>" << GETSOCKETERRNO();
 	}
+	/*
 	int option = 0;
 	if (setsockopt(socket_listen, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&option, sizeof(option)))//for accepting ipv6 as well
 	{
 		cout << "\n problem in setting the flag==>";
 	}
+	*/
 	cout << "\n binding the socket==>";
 	if (bind(socket_listen, (const sockaddr*)bind_address->ai_addr, (int)bind_address->ai_addrlen))
 	{
@@ -404,11 +410,28 @@ int main()
 		select(max_socket + 1, &reads, 0, 0, &timeout);
 		if (FD_ISSET(socket_listen, &reads))
 		{
+
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
 			SOCKET sock = accept(socket_listen, (sockaddr*)&client_address, &client_len);
-			lobby[sock] = 0;
 			
+			
+			
+			struct sockaddr_in serverAddress, clientAddress;
+			int clientAddressLength = sizeof(clientAddress);
+			char clientIP[INET_ADDRSTRLEN];
+
+			int ret=getpeername(sock, (sockaddr*)&clientAddress, &clientAddressLength);
+			cout << "\n getpeername returned=>" << ret;
+			if (ret != 0)
+			{
+				cout << "\n error in getpeername=>" << GetLastErrorAsString();
+			}
+			inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN);
+			if (strcmp("127.0.0.1", clientIP) == 0)//a check if the connection is from the same computer or not
+			{
+				lobby[sock] = 0;
+			}
 		}
 				
 	}

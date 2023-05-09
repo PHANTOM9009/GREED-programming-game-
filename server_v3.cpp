@@ -1,5 +1,10 @@
 /*this version is the final version of the game server, this doesn't show the graphics, only does the computation*/
-
+/*how to run this shit
+start lobby_server
+start server_v3
+start client_v1
+start client_show
+*/
 
 
 #pragma once
@@ -40,7 +45,7 @@
 #include<ctime>
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-
+int max_player;
 /*
 * 1. a function which connects the server with the clients and assign each client's ship an id
 * 2. after all required clients are connected properly or the time of connection is up, send all the connected clients initial configuration of the game
@@ -49,6 +54,14 @@
 */
 vector<int> socket_display;//vector of sockets for display unit of the client
 unordered_map<int, int> socket_id_display;
+
+class transfer_socket
+{
+public:
+	int length;
+	WSAPROTOCOL_INFO protocolInfo[100];
+
+};
 class debug
 {
 public:
@@ -227,23 +240,24 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
-
+	hints.ai_family = AF_INET;
 	hints.ai_flags = AI_PASSIVE;
 
 
 	struct addrinfo* bind_address;
-	getaddrinfo(0, "8080", &hints, &bind_address);
+	getaddrinfo(0, "8081", &hints, &bind_address);
 	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_listen))
 	{
 		cout << "\n socket not created==>" << GETSOCKETERRNO();
 	}
-
+	/*
 	int option = 0;
 	if (setsockopt(socket_listen, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&option, sizeof(option)))//for accepting ipv6 as well
 	{
 		cout << "\n problem in setting the flag==>";
 	}
+	*/
 	int yes = 1;
 	if (setsockopt(socket_listen, IPPROTO_TCP, TCP_NODELAY, (char*)&yes, sizeof(yes)) < 0) //disabling nagle's algorithm for speed in sending the data
 	{
@@ -492,7 +506,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					{
 						if (pl1[i]->udata[j].type == 0)
 						{
-							pl1[i]->upgradeAmmo(pl1[i]->udata[j].n);
+							pl1[i]->upgradeAmmo(pl1[i]->udata[j].n);//when the user buys something
 						}
 						else if (pl1[i]->udata[j].type == 1)
 						{
@@ -1308,7 +1322,18 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					{
 						bytes += recv(i, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
 					}
-
+					cout << "\n data received by the server==>";
+					cout << "\n packet_id=>" << data2.packet_id;
+					cout << "\n ship_id=>" << data2.shipdata_forServer.ship_id;
+					
+					if (data2.shipdata_forServer.size_navigation > 0)
+					{
+						cout << "\n size navigation=>" << data2.shipdata_forServer.size_navigation;
+						cout << "\n type=>" << data2.shipdata_forServer.nav_data->type;
+						cout << "\n tiles=>" << data2.shipdata_forServer.nav_data->n;
+						cout << "\n direction==>" << (int)data2.shipdata_forServer.nav_data->dir;
+					}
+					
 					//data is received now convert it to appropriate form
 					if (bytes > 0)
 					{
@@ -1516,6 +1541,7 @@ void startup(vector<int> &sockets,unordered_map<int,int> &socket_id)
 	graphics cg;
 	cg.callable(&mutx, code, map1, sockets, socket_id, socket_display);//dont call callable function its depricated
 }
+
 int main()
 {
 #if defined(_WIN32)
@@ -1525,12 +1551,81 @@ int main()
 		cout << "\n failed to initialize";
 	}
 #endif // defined
+
+	cout << "\n enter the number of players=>";
+	cin >> max_player;
+
 	//extracting the data
 	vector<int> sockets;//a vector of n
 	unordered_map<int, int> socket_id;//socket to ship id map
-	connector(sockets, socket_id,4);//connecting to the client terminal
+	//establishing socket connection with the server
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	int res = 0;
+	hints.ai_socktype = SOCK_STREAM;
+	struct addrinfo* server_add;
+	char buff[1000];
+	getaddrinfo("127.0.0.1", "8080", &hints, &server_add);
+	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
+	cout << "\n the server address is==>" << buff;
+	cout << endl;
+	SOCKET peer_socket = socket(server_add->ai_family, server_add->ai_socktype, server_add->ai_protocol);
+	cout << "\n my process id is=>" << GetCurrentProcessId();
+	while (connect(peer_socket, server_add->ai_addr, server_add->ai_addrlen))
+	{
+		cout << "\n problem in connecting";
+	}
+	cout << "\n sending the id=>";
+	int val = GetCurrentProcessId();
+	int bytes = send(peer_socket, (char*)&val, sizeof(val), 0);
+	
+	while (1)
+	{
+		int total = 0;
+		while (total < max_player)
+		{
+			transfer_socket ob;
+			int byte = recv(peer_socket, (char*)&ob, sizeof(ob), 0);
+			for (int i = 0; i < ob.length; i++)
+			{
+				SOCKET childSocket = WSASocket(ob.protocolInfo[i].iAddressFamily, ob.protocolInfo[i].iSocketType, ob.protocolInfo[i].iProtocol, &ob.protocolInfo[i], 0, WSA_FLAG_OVERLAPPED);
+				if (childSocket == INVALID_SOCKET)
+				{
+					std::cerr << "Failed to create child socket: " << WSAGetLastError() << std::endl;
+					return 1;
+				}
+				char response[100] = "Hello from child process!\0";
+				int sendResult = send(childSocket, (char*)&response, 100, 0);
+				if (sendResult == SOCKET_ERROR)
+				{
+				//	std::cerr << "Failed to send data: " << GetLastErrorAsString() << std::endl;
+					closesocket(childSocket);
+					//return 1;
+					cout << "\n error in connection with the client";
+				}
 
-	startup(sockets, socket_id);
+				else
+				{
+					sockets.push_back(childSocket);
+					socket_id[childSocket] = total;
+					total++;
+					cout << "\n succesfully connected!";
+				}
+			}
+		}
+		//we have got our warriors now, just notify the main server and start the fucking game
+		int status = 0;
+		int bytes = send(peer_socket, (char*)&status, sizeof(status), 0);
+		//start the game now
+		startup(sockets, socket_id);//to call the game
+
+		status = 1;
+		bytes = send(peer_socket, (char*)&status, sizeof(status), 0);//notify the server that i am ready to take new connections
+
+	}
+	//connector(sockets, socket_id,4);//connecting to the client terminal
+
+	
 	//connector is called
 	const int no_of_players = socket_id.size();
 	cout << "\n number of players==>" << no_of_players;
