@@ -36,7 +36,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "diff_file.cpp"
+#include "hawk.cpp"
 #include<ctime>
 /*
 * what am i doing here?
@@ -85,7 +85,7 @@ SOCKET connect_to_server()//first connection to the server
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* server_add;
 	char buff[1000];
-	getaddrinfo("192.168.33.213", "8080", &hints, &server_add);
+	getaddrinfo("127.0.0.1", "8080", &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
