@@ -73,12 +73,17 @@ public:
 	double navigation_ship;
 	double fire_ship;
 	double fire_cannon;
+	double avg_send1;//for sending to the client terminal
+	double avg_send2;//for sending to the client display unit
+
 	debug()
 	{
 
 	}
-	debug(double avg_pro1,double avg_pro2,double fire_up,double nav_ship,double fire_s,double fire_c,double avg_send,double avg_rec)
+	debug(double avg_pro1,double avg_pro2,double fire_up,double nav_ship,double fire_s,double fire_c,double avg_send,double avg_rec,double a,double b)
 	{
+		avg_send1 = a;
+		avg_send2 = b;
 		avg_processing1 = avg_pro1;
 		avg_processing2 = avg_pro2;
 		fire_upgrade = fire_up;
@@ -245,7 +250,7 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 
 
 	struct addrinfo* bind_address;
-	getaddrinfo(0, "8081", &hints, &bind_address);
+	getaddrinfo(0, "8081", &hints, &bind_address);//client show process is connected to the socket having socket number 8081
 	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_listen))
 	{
@@ -381,7 +386,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 	vector<int> checker;
 
-    double avg_send = 0;
+    double avg_send = 0;//total send
+	double avg_send1 = 0;//sending to the player terminals
+	double avg_send2 = 0;
 	double avg_recv = 0;
 	double avg_processing = 0;
 	double avg_processing2 = 0;
@@ -440,12 +447,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			if (t2 >= 1)
 			{
 				cout << "\n\n frame rate is==>" << c;
-				de.push_back(debug(avg_processing ,avg_processing2, fire_upgrade, navigation_ship, fire_ship,fire_cannon, avg_send, avg_recv));
+				de.push_back(debug(avg_processing ,avg_processing2, fire_upgrade, navigation_ship, fire_ship,fire_cannon, avg_send, avg_recv,avg_send1,avg_send2));
 				avg_processing = 0;
 				avg_processing2 = 0;
 				avg_send = 0;
 				avg_recv = 0;
-
+				avg_send1 = 0;
+				avg_send2 = 0;
 				fire_upgrade = 0;
 				navigation_ship = 0;
 				fire_ship = 0;
@@ -1121,15 +1129,18 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					//sending the data
 					data1.packet_id = total_time;
 					int bytes = send(i, (char*)&data1, sizeof(data1), 0);
+					/*
 					while (bytes < sizeof(data1))
 					{
 						bytes += send(i, (char*)&data1 + bytes, sizeof(data1) - bytes, 0);
 					}
+					*/
 					//data is sent
 				}
 
 			}
 			sf::Time time2 = sending.getElapsedTime();
+			avg_send1 += time2.asSeconds();
 			avg_send += time2.asSeconds();
 			//rendering starts from here
 			
@@ -1280,14 +1291,16 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					CLOSESOCKET(socket_client);
 					break;
 				}
-			
+				/*
 				while (bytes < sizeof(ship_packet))
 				{
 					bytes += send(socket_client, (char*)&ship_packet + bytes, sizeof(ship_packet) - bytes, 0);
 				}
+				*/
 			
 				//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
 			}
+			avg_send2 += sending.getElapsedTime().asSeconds();
 			avg_send += sending.getElapsedTime().asSeconds();
 
 
@@ -1322,17 +1335,6 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					{
 						bytes += recv(i, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
 					}
-					cout << "\n data received by the server==>";
-					cout << "\n packet_id=>" << data2.packet_id;
-					cout << "\n ship_id=>" << data2.shipdata_forServer.ship_id;
-					
-					if (data2.shipdata_forServer.size_navigation > 0)
-					{
-						cout << "\n size navigation=>" << data2.shipdata_forServer.size_navigation;
-						cout << "\n type=>" << data2.shipdata_forServer.nav_data->type;
-						cout << "\n tiles=>" << data2.shipdata_forServer.nav_data->n;
-						cout << "\n direction==>" << (int)data2.shipdata_forServer.nav_data->dir;
-					}
 					
 					//data is received now convert it to appropriate form
 					if (bytes > 0)
@@ -1365,6 +1367,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	WSACleanup();
 	cout << "\n average times are==>";
 	double sending = 0;
+	double sending1 = 0;
+	double sending2 = 0;
 	double processing1 = 0;
 	double processing2 = 0;
 	double receiving = 0;
@@ -1384,9 +1388,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 		navigation_ship1 += de[i].navigation_ship;
 		fire_ship1 += de[i].fire_ship;
 		fire_cannon1 += de[i].fire_cannon;
-
+		sending1 += de[i].avg_send1;
+		sending2 += de[i].avg_send2;
+	
 	}
 	cout << "\n sending=>" << sending / total_frames;
+	cout << "\n sending to the client terminal==>" << sending1 / total_frames;
+	cout << "\n sending to the client display unit==>" << sending2 / total_frames;
 	cout << "\n processing1=>" << processing1 / total_frames;
 	cout << "\n processing2=>" << processing2 / total_frames;
 	cout << "\n receiving=>" << receiving / total_frames;
