@@ -90,7 +90,7 @@ SOCKET connect_to_server()//first connection to the server
 	struct addrinfo* server_add;
 	char buff[1000];
 
-	getaddrinfo("127.0.0.1", "8081", &hints, &server_add);
+	getaddrinfo("192.168.129.213", "8081", &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
@@ -462,6 +462,11 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				gone = 1;
 				bytes_received = recv(peer_socket, (char*)&ship_data, sizeof(ship_data), 0);
 				
+				while (bytes_received < sizeof(ship_data))
+				{
+					bytes_received += recv(peer_socket, (char*)&ship_data + bytes_received, sizeof(ship_data) - bytes_received, 0);
+
+				}
 				
 				
 				if (bytes_received < 1)
