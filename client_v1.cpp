@@ -205,6 +205,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			{
 				break;
 			}
+			select(peer_socket + 1, &reads, 0, 0, &timeout);
 			if (FD_ISSET(peer_socket, &reads))//socket is ready to read from
 			{
 				memset((void*)&data1, 0, sizeof(data1));
@@ -950,7 +951,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				shipData_forServer shipdata;
 				memset((void*)&shipdata, 0, sizeof(shipdata));
 				memset((void*)&data2, 0, sizeof(data2));
-				//select(peer_socket + 1, 0, &writes, 0, &timeout);
+				
+				select(peer_socket + 1, 0, &writes, 0, &timeout);
 
 				if (FD_ISSET(peer_socket, &writes))
 				{

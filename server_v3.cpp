@@ -1129,12 +1129,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					//sending the data
 					data1.packet_id = total_time;
 					int bytes = send(i, (char*)&data1, sizeof(data1), 0);
-					/*
+					
 					while (bytes < sizeof(data1))
 					{
 						bytes += send(i, (char*)&data1 + bytes, sizeof(data1) - bytes, 0);
 					}
-					*/
+					
 					//data is sent
 				}
 
@@ -1291,12 +1291,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					CLOSESOCKET(socket_client);
 					break;
 				}
-				/*
+				
 				while (bytes < sizeof(ship_packet))
 				{
 					bytes += send(socket_client, (char*)&ship_packet + bytes, sizeof(ship_packet) - bytes, 0);
 				}
-				*/
+				
 			
 				//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
 			}

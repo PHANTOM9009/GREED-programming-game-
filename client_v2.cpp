@@ -462,7 +462,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				gone = 1;
 				bytes_received = recv(peer_socket, (char*)&ship_data, sizeof(ship_data), 0);
 				
-			
+				
 				
 				if (bytes_received < 1)
 				{
