@@ -163,6 +163,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int frame_rate = 0;
 	double check_time = 0;
 	sf::Clock clock1;
+	int c = 0;
+	double avg_recv = 0;
+	double avg_send = 0;
+	double avg_processing = 0;
 	while (1)
 	{
 		/*NOTES:
@@ -192,6 +196,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			sf::Time tt = clock1.restart();
 			check_time+=tt.asSeconds();
 			frame_rate++;
+			c++;
 		
 			if (check_time > 1)
 			{
@@ -220,6 +225,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			{
 				break;
 			}
+			sf::Clock recvt;
+			recvt.restart();
 			select(peer_socket + 1, &reads, 0, 0, &timeout);
 			if (FD_ISSET(peer_socket, &reads))//socket is ready to read from
 			{
@@ -269,6 +276,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				
 
 			}
+			avg_recv += recvt.getElapsedTime().asSeconds();
+			
 			//std::time_t result = std::time(nullptr);
 		    //cout << "\n----------------------------------------------------------";
 			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
@@ -276,6 +285,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			if (!gameOver)
 			{
 				//using nav_data
+				sf::Clock process;
+				process.restart();
 				if (pl1[ship_id]->nav_data.size() > 0 && frame_no % 120 == 0)//once every two frame
 				{
 					total_frames++;
@@ -957,9 +968,13 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				
 				/*event handling is over here*/
 
-
+					avg_processing += process.getElapsedTime().asSeconds();
 			}
+			
 			//send the data over here
+			sf::Clock sending;
+			sending.restart();
+			
 			if (pl1[ship_id]->died == 0)//send the data only if the ship is alive
 			{
 				send_data data2;
@@ -990,15 +1005,22 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							bytes += send(peer_socket, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
 						}
 					
-
+						if (bytes < 1)
+						{
+							break;
+						}
 
 				}
 			}
+			avg_send += sending.getElapsedTime().asSeconds();
 			
 		}
 			
 	}
-	
+	cout << "\n average receiving time==>" << avg_recv / c;
+	cout << "\n average processing time==>" << avg_processing / c;
+	cout << "\n average sending time==>" << avg_send / c;
+
 	CLOSESOCKET(peer_socket);
 	WSACleanup();
 
