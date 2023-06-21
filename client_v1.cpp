@@ -160,6 +160,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	double avg_nav_req = 0;
 	int total_frames = 0;
 	int tot = 0;
+	int frame_rate = 0;
+	double check_time = 0;
+	sf::Clock clock1;
 	while (1)
 	{
 		/*NOTES:
@@ -178,13 +181,25 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		*/
 		sf::Time curtime = clock.restart();
 		elapsed_time += curtime.asSeconds();
-		next_frame = elapsed_time * 60;
 		if (elapsed_time > 1)
 		{
 			elapsed_time = 0;
 		}
+		next_frame = elapsed_time * 60;
+	
 		if (next_frame != cur_frame)//under this frame rate is stable
 		{
+			sf::Time tt = clock1.restart();
+			check_time+=tt.asSeconds();
+			frame_rate++;
+		
+			if (check_time > 1)
+			{
+				cout << "\n frame rate is=>" << frame_rate;
+				frame_rate = 0;
+				check_time = 0;
+			}
+
 			reads = master;
 			writes = master;
 			cur_frame = next_frame;

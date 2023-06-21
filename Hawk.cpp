@@ -29,7 +29,7 @@ namespace user1
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob);
 		if (index >= 0)
 		ob.Greed_chaseShip(index);
-
+		/*
 		while (1)
 		{
 
@@ -46,30 +46,7 @@ namespace user1
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
 					ob.Greed_chaseShip(index);
 				}
-				/*errorsome
-				if (e.eventType == Event::EventType::ShipCollision)
-				{
-					//write collision code here
-					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
-					ob.Greed_chaseShip(index);
-					
-
-				}
-				
-				
-				if (ob.isShipInMotion()==0)
-				{
-				//	cout << "\n not in motion";
-					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
-					ob.Greed_chaseShip(index);
-				}
-				if (ob.isShipInMotion() == 0)
-				{
-					//	cout << "\n not in motion";
-					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
-					ob.Greed_chaseShip(index);
-				}
-				*/
+		
 				
 				if (e.eventType == Event::EventType::LowHealth)
 				{
@@ -131,6 +108,7 @@ namespace user1
 			}
 
 		}
+			*/
 
 
 	}
