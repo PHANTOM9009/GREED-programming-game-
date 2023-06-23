@@ -227,6 +227,12 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
 			SOCKET sock = accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
+			unsigned long nonBlocking = 1;
+			if (ioctlsocket(sock, FIONBIO, &nonBlocking) != 0)
+			{
+				// Error handling
+				cout << "\n could not set the socket to non blocking state";
+			}
 			socks.push_back(sock);
 			sockets_id[sock] = count;
 			cout << "\n connection established for client=>" << count;
@@ -366,14 +372,26 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	}
 	control1 control;
 	SOCKET max_socket = sockets[0];
+	u_long nonBlocking = 1;
 	for (int i = 0; i < sockets.size(); i++)
 	{
 		if (sockets[i] > max_socket)
 		{
 			max_socket = sockets[i];
 		}
+		
+		if (ioctlsocket(sockets[i], FIONBIO, &nonBlocking) != 0)
+		{
+			// Error handling
+			cout << "\n could not set the socket to non blocking state";
+		}
 	}
-	
+
+	if (ioctlsocket(socket_display[0], FIONBIO, &nonBlocking) != 0)
+	{
+		// Error handling
+		cout << "\n could not set the socket to non blocking state";
+	}
 	fd_set master2, temp;
 	FD_ZERO(&master2);
 	FD_ZERO(&temp);
@@ -1108,47 +1126,53 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			sf::Clock sending;
 			sending.restart();
 			//sending the data over here to the client terminal
-			recv_data data1;
-			memset((void*)&data1, 0, sizeof(data1));
-			data1.packet_id = total_time;
-			data1.s1 = pl1.size();
-			shipData_exceptMe sdem[20];
-			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-
-			select(max_socket+1, 0, &write, 0, &timeout);
-			for (int i = 1; i <= max_socket; i++)
+			if (c % 2 == 0)
 			{
-				if (FD_ISSET(i, &write))
+				recv_data data1;
+				memset((void*)&data1, 0, sizeof(data1));
+				data1.packet_id = total_time;
+				data1.s1 = pl1.size();
+				shipData_exceptMe sdem[20];
+				control.pl_to_packet(data1.shipdata_exceptMe, pl1);
+
+				select(max_socket + 1, 0, &write, 0, &timeout);
+				for (int i = 1; i <= max_socket; i++)
 				{
-					auto it = socket_id.find(i);
-					int sid = it->second;
-					if (pl1[sid]->died == 1)
+					if (FD_ISSET(i, &write))
 					{
-						continue;
-					}//dont send the data if dead
-					shipData_forMe sdfm;
-					control.me_to_packet(sdfm, sid, pl1);
-					data1.shipdata_forMe = sdfm;
-					//sending the data
-					data1.packet_id = total_time;
-					int bytes = send(i, (char*)&data1, sizeof(data1), 0);
-					
-					while (bytes < sizeof(data1))
-					{
-						bytes += send(i, (char*)&data1 + bytes, sizeof(data1) - bytes, 0);
+						auto it = socket_id.find(i);
+						int sid = it->second;
+						if (pl1[sid]->died == 1)
+						{
+							continue;
+						}//dont send the data if dead
+						shipData_forMe sdfm;
+						control.me_to_packet(sdfm, sid, pl1);
+						data1.shipdata_forMe = sdfm;
+						//sending the data
+						data1.packet_id = total_time;
+						int bytes = send(i, (char*)&data1, sizeof(data1), 0);
+						if (bytes == -1)
+						{
+							cout << "\n error in sending the data";
+						}
+
+						while (bytes < sizeof(data1))
+						{
+							bytes += send(i, (char*)&data1 + bytes, sizeof(data1) - bytes, 0);
+						}
+
+						//data is sent
 					}
-					
-					//data is sent
+
 				}
+				sf::Time time2 = sending.getElapsedTime();
+				avg_send1 += time2.asSeconds();
+				avg_send += time2.asSeconds();
+				//rendering starts from here
+
 
 			}
-			sf::Time time2 = sending.getElapsedTime();
-			avg_send1 += time2.asSeconds();
-			avg_send += time2.asSeconds();
-			//rendering starts from here
-			
-
-
 			//cannon_list[0].fireCannon(1, ShipSide::FRONT);
 			processing.restart();
 			for (int i = 0; i < cannon_list.howMany(); i++)
@@ -1405,6 +1429,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	cout << "\n navigation_ship=>" << navigation_ship1 / total_frames;
 	cout << "\n fire_ship=>" << fire_ship1 / total_frames;
 	cout << "\n fire _cannon=>" << fire_cannon1 / total_frames;
+
+	while(1)
+	{ }
 }
 void startup(vector<int> &sockets,unordered_map<int,int> &socket_id)
 {

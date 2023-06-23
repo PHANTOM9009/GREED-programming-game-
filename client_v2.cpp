@@ -330,7 +330,12 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	FD_SET(peer_socket, &master);
 	fd_set temp_set;
 	FD_ZERO(&temp_set);
-	
+	u_long nonBlocking = 1;
+	if (ioctlsocket(peer_socket, FIONBIO, &nonBlocking) != 0)
+	{
+		// Error handling
+		cout << "\n could not set the socket to non blocking state";
+	}
 	//Greed::abs_pos prev1 = Greed::abs_pos(pl1[0]->rect.getPosition().x,pl1[0]->rect.getPosition().y);
 	Greed::abs_pos prev1 = pl1[0]->getAbsolutePosition();
 	
