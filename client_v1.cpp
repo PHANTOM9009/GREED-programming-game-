@@ -85,7 +85,7 @@ SOCKET connect_to_server()//first connection to the server
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* server_add;
 	char buff[1000];
-	getaddrinfo("192.168.129.213", "8080", &hints, &server_add);
+	getaddrinfo("127.0.0.1", "8080", &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
@@ -163,7 +163,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int frame_rate = 0;
 	double check_time = 0;
 	sf::Clock clock1;
-	int c = 0;
+	int cc = 0;
 	double avg_recv = 0;
 	double avg_send = 0;
 	double avg_processing = 0;
@@ -196,7 +196,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			sf::Time tt = clock1.restart();
 			check_time+=tt.asSeconds();
 			frame_rate++;
-			c++;
+			cc++;
 		
 			if (check_time > 1)
 			{
@@ -247,6 +247,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					cout << "\n connection disconnected to the server..retrying to connect";
 					//peer_socket = connect_to_server();
 					cout << "\n connection is back.";
+					CLOSESOCKET(peer_socket);
 					break;
 				}
 				//we have received the data.. now parse the data in original class structure.
@@ -1007,6 +1008,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					
 						if (bytes < 1)
 						{
+							CLOSESOCKET(peer_socket);
 							break;
 						}
 
@@ -1017,9 +1019,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		}
 			
 	}
-	cout << "\n average receiving time==>" << avg_recv / c;
-	cout << "\n average processing time==>" << avg_processing / c;
-	cout << "\n average sending time==>" << avg_send / c;
+	cout << "\n average receiving time==>" << avg_recv / cc;
+	cout << "\n average processing time==>" << avg_processing /cc;
+	cout << "\n average sending time==>" << avg_send / cc;
 
 	CLOSESOCKET(peer_socket);
 	WSACleanup();

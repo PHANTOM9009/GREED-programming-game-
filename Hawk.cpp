@@ -29,7 +29,7 @@ namespace user1
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob);
 		if (index >= 0)
 		ob.Greed_chaseShip(index);
-		/*
+		
 		while (1)
 		{
 
@@ -108,7 +108,7 @@ namespace user1
 			}
 
 		}
-			*/
+			
 
 
 	}

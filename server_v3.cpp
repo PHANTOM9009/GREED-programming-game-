@@ -409,6 +409,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 	vector<debug> de;
 
+	cout << "\n size of recv_data=>" << sizeof(recv_data);
+	cout << "\n size of top player=>" << sizeof(top_layer);
+
 	while (1)
 	{
 		sf::Time tt = clock1.restart();
@@ -1112,7 +1115,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
 
-			select(max_socket, 0, &write, 0, &timeout);
+			select(max_socket+1, 0, &write, 0, &timeout);
 			for (int i = 1; i <= max_socket; i++)
 			{
 				if (FD_ISSET(i, &write))
