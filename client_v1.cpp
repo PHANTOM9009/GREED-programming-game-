@@ -151,12 +151,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	fd_set writes;
 	FD_ZERO(&reads);
 	FD_ZERO(&writes);
-	u_long nonBlocking = 1;
-	if (ioctlsocket(peer_socket, FIONBIO, &nonBlocking) != 0)
-	{
-		// Error handling
-		cout << "\n could not set the socket to non blocking state";
-	}
+
 	vector<Greed::bullet> newBullets;
 	
 	thread t(user1::GreedMain, ref(player));
