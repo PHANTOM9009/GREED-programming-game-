@@ -82,9 +82,9 @@ SOCKET connect_to_server()//first connection to the server
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	int res = 0;
-	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_socktype = SOCK_DGRAM;
 	struct addrinfo* server_add;
-	char buff[1000];
+	char buff[1000] = { "hello" };
 	getaddrinfo("192.168.129.209", "8080", &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
@@ -102,15 +102,10 @@ SOCKET connect_to_server()//first connection to the server
 
 	}
 	cout << "\n client connected with server";
-	int yes = 1;
-	if (setsockopt(peer_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&yes, sizeof(yes)) < 0) //disabling nagle's algorithm for speed in sending the data
-	{
-		fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
-	}
-	//cout << "\n connected with the server..";
+	
 	freeaddrinfo(server_add);
 	
-	int r = recv(peer_socket, (char*)&buff, sizeof(buff), 0);
+	int r = send(peer_socket, (char*)&buff, sizeof(buff), 0);
 	cout << "\n the message is=>" << buff;
 	return peer_socket;
 }

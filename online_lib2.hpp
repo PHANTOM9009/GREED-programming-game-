@@ -60,7 +60,7 @@ class ship;
 class graphics;
 class Control;
 /*some networking libs*/
-void startup(vector<int> &sockets,unordered_map<int,int> &socket_id);
+void startup(int n, unordered_map<int, sockaddr_storage>& socket_id);
 class control1;
 void chaseShip1(int s_id, ship& ob);
 enum class map
@@ -624,7 +624,7 @@ public:
 	friend graphics;
 	friend int main();
 	friend class ship;
-	friend void startup(vector<int>& sockets, unordered_map<int, int>& socket_id);
+	friend void startup(int n, unordered_map<int,sockaddr_storage>& socket_id);
 
 };
 class Greed::shipCannon
@@ -2002,7 +2002,7 @@ public:
 	friend class shipInfo;
 	friend void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
 	friend class control1;
-	friend void startup(vector<int> &sockets,unordered_map<int,int> &socket_id);
+	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id);
 	
 };
 double avg_bullet = 0;
@@ -2443,7 +2443,7 @@ public:
 	friend int main();
 	friend void filter();
 	friend class Greed::cannon;
-	friend void startup(vector<int> &sockets,unordered_map<int,int> &socket_id);
+	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id);
 
 };
 /*networking libs*/
@@ -2805,7 +2805,7 @@ public:
 	static long double getTotalTime();
 	bool check_game_over(deque<ship*>& pl1);
 	deque<ship*> findWinner(deque<ship*> l);
-	void callable(Mutex* mutx, int code[rows][columns], Map& map_ob,vector<int> &sockets,unordered_map<int,int> &socker_id,vector<int> &socket_display);//taking the ship object so as to access the list of the player
+	void callable(Mutex* mutx, int code[rows][columns], Map& map_ob,int n,unordered_map<int,sockaddr_storage> &socker_id,vector<int> &socket_display);//taking the ship object so as to access the list of the player
 	void callable_client(int ship_id, Mutex* mutx, int code[rows][columns], Map& map_ob, int,ship&);
 	void callable_server(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<SOCKET>& sockets, unordered_map<SOCKET, int>& socket_id,vector<SOCKET> &socket_display);//taking the ship object so as to access the list of the player
 	

@@ -45,6 +45,7 @@ start client_show
 #include<ctime>
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
+
 int max_player;
 /*
 * 1. a function which connects the server with the clients and assign each client's ship an id
@@ -54,6 +55,8 @@ int max_player;
 */
 vector<int> socket_display;//vector of sockets for display unit of the client
 unordered_map<int, int> socket_id_display;
+
+SOCKET sock;//the only UDP socket that will be used to transmit the data
 
 class transfer_socket
 {
@@ -309,8 +312,16 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 
 
 
-void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<int>& sockets, unordered_map<int, int>& socket_id,vector<int> &socket_display)//taking the ship object so as to access the list of the player
+void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n,unordered_map<int,sockaddr_storage>& socket_id,vector<int> &socket_display)//taking the ship object so as to access the list of the player
 {
+
+	//making a reverse mapping of socket_id
+	vector<sockaddr_storage> socket_id_rev(n);
+	for (auto it : socket_id)
+	{
+		socket_id_rev.push_back(it.second);
+	}
+	
 	deque<int> dying_ships;
 	int ran = 0;
 	this->mutx = mutx;
@@ -360,19 +371,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	FD_ZERO(&master);
 	FD_ZERO(&read);
 	FD_ZERO(&write);
-	for (int i = 0; i < sockets.size(); i++)
-	{
-		FD_SET(sockets[i], &master);
-	}
+	FD_SET(sock,&master);
 	control1 control;
-	SOCKET max_socket = sockets[0];
-	for (int i = 0; i < sockets.size(); i++)
-	{
-		if (sockets[i] > max_socket)
-		{
-			max_socket = sockets[i];
-		}
-	}
+	
 	
 	fd_set master2, temp;
 	FD_ZERO(&master2);
@@ -422,12 +423,15 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 		}
 		next_frame = ep * 60;
 
-		
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+		{
+			break;
+		}
 
 		if (next_frame != current_frame)
 		{
 			current_frame = next_frame;
-			
+
 			read = master;
 			write = master;
 			temp = master2;
@@ -436,21 +440,21 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			timeout.tv_usec = 0;
 			c++;
 			frames++;
-		
+
 			sf::Event event;
-		
+
 			sf::Time deltime = clock.restart();
 			elapsed_time += deltime.asSeconds();
 			t2 += deltime.asSeconds();
 			total_secs += deltime.asSeconds();
 			//total_time += deltime.asSeconds();
 			total_time++;
-			
+
 			no_of_chase++;
 			if (t2 >= 1)
 			{
 				cout << "\n\n frame rate is==>" << c;
-				de.push_back(debug(avg_processing ,avg_processing2, fire_upgrade, navigation_ship, fire_ship,fire_cannon, avg_send, avg_recv,avg_send1,avg_send2));
+				de.push_back(debug(avg_processing, avg_processing2, fire_upgrade, navigation_ship, fire_ship, fire_cannon, avg_send, avg_recv, avg_send1, avg_send2));
 				avg_processing = 0;
 				avg_processing2 = 0;
 				avg_send = 0;
@@ -483,7 +487,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 				c = 0;
 				t2 = 0;
 			}
-		
+
 			died.clear();
 			sf::Clock processing;
 			processing.restart();
@@ -496,7 +500,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 				/*code to update the timer*/
 				int min = total_secs / 60;
 				int sec = (int)total_secs % 60;
-			
+
 				/*code to update the timer ends*/
 
 				//run a thread here which will update the path buffer according to the data received
@@ -505,7 +509,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 				//t.detach();
 
 				//con.nav_data_processor(pl1, mutx);
-			
+
 				for (int i = 0; i < pl1.size(); i++)
 				{
 					if (pl1[i]->died == 1)
@@ -569,7 +573,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 						continue;
 					}
 					//doing the navigation stuff
-							
+
 					for (int j = 0; j < pl1.size(); j++)
 					{
 						if (i != j && pl1[j]->died == 0)
@@ -577,11 +581,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 							if (pl1[i]->collide(j, pl1[i]->tile_pos_front))
 							{
-								
+
 								pl1[i]->collided_ships.push_back(j);
-								
+
 								pl1[i]->anchorShip_collision();
-								
+
 							}
 						}
 					}
@@ -613,7 +617,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 								}
 
 							}
-										
+
 						}
 						else
 						{
@@ -624,7 +628,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					}
 					//navigation part of the ship ends here
 					navigation_ship += processing2.getElapsedTime().asSeconds();
-				
+
 					sf::Clock processing3;
 					processing3.restart();
 					if (pl1[i]->ammo > 0 && pl1[i]->cannon_ob.activeBullets.size() > 0 && frames % 30 == 0)
@@ -762,7 +766,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 
 							}
-						// cout << "\n end";
+							// cout << "\n end";
 
 							if (pl1[i]->cannon_ob.activeBullets[j].hit_ship != -1)
 							{
@@ -816,7 +820,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 									t.d.id = pl1[i]->cannon_ob.activeBullets[j].hit_ship;
 									pl1[i]->time_line.push_back(t);
 									mutx->timeMutex[i].unlock();
-								
+
 									timeline t1;
 									t1.eventype = timeline::EventType::SHIP_DIED;
 									t1.timestamp = total_secs;
@@ -881,7 +885,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					fire_ship += processing3.getElapsedTime().asSeconds();
 				}
 				//end of firing of the ship
-				
+
 				sf::Clock processing4;
 				processing4.restart();
 				for (int j = 0; j < cannon_list.howMany(); j++)
@@ -1001,13 +1005,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 
 				}
 				fire_cannon += processing4.getElapsedTime().asSeconds();
-		
+
 			}
 			top_layer ship_packet;
 			memset((void*)&ship_packet, 0, sizeof(ship_packet));
 			for (int i = 0; i < pl1.size(); i++)
 			{
-			 //	unique_lock<mutex> lk(mutx->timeMutex[i]);
+				//	unique_lock<mutex> lk(mutx->timeMutex[i]);
 				if (pl1[i]->time_line.size() > 0)
 				{
 					ship_packet.ob[i].isthere = true;
@@ -1015,12 +1019,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					ship_packet.ob[i].time_line = pl1[i]->time_line[0];
 					pl1[i]->time_line.pop_front();
 				}
-	    		//	lk.unlock();
+				//	lk.unlock();
 			}
 			ship_packet.packet_no = total_time;
 			ship_packet.no_of_players = pl1.size();
 			int bullet_no = 0;//number of total bullets
-		
+
 			for (int i = 0; i < pl1.size(); i++)
 			{
 				ship_packet.ob[i].ship_id = i;
@@ -1064,7 +1068,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 				ship_packet.ob[i].died = pl1[i]->died;
 				ship_packet.ob[i].tile_pos_front = pl1[i]->tile_pos_front;
 				ship_packet.ob[i].tile_pos_rear = pl1[i]->tile_pos_rear;
-				for (int j = 0; j <= pl1[i]->bullet_pointer && bullet_no<500; j++)
+				for (int j = 0; j <= pl1[i]->bullet_pointer && bullet_no < 500; j++)
 				{
 					if (pl1[i]->died == 0)
 					{
@@ -1077,13 +1081,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 							cout << "\n target cannon=>" << pl1[i]->cannon_ob.activeBullets[j].target_cannon;
 						}
 					}
-				
+
 				}
 			}
 			//adding the bullets of the cannons
 			for (int i = 0; i < cannon_list.howMany(); i++)
 			{
-				for (int j = 0; j < cannon_list[i].bullet_list.size() && bullet_no<500; j++)
+				for (int j = 0; j < cannon_list[i].bullet_list.size() && bullet_no < 500; j++)
 				{
 					if (cannon_list[i].isDead == 0)
 					{
@@ -1096,9 +1100,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 						}
 					}
 				}
-				
+
 			}
-			
+
 
 
 			ship_packet.no_of_bullets = bullet_no;
@@ -1114,14 +1118,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 			data1.s1 = pl1.size();
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-
-			select(max_socket+1, 0, &write, 0, &timeout);
-			for (int i = 1; i <= max_socket; i++)
+		
+			for (int sid = 0; sid < n; sid++)
 			{
-				if (FD_ISSET(i, &write))
+				select(sock + 1, 0, &write, 0, &timeout);
+				if (FD_ISSET(sock, &write))
 				{
-					auto it = socket_id.find(i);
-					int sid = it->second;
+
 					if (pl1[sid]->died == 1)
 					{
 						continue;
@@ -1131,17 +1134,18 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					data1.shipdata_forMe = sdfm;
 					//sending the data
 					data1.packet_id = total_time;
-					int bytes = send(i, (char*)&data1, sizeof(data1), 0);
-					
+					int bytes = sendto(sid, (char*)&data1, sizeof(data1), 0, (sockaddr*)&socket_id[sid], sizeof(socket_id[sid]));
+
 					while (bytes < sizeof(data1))
 					{
-						bytes += send(i, (char*)&data1 + bytes, sizeof(data1) - bytes, 0);
+						bytes += sendto(sid, (char*)&data1 + bytes, sizeof(data1) - bytes, 0,(sockaddr*)&socket_id[sid],sizeof(socket_id[sid]));
 					}
-					
+
 					//data is sent
 				}
 
 			}
+		
 			sf::Time time2 = sending.getElapsedTime();
 			avg_send1 += time2.asSeconds();
 			avg_send += time2.asSeconds();
@@ -1310,22 +1314,17 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
       		//recv the data here and update for the next frame
 			sf::Clock recv_data;
 			recv_data.restart();
-
-			select(max_socket, &read, 0, 0, &timeout);
-			for (int i = 1; i <= max_socket; i++)
+			for(int j=0;j<n;j++)
 			{
-				if (FD_ISSET(i, &read))
+				select(sock+1, &read, 0, 0, &timeout);
+			
+				if (FD_ISSET(sock, &read))
 				{
 					send_data data2;
 					memset((void*)&data2, 0, sizeof(data2));
-
-					auto it = socket_id.find(i);
-					int sid = it->second;
-					if (pl1[sid]->died== 1)
-					{
-						continue;
-					}
-					int bytes = recv(i, (char*)&data2, sizeof(data2), 0);
+					struct sockaddr_storage client_address;
+					socklen_t client_len = sizeof(client_address);
+					int bytes = recvfrom(sock, (char*)&data2, sizeof(data2), 0, (sockaddr*)&client_address, &client_len);
 					/*
 					if (bytes < 1)
 					{
@@ -1336,10 +1335,15 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 					*/
 					while (bytes < sizeof(data2))
 					{
-						bytes += recv(i, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
+						bytes += recvfrom(sock, (char*)&data2 + bytes, sizeof(data2) - bytes, 0,(sockaddr*)&client_address,&client_len);
 					}
 					
 					//data is received now convert it to appropriate form
+					int sid = data2.shipdata_forServer.ship_id;
+					if (pl1[sid]->died == 1)
+					{
+						continue;
+					}
 					if (bytes > 0)
 					{
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
@@ -1358,18 +1362,15 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	}
 
 	//closing all the left sockets
-	for (int i = 1; i <= max_socket; i++)
-	{
-		if (FD_ISSET(i, &master))
-		{
-			CLOSESOCKET(i);
-			FD_CLR(i, &master);
-		}
-	}
+	
+			CLOSESOCKET(sock);
+			
+	
+	
 	CLOSESOCKET(socket_display[0]);
 	WSACleanup();
 	cout << "\n average times are==>";
-	double sending = 0;
+	double sending0 = 0;
 	double sending1 = 0;
 	double sending2 = 0;
 	double processing1 = 0;
@@ -1384,7 +1385,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	{
 		processing1 += de[i].avg_processing1;
 		processing2 += de[i].avg_processing2;
-		sending += de[i].avg_sending;
+		sending0 += de[i].avg_sending;
 		receiving += de[i].avg_receiving;
 
 		fire_update1 += de[i].fire_upgrade;
@@ -1395,7 +1396,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 		sending2 += de[i].avg_send2;
 	
 	}
-	cout << "\n sending=>" << sending / total_frames;
+	cout << "\n sending=>" << sending0 / total_frames;
 	cout << "\n sending to the client terminal==>" << sending1 / total_frames;
 	cout << "\n sending to the client display unit==>" << sending2 / total_frames;
 	cout << "\n processing1=>" << processing1 / total_frames;
@@ -1406,9 +1407,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, vecto
 	cout << "\n fire_ship=>" << fire_ship1 / total_frames;
 	cout << "\n fire _cannon=>" << fire_cannon1 / total_frames;
 }
-void startup(vector<int> &sockets,unordered_map<int,int> &socket_id)
+void startup(int n,unordered_map<int,sockaddr_storage> &socket_id)
 {
-	int no_of_players = sockets.size();
+	int no_of_players =n;
 
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
@@ -1513,19 +1514,19 @@ void startup(vector<int> &sockets,unordered_map<int,int> &socket_id)
 	//sending the startup data to all the connected clients
 
 
-	connector_show(socket_display, socket_id_display, 1);//connecting with display unit of the client
+	connector_show(socket_display,socket_id_display, 1);//connecting with display unit of the client
 
 	cout << "\n sending the data to the clients=>";
 	for (int i = 0; i < no_of_players; i++)
 	{
 		auto it = socket_id.begin();
 		advance(it, i);
-		Startup_info_client data1(60, no_of_players, it->second, spawn[it->second]);
-		cout << "\n the id is==>" << it->second;
-		int bytes = send(it->first, (char*)&data1, sizeof(data1), 0);
+		Startup_info_client data1(60, no_of_players, it->first, spawn[it->first]);
+		cout << "\n the id is==>" << it->first;
+		int bytes = sendto(sock, (char*)&data1, sizeof(data1), 0, (sockaddr*)&it->second, sizeof(it->second));
 		while (bytes < sizeof(data1))
 		{
-			bytes += send(it->first, (char*)&data1 + bytes, sizeof(data1) - bytes, 0);//sending socket is wrong
+			bytes += sendto(sock, (char*)&data1 + bytes, sizeof(data1) - bytes, 0,(sockaddr*)&it->second,sizeof(it->second));//sending socket is wrong
 		}
 
 	}
@@ -1550,7 +1551,7 @@ void startup(vector<int> &sockets,unordered_map<int,int> &socket_id)
 
 
 	graphics cg;
-	cg.callable(&mutx, code, map1, sockets, socket_id, socket_display);//dont call callable function its depricated
+	cg.callable(&mutx, code, map1,n,socket_id, socket_display);//dont call callable function its depricated
 }
 
 int main()
@@ -1568,82 +1569,63 @@ int main()
 
 	//extracting the data
 	vector<int> sockets;//a vector of n
-	unordered_map<int, int> socket_id;//socket to ship id map
+	unordered_map<int, sockaddr_storage> socket_id;//socket to ship id map
 	//establishing socket connection with the server
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	int res = 0;
-	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_socktype = SOCK_DGRAM;
 	struct addrinfo* server_add;
 	char buff[1000];
-	getaddrinfo("127.0.0.1", "8080", &hints, &server_add);
-	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
-	cout << "\n the server address is==>" << buff;
-	cout << endl;
-	SOCKET peer_socket = socket(server_add->ai_family, server_add->ai_socktype, server_add->ai_protocol);
-	cout << "\n my process id is=>" << GetCurrentProcessId();
-	while (connect(peer_socket, server_add->ai_addr, server_add->ai_addrlen))
-	{
-		cout << "\n problem in connecting";
-	}
-	cout << "\n sending the id=>";
-	int val = GetCurrentProcessId();
-	int bytes = send(peer_socket, (char*)&val, sizeof(val), 0);
+	getaddrinfo(0, "8080", &hints, &server_add);
 	
-	while (1)
+	//creating the socket
+	 sock = socket(server_add->ai_family, server_add->ai_socktype, server_add->ai_protocol);
+	if (sock == INVALID_SOCKET)
 	{
-		int total = 0;
-		while (total < max_player)
-		{
-			transfer_socket ob;
-			int byte = recv(peer_socket, (char*)&ob, sizeof(ob), 0);
-			for (int i = 0; i < ob.length; i++)
-			{
-				SOCKET childSocket = WSASocket(ob.protocolInfo[i].iAddressFamily, ob.protocolInfo[i].iSocketType, ob.protocolInfo[i].iProtocol, &ob.protocolInfo[i], 0, WSA_FLAG_OVERLAPPED);
-				if (childSocket == INVALID_SOCKET)
-				{
-					std::cerr << "Failed to create child socket: " << WSAGetLastError() << std::endl;
-					return 1;
-				}
-				char response[100] = "Hello from child process!\0";
-				int sendResult = send(childSocket, (char*)&response, 100, 0);
-				if (sendResult == SOCKET_ERROR)
-				{
-				//	std::cerr << "Failed to send data: " << GetLastErrorAsString() << std::endl;
-					closesocket(childSocket);
-					//return 1;
-					cout << "\n error in connection with the client";
-				}
+		cout << "\n invalid socket";
+	}
+	//binding the socket
+	bind(sock, server_add->ai_addr, server_add->ai_addrlen);
+	freeaddrinfo(server_add);
+	//now accepting hi from the clients
+	int n = 0;
 
-				else
-				{
-					sockets.push_back(childSocket);
-					socket_id[childSocket] = total;
-					total++;
-					cout << "\n succesfully connected!";
-				}
+	fd_set master;
+	fd_set reads;
+	FD_ZERO(&master);
+	FD_ZERO(&reads);
+	FD_SET(sock, &master);
+	timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 10;
+	while (n < max_player)
+
+	{
+		struct sockaddr_storage client_address;
+		socklen_t client_len = sizeof(client_address);
+		reads = master;
+		
+		select(sock + 1, &reads, 0, 0, &timeout);
+		if (FD_ISSET(sock, &reads))
+		{
+			int bytes = recvfrom(sock, buff, sizeof(buff), 0, (struct sockaddr*)&client_address, &client_len);
+			if (bytes < 1)
+			{
+				cout << "\n no data";
+			}
+			if (bytes > 0)
+			{
+				cout << "\n received hi from the client";
+				sockets.push_back(sock);
+				socket_id[n] = client_address;
+				n++;
 			}
 		}
-		//we have got our warriors now, just notify the main server and start the fucking game
-		int status = 0;
-		int bytes = send(peer_socket, (char*)&status, sizeof(status), 0);
-		//start the game now
-		startup(sockets, socket_id);//to call the game
-
-		status = 1;
-		bytes = send(peer_socket, (char*)&status, sizeof(status), 0);//notify the server that i am ready to take new connections
-
 	}
-	//connector(sockets, socket_id,4);//connecting to the client terminal
+
 
 	
-	//connector is called
-	const int no_of_players = socket_id.size();
-	cout << "\n number of players==>" << no_of_players;
-
-
-	cout << "\n avg bulle count per frame is=>" << avg_bullet / no_of_times;
-
 
 
 
