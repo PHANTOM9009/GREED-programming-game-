@@ -117,21 +117,14 @@ SOCKET connect_to_server()//first connection to the server
 	}
 	const char* message = "Hello World";
 	printf("Sending: %s\n", message);
-	int bytes_sent = send(socket_peer,
-		message, strlen(message),
-		0);
+
+	int bytes_sent = send(socket_peer,	message, strlen(message),0);
+
 	printf("Sent %d bytes.\n", bytes_sent);
 
-	freeaddrinfo(peer_address);
-	CLOSESOCKET(socket_peer);
+	
 
-#if defined(_WIN32)
-	WSACleanup();
-#endif
-
-	printf("Finished.\n");
-
-	return 0;
+	return socket_peer;
 
 }
 
@@ -220,7 +213,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		
 			if (check_time > 1)
 			{
-				cout << "\n frame rate is=>" << frame_rate;
+				//cout << "\n frame rate is=>" << frame_rate;
 				frame_rate = 0;
 				check_time = 0;
 			}
@@ -291,6 +284,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					cout << "\n front tile=>" << data1.shipdata_forMe.front_tile.r << " " << data1.shipdata_forMe.front_tile.c;
 					cout << "\n position is=>" << data1.shipdata_forMe.absolute_position.x << " " << data1.shipdata_forMe.absolute_position.y;
 					*/
+					cout << "\n packet id=>" << data1.packet_id;
 					control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);
 					control_ob.packet_to_me(data1.shipdata_forMe, ship_id, pl1);
 				}
@@ -1055,14 +1049,16 @@ int main()
 	
 	SOCKET socket_listen = connect_to_server();
 	
+	
 	//receiving the startupinfo data
 	Startup_info_client start_data;
 	memset((void*)&start_data, 0, sizeof(start_data));
-	int bytes = recv(socket_listen, (char*)&start_data, sizeof(start_data),0);
-	while (bytes < sizeof(start_data))
-	{
-		bytes += recv(socket_listen, (char*)&start_data + bytes, sizeof(start_data) - bytes, 0);
-	}
+	
+	struct sockaddr_storage client_address;
+	
+	int client_length = sizeof(client_address);
+	int bytes = recv(socket_listen, (char*)&start_data, sizeof(start_data), 0);
+	
 	cout << "\n received bytes are==>" << bytes;
 	cout << "\n my ship id is==>" << start_data.ship_id;
 	cout << "\n my pos is=>" << start_data.starting_pos.r << " " << start_data.starting_pos.c;

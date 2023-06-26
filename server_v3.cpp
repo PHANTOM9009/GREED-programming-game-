@@ -6,7 +6,13 @@ start client_v1
 start client_show
 */
 
-
+//problem
+/*
+* server is not sending the data to the clients, clients dont know whats happening in the game, so they are dead or others are dead
+* they dont know.
+* but the client can send the data to the server and server is able to receive it, 
+* problem must be the unordered_map, the client address is not getting stored properly.
+*/
 #pragma once
 #include<SFML/Graphics.hpp>
 #include<conio.h>
@@ -229,7 +235,8 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 		{
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
-			SOCKET socket_listen = accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
+			SOCKET socket_listen = 0;
+			socket_listen=accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
 			socks.push_back(socket_listen);
 			sockets_id[socket_listen] = count;
 			cout << "\n connection established for client=>" << count;
@@ -254,8 +261,8 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 
 	struct addrinfo* bind_address;
 	getaddrinfo(0, "8081", &hints, &bind_address);//client show process is connected to the socket having socket number 8081
-	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
-	if (!ISVALIDSOCKET(socket_listen))
+	SOCKET socket_listen0 = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
+	if (!ISVALIDSOCKET(socket_listen0))
 	{
 		cout << "\n socket not created==>" << GETSOCKETERRNO();
 	}
@@ -267,38 +274,38 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 	}
 	*/
 	int yes = 1;
-	if (setsockopt(socket_listen, IPPROTO_TCP, TCP_NODELAY, (char*)&yes, sizeof(yes)) < 0) //disabling nagle's algorithm for speed in sending the data
+	if (setsockopt(socket_listen0, IPPROTO_TCP, TCP_NODELAY, (char*)&yes, sizeof(yes)) < 0) //disabling nagle's algorithm for speed in sending the data
 	{
 		fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
 	}
 
 
 	cout << "\n binding the socket==>";
-	if (bind(socket_listen, (const sockaddr*)bind_address->ai_addr, (int)bind_address->ai_addrlen))
+	if (bind(socket_listen0, (const sockaddr*)bind_address->ai_addr, (int)bind_address->ai_addrlen))
 	{
 		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO();
 	}
 
-	if (listen(socket_listen, 20) < 0)
+	if (listen(socket_listen0, 20) < 0)
 	{
 		cout << "\n socket failed";
 	}
 	freeaddrinfo(bind_address);
 	int count = 0;
-	SOCKET max_socket = socket_listen;
+	SOCKET max_socket = socket_listen0;
 	fd_set master;
 	FD_ZERO(&master);
-	FD_SET(socket_listen, &master);
+	FD_SET(socket_listen0, &master);
 	while (count < n)
 	{
 		FD_SET reads;
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, 0);
-		if (FD_ISSET(socket_listen, &reads))
+		if (FD_ISSET(socket_listen0, &reads))
 		{
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
-			SOCKET socket_liste = accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
+			SOCKET socket_liste = accept(socket_listen0, (struct sockaddr*)&client_address, &client_len);
 			socks.push_back(socket_liste);
 			sockets_id[socket_liste] = count;//id's are being given countwise
 			cout << "\n connection established for client shower=>" << count;
@@ -306,7 +313,7 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 
 		}
 	}
-	CLOSESOCKET(socket_listen);
+	CLOSESOCKET(socket_listen0);
 	
 }
 
@@ -1135,11 +1142,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					//sending the data
 					data1.packet_id = total_time;
 					int bytes = sendto(sid, (char*)&data1, sizeof(data1), 0, (sockaddr*)&socket_id[sid], sizeof(socket_id[sid]));
-
-					while (bytes < sizeof(data1))
+					if (bytes < 1)
 					{
-						bytes += sendto(sid, (char*)&data1 + bytes, sizeof(data1) - bytes, 0,(sockaddr*)&socket_id[sid],sizeof(socket_id[sid]));
+						//cout << "\n no bytes are sent";
+							
 					}
+					
 
 					//data is sent
 				}
@@ -1340,6 +1348,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					
 					//data is received now convert it to appropriate form
 					int sid = data2.shipdata_forServer.ship_id;
+					if (data2.shipdata_forServer.ship_id != sid)
+					{
+						cout << "\n fukk";
+					}
 					if (pl1[sid]->died == 1)
 					{
 						continue;
