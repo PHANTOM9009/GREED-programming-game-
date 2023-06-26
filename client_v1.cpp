@@ -74,40 +74,65 @@ SOCKET connect_to_server()//first connection to the server
 {
 #if defined(_WIN32)
 	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d))
-	{
-		cout << "\n failed to initialize";
+	if (WSAStartup(MAKEWORD(2, 2), &d)) {
+		fprintf(stderr, "Failed to initialize.\n");
+		return 1;
 	}
-#endif // defined
+#endif
+
+	printf("Configuring remote address...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
-	int res = 0;
 	hints.ai_socktype = SOCK_DGRAM;
-	struct addrinfo* server_add;
-	char buff[1000] = { "hello" };
-	getaddrinfo("192.168.129.209", "8080", &hints, &server_add);
-	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
-	cout << "\n the server address is==>" << buff;
-	cout << endl;
-	SOCKET peer_socket = socket(server_add->ai_family, server_add->ai_socktype, server_add->ai_protocol);
-	cout << "\n socket number of the user is==>" << peer_socket;
-	if (!ISVALIDSOCKET(peer_socket))
-	{
-		cout << "\n socket not created==>" << GETSOCKETERRNO();
+	struct addrinfo* peer_address;
+	if (getaddrinfo("127.0.0.1", "8080", &hints, &peer_address)) {
+		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
+		return 1;
 	}
-	/**/
-	while(connect(peer_socket, server_add->ai_addr, server_add->ai_addrlen))
-	{
-		cout << "\n problem in connecting";
 
+
+	printf("Remote address is: ");
+	char address_buffer[100];
+	char service_buffer[100];
+	getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen,
+		address_buffer, sizeof(address_buffer),
+		service_buffer, sizeof(service_buffer),
+		NI_NUMERICHOST | NI_NUMERICSERV);
+	printf("%s %s\n", address_buffer, service_buffer);
+
+
+	printf("Creating socket...\n");
+	SOCKET socket_peer;
+	socket_peer = socket(peer_address->ai_family,
+		peer_address->ai_socktype, peer_address->ai_protocol);
+	if (!ISVALIDSOCKET(socket_peer)) {
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		return 1;
 	}
-	cout << "\n client connected with server";
-	
-	freeaddrinfo(server_add);
-	
-	int r = send(peer_socket, (char*)&buff, sizeof(buff), 0);
-	cout << "\n the message is=>" << buff;
-	return peer_socket;
+
+	if (connect(socket_peer, peer_address->ai_addr, peer_address->ai_addrlen))
+	{
+		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+		return 1;
+	}
+	const char* message = "Hello World";
+	printf("Sending: %s\n", message);
+	int bytes_sent = send(socket_peer,
+		message, strlen(message),
+		0);
+	printf("Sent %d bytes.\n", bytes_sent);
+
+	freeaddrinfo(peer_address);
+	CLOSESOCKET(socket_peer);
+
+#if defined(_WIN32)
+	WSACleanup();
+#endif
+
+	printf("Finished.\n");
+
+	return 0;
+
 }
 
 void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns], Map& map_ob,int peer_s,ship &player)
@@ -1028,15 +1053,15 @@ int main()
 	//extracting the data
 	
 	
-	SOCKET sock = connect_to_server();
+	SOCKET socket_listen = connect_to_server();
 	
 	//receiving the startupinfo data
 	Startup_info_client start_data;
 	memset((void*)&start_data, 0, sizeof(start_data));
-	int bytes = recv(sock, (char*)&start_data, sizeof(start_data),0);
+	int bytes = recv(socket_listen, (char*)&start_data, sizeof(start_data),0);
 	while (bytes < sizeof(start_data))
 	{
-		bytes += recv(sock, (char*)&start_data + bytes, sizeof(start_data) - bytes, 0);
+		bytes += recv(socket_listen, (char*)&start_data + bytes, sizeof(start_data) - bytes, 0);
 	}
 	cout << "\n received bytes are==>" << bytes;
 	cout << "\n my ship id is==>" << start_data.ship_id;
@@ -1111,7 +1136,7 @@ int main()
 	ship::cannon_list = cannon_list;
 	
 	graphics cg;
-	cg.callable_client(start_data.ship_id,&mutx, code, map1, sock,player[start_data.ship_id]);
+	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	
 
 }

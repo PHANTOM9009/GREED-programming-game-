@@ -9,7 +9,7 @@ start client_show
 
 #pragma once
 #include<SFML/Graphics.hpp>
-
+#include<conio.h>
 
 #if defined(_WIN32)
 #ifndef _WIN32_WINNT
@@ -56,7 +56,7 @@ int max_player;
 vector<int> socket_display;//vector of sockets for display unit of the client
 unordered_map<int, int> socket_id_display;
 
-SOCKET sock;//the only UDP socket that will be used to transmit the data
+SOCKET socket_listen;//the only UDP socket that will be used to transmit the data
 
 class transfer_socket
 {
@@ -229,9 +229,9 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 		{
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
-			SOCKET sock = accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
-			socks.push_back(sock);
-			sockets_id[sock] = count;
+			SOCKET socket_listen = accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
+			socks.push_back(socket_listen);
+			sockets_id[socket_listen] = count;
 			cout << "\n connection established for client=>" << count;
 			count++;
 
@@ -298,9 +298,9 @@ void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int
 		{
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
-			SOCKET sock = accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
-			socks.push_back(sock);
-			sockets_id[sock] = count;//id's are being given countwise
+			SOCKET socket_liste = accept(socket_listen, (struct sockaddr*)&client_address, &client_len);
+			socks.push_back(socket_liste);
+			sockets_id[socket_liste] = count;//id's are being given countwise
 			cout << "\n connection established for client shower=>" << count;
 			count++;
 
@@ -371,7 +371,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	FD_ZERO(&master);
 	FD_ZERO(&read);
 	FD_ZERO(&write);
-	FD_SET(sock,&master);
+	FD_SET(socket_listen,&master);
 	control1 control;
 	
 	
@@ -1121,8 +1121,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		
 			for (int sid = 0; sid < n; sid++)
 			{
-				select(sock + 1, 0, &write, 0, &timeout);
-				if (FD_ISSET(sock, &write))
+				select(socket_listen + 1, 0, &write, 0, &timeout);
+				if (FD_ISSET(socket_listen, &write))
 				{
 
 					if (pl1[sid]->died == 1)
@@ -1316,15 +1316,15 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			recv_data.restart();
 			for(int j=0;j<n;j++)
 			{
-				select(sock+1, &read, 0, 0, &timeout);
+				select(socket_listen+1, &read, 0, 0, &timeout);
 			
-				if (FD_ISSET(sock, &read))
+				if (FD_ISSET(socket_listen, &read))
 				{
 					send_data data2;
 					memset((void*)&data2, 0, sizeof(data2));
 					struct sockaddr_storage client_address;
 					socklen_t client_len = sizeof(client_address);
-					int bytes = recvfrom(sock, (char*)&data2, sizeof(data2), 0, (sockaddr*)&client_address, &client_len);
+					int bytes = recvfrom(socket_listen, (char*)&data2, sizeof(data2), 0, (sockaddr*)&client_address, &client_len);
 					/*
 					if (bytes < 1)
 					{
@@ -1335,7 +1335,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					*/
 					while (bytes < sizeof(data2))
 					{
-						bytes += recvfrom(sock, (char*)&data2 + bytes, sizeof(data2) - bytes, 0,(sockaddr*)&client_address,&client_len);
+						bytes += recvfrom(socket_listen, (char*)&data2 + bytes, sizeof(data2) - bytes, 0,(sockaddr*)&client_address,&client_len);
 					}
 					
 					//data is received now convert it to appropriate form
@@ -1363,7 +1363,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 	//closing all the left sockets
 	
-			CLOSESOCKET(sock);
+			CLOSESOCKET(socket_listen);
 			
 	
 	
@@ -1409,8 +1409,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 }
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id)
 {
-	int no_of_players =n;
-
+	int no_of_players = n;
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
 	Mutex mutx;
@@ -1523,10 +1522,10 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id)
 		advance(it, i);
 		Startup_info_client data1(60, no_of_players, it->first, spawn[it->first]);
 		cout << "\n the id is==>" << it->first;
-		int bytes = sendto(sock, (char*)&data1, sizeof(data1), 0, (sockaddr*)&it->second, sizeof(it->second));
+		int bytes = sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&it->second, sizeof(it->second));
 		while (bytes < sizeof(data1))
 		{
-			bytes += sendto(sock, (char*)&data1 + bytes, sizeof(data1) - bytes, 0,(sockaddr*)&it->second,sizeof(it->second));//sending socket is wrong
+			bytes += sendto(socket_listen, (char*)&data1 + bytes, sizeof(data1) - bytes, 0,(sockaddr*)&it->second,sizeof(it->second));//sending socket is wrong
 		}
 
 	}
@@ -1558,76 +1557,92 @@ int main()
 {
 #if defined(_WIN32)
 	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d))
-	{
-		cout << "\n failed to initialize";
+	if (WSAStartup(MAKEWORD(2, 2), &d)) {
+		fprintf(stderr, "Failed to initialize.\n");
+		return 1;
 	}
-#endif // defined
-
+#endif
+	int max_player = 0;
 	cout << "\n enter the number of players=>";
 	cin >> max_player;
-
-	//extracting the data
-	vector<int> sockets;//a vector of n
-	unordered_map<int, sockaddr_storage> socket_id;//socket to ship id map
-	//establishing socket connection with the server
+	printf("Configuring local address...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
-	int res = 0;
+	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_DGRAM;
-	struct addrinfo* server_add;
-	char buff[1000];
-	getaddrinfo(0, "8080", &hints, &server_add);
-	
-	//creating the socket
-	 sock = socket(server_add->ai_family, server_add->ai_socktype, server_add->ai_protocol);
-	if (sock == INVALID_SOCKET)
-	{
-		cout << "\n invalid socket";
+	//hints.ai_flags = AI_PASSIVE;
+
+	struct addrinfo* bind_address;
+	getaddrinfo(0, "8080", &hints, &bind_address);
+
+
+	printf("Creating socket...\n");
+
+	socket_listen = socket(bind_address->ai_family,
+		bind_address->ai_socktype, bind_address->ai_protocol);
+	if (!ISVALIDSOCKET(socket_listen)) {
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		return 1;
 	}
-	//binding the socket
-	bind(sock, server_add->ai_addr, server_add->ai_addrlen);
-	freeaddrinfo(server_add);
-	//now accepting hi from the clients
+
+
+	printf("Binding socket to local address...\n");
+	if (::bind(socket_listen,
+		bind_address->ai_addr, bind_address->ai_addrlen)) {
+		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+		return 1;
+	}
+	freeaddrinfo(bind_address);
 	int n = 0;
-
+	unordered_map<int, sockaddr_storage> socket_id;
 	fd_set master;
-	fd_set reads;
 	FD_ZERO(&master);
+	FD_SET(socket_listen, &master);
+	fd_set reads;
 	FD_ZERO(&reads);
-	FD_SET(sock, &master);
-	timeval timeout;
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 10;
-	while (n < max_player)
-
+	
+	while (max_player>n)
 	{
-		struct sockaddr_storage client_address;
-		socklen_t client_len = sizeof(client_address);
 		reads = master;
-		
-		select(sock + 1, &reads, 0, 0, &timeout);
-		if (FD_ISSET(sock, &reads))
+		select(socket_listen, &reads, 0, 0, 0);
+		if (FD_ISSET(socket_listen, &reads))
 		{
-			int bytes = recvfrom(sock, buff, sizeof(buff), 0, (struct sockaddr*)&client_address, &client_len);
-			if (bytes < 1)
+			struct sockaddr_storage client_address;
+			socklen_t client_len = sizeof(client_address);
+			char read[1024];
+			int bytes_received = recvfrom(socket_listen,
+				read, sizeof(read),
+				0,
+				(struct sockaddr*)&client_address, &client_len);
+
+			printf("Received (%d bytes): %.*s\n",
+				bytes_received, bytes_received, read);
+			if (bytes_received > 1)
 			{
-				cout << "\n no data";
-			}
-			if (bytes > 0)
-			{
-				cout << "\n received hi from the client";
-				sockets.push_back(sock);
+				cout << "\n client connected";
 				socket_id[n] = client_address;
 				n++;
 			}
+
+			printf("Remote address is: ");
+			char address_buffer[100];
+			char service_buffer[100];
+			getnameinfo(((struct sockaddr*)&client_address),
+				client_len,
+				address_buffer, sizeof(address_buffer),
+				service_buffer, sizeof(service_buffer),
+				NI_NUMERICHOST | NI_NUMERICSERV);
+			printf("%s %s\n", address_buffer, service_buffer);
 		}
 	}
+	startup(max_player, socket_id);
+	CLOSESOCKET(socket_listen);
 
+#if defined(_WIN32)
+	WSACleanup();
+#endif
 
-	
-
-
-
+	printf("Finished.\n");
+	return 0;
 
 }

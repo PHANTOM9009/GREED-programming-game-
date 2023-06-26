@@ -92,7 +92,7 @@ class transfer_socket
 {
 public:
 	int len;
-	WSAPROTOCOL_INFO sock[100];
+	WSAPROTOCOL_INFO socket_listen[100];
 	
 };
 void listener()
@@ -151,16 +151,16 @@ void listener()
 				{
 					struct sockaddr_storage client_address;
 					socklen_t client_len = sizeof(client_address);
-					SOCKET sock = accept(socket_listen, (sockaddr*)&client_address, &client_len);
-					temp_socket.push_back(pair<SOCKET,int>(sock,count));
-					cout << "\n connection is=>" << sock;
-					FD_SET(sock, &master);
-					if (sock > max_socket)
+					SOCKET socket_listen = accept(socket_listen, (sockaddr*)&client_address, &client_len);
+					temp_socket.push_back(pair<SOCKET,int>(socket_listen,count));
+					cout << "\n connection is=>" << socket_listen;
+					FD_SET(socket_listen, &master);
+					if (socket_listen > max_socket)
 					{
-						max_socket = sock;
+						max_socket = socket_listen;
 					}
 					unique_lock<mutex> lk(m->m_valid);
-					valid_connections.push_back(sock);
+					valid_connections.push_back(socket_listen);
 					m->is_data.notify_one();
 				}
 				/*
@@ -272,7 +272,7 @@ void transferSocket(deque<SOCKET>& player_queue, const int st,const int end, SOC
 			std::cerr << "Failed to duplicate socket handle: " << WSAGetLastError() << std::endl;
 			cout << GetLastErrorAsString();
 		}
-		ob.sock[i] = protocolInfo;
+		ob.socket_listen[i] = protocolInfo;
 	}
 	int bytes = send(recvr, (char*)&ob, sizeof(ob), 0);
 	cout << "\n sockets sent to process=>" << pid;
@@ -413,7 +413,7 @@ int main()
 
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
-			SOCKET sock = accept(socket_listen, (sockaddr*)&client_address, &client_len);
+			SOCKET socket_listen = accept(socket_listen, (sockaddr*)&client_address, &client_len);
 			
 			
 			
@@ -421,7 +421,7 @@ int main()
 			int clientAddressLength = sizeof(clientAddress);
 			char clientIP[INET_ADDRSTRLEN];
 
-			int ret=getpeername(sock, (sockaddr*)&clientAddress, &clientAddressLength);
+			int ret=getpeername(socket_listen, (sockaddr*)&clientAddress, &clientAddressLength);
 			cout << "\n getpeername returned=>" << ret;
 			if (ret != 0)
 			{
@@ -430,7 +430,7 @@ int main()
 			inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN);
 			if (strcmp("127.0.0.1", clientIP) == 0)//a check if the connection is from the same computer or not
 			{
-				lobby[sock] = 0;
+				lobby[socket_listen] = 0;
 			}
 		}
 				
