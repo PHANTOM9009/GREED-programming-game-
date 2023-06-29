@@ -1141,10 +1141,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					data1.shipdata_forMe = sdfm;
 					//sending the data
 					data1.packet_id = total_time;
-					int bytes = sendto(sid, (char*)&data1, sizeof(data1), 0, (sockaddr*)&socket_id[sid], sizeof(socket_id[sid]));
-					if (bytes < 1)
+					int bytes = sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&socket_id[sid], sizeof(socket_id[sid]));
+					if (bytes==-1)
 					{
-						//cout << "\n no bytes are sent";
+						cout << GETSOCKETERRNO() << endl;
 							
 					}
 					
