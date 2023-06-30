@@ -1617,7 +1617,7 @@ int main()
 	{
 		reads = master;
 		select(socket_listen, &reads, 0, 0, 0);
-		if (FD_ISSET(socket_listen, &reads))
+		if (FD_ISSET(socket_listen,&reads))
 		{
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
