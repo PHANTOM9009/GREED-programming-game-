@@ -86,11 +86,11 @@ SOCKET connect_to_server()//first connection to the server
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	int res = 0;
-	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_socktype = SOCK_DGRAM;
 	struct addrinfo* server_add;
 	char buff[1000];
 
-	getaddrinfo("192.168.129.213", "8081", &hints, &server_add);
+	getaddrinfo("127.0.0.1", "8080", &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
@@ -101,18 +101,10 @@ SOCKET connect_to_server()//first connection to the server
 		cout << "\n socket not created==>" << GETSOCKETERRNO();
 	}
 	/**/
-	while (connect(peer_socket, server_add->ai_addr, server_add->ai_addrlen))
-	{
-		cout << "\n problem in connecting";
-
-	}
-	cout << "\n client connected with server";
-	int yes = 1;
-	if (setsockopt(peer_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&yes, sizeof(yes)) < 0) //disabling nagle's algorithm for speed in sending the data
-	{
-		fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
-	}
-	//cout << "\n connected with the server..";
+	connect(peer_socket, server_add->ai_addr, server_add->ai_addrlen);
+	//sending the bytes to the server
+	char msg[100] = { "hi server" };
+	int bytes = sendto(peer_socket, buff, sizeof(buff), 0, server_add->ai_addr, server_add->ai_addrlen);
 	freeaddrinfo(server_add);
 
 	return peer_socket;

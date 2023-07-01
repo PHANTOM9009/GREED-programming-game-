@@ -60,7 +60,7 @@ int max_player;
 * 4. This gets the game running
 */
 vector<int> socket_display;//vector of sockets for display unit of the client
-unordered_map<int, int> socket_id_display;
+unordered_map<int,sockaddr_storage> socket_id_display;
 
 SOCKET socket_listen;//the only UDP socket that will be used to transmit the data
 
@@ -249,71 +249,33 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 }
 
 //making the connector number 2 to display the game to the client
-void connector_show(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
+void connector_show(vector<int>& socks, unordered_map<int,sockaddr_storage>& sockets_id, int n)//n is the number of clients we are expecting to be connected the clients connected in reality may be lot less
 {
 
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_family = AF_INET;
-	hints.ai_flags = AI_PASSIVE;
-
-
-	struct addrinfo* bind_address;
-	getaddrinfo(0, "8081", &hints, &bind_address);//client show process is connected to the socket having socket number 8081
-	SOCKET socket_listen0 = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
-	if (!ISVALIDSOCKET(socket_listen0))
-	{
-		cout << "\n socket not created==>" << GETSOCKETERRNO();
-	}
-	/*
-	int option = 0;
-	if (setsockopt(socket_listen, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&option, sizeof(option)))//for accepting ipv6 as well
-	{
-		cout << "\n problem in setting the flag==>";
-	}
-	*/
-	int yes = 1;
-	if (setsockopt(socket_listen0, IPPROTO_TCP, TCP_NODELAY, (char*)&yes, sizeof(yes)) < 0) //disabling nagle's algorithm for speed in sending the data
-	{
-		fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
-	}
-
-
-	cout << "\n binding the socket==>";
-	if (bind(socket_listen0, (const sockaddr*)bind_address->ai_addr, (int)bind_address->ai_addrlen))
-	{
-		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO();
-	}
-
-	if (listen(socket_listen0, 20) < 0)
-	{
-		cout << "\n socket failed";
-	}
-	freeaddrinfo(bind_address);
 	int count = 0;
-	SOCKET max_socket = socket_listen0;
+	SOCKET max_socket = socket_listen;
 	fd_set master;
 	FD_ZERO(&master);
-	FD_SET(socket_listen0, &master);
+	FD_SET(socket_listen, &master);
 	while (count < n)
 	{
 		FD_SET reads;
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, 0);
-		if (FD_ISSET(socket_listen0, &reads))
+		if (FD_ISSET(socket_listen, &reads))
 		{
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
-			SOCKET socket_liste = accept(socket_listen0, (struct sockaddr*)&client_address, &client_len);
-			socks.push_back(socket_liste);
-			sockets_id[socket_liste] = count;//id's are being given countwise
-			cout << "\n connection established for client shower=>" << count;
+			char buff[100];
+			
+			int bytes = recvfrom(socket_listen, buff, sizeof(buff), 0, (sockaddr*)&client_address, &client_len);
+			sockets_id[count] = client_address;
+			cout << "\n message received from the client=>" << buff;
 			count++;
 
 		}
 	}
-	CLOSESOCKET(socket_listen0);
+	 
 	
 }
 
@@ -382,10 +344,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	control1 control;
 	
 	
-	fd_set master2, temp;
-	FD_ZERO(&master2);
-	FD_ZERO(&temp);
-	FD_SET(socket_display[0], &master2);//
+	
 
 
 	thread t(&control1::nav_data_processor, &con, ref(pl1), mutx);
@@ -441,7 +400,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 			read = master;
 			write = master;
-			temp = master2;
+			
 			struct timeval timeout;
 			timeout.tv_sec = 0;
 			timeout.tv_usec = 0;
@@ -1291,27 +1250,21 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			* 
 			*/
 			sending.restart();
-			select(socket_display[0] + 1, 0, &temp, 0, &timeout);
-			SOCKET socket_client = socket_display[0];
-			if (FD_ISSET(socket_client, &temp))
+			select(socket_listen+ 1, 0,&write, 0, &timeout);
+			
+			if (FD_ISSET(socket_listen, &write))
 			{
 
 				ship_packet.total_secs = total_secs;
 
-				int bytes = send(socket_client, (char*)&ship_packet, sizeof(ship_packet), 0);
+				int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&socket_id_display[0], sizeof(socket_id_display[0]));
 				if (bytes < 1)
 				{
 
-					FD_CLR(socket_client, &master2);
-					CLOSESOCKET(socket_client);
-					break;
+					cout << "\n couldn't sent bytes to the client display unit";
 				}
 				
-				while (bytes < sizeof(ship_packet))
-				{
-					bytes += send(socket_client, (char*)&ship_packet + bytes, sizeof(ship_packet) - bytes, 0);
-				}
-				
+					
 			
 				//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
 			}
