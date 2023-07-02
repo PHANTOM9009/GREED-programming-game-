@@ -181,6 +181,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	double avg_send = 0;
 	double avg_processing = 0;
 	int prev_pack = 0;
+
+	int previous_packet = -1;
 	while (1)
 	{
 		/*NOTES:
@@ -261,11 +263,11 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					cout << "\n connection disconnected to the server..retrying to connect";
 					//peer_socket = connect_to_server();
 					cout << "\n connection is back.";
-					CLOSESOCKET(peer_socket);
+					CLOSESOCKET(peer_socket); 
 					break;
 				}
 				//we have received the data.. now parse the data in original class structure.
-				if (bytes_recv > 0)
+				if (bytes_recv > 0 && previous_packet<data1.packet_id)
 				{
 					//cout << "\n for frame=>" << total_time;
 					/*
@@ -293,6 +295,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					prev_pack = data1.packet_id;
 					control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);
 					control_ob.packet_to_me(data1.shipdata_forMe, ship_id, pl1);
+					
+					previous_packet = data1.packet_id;
 				}
 				
 
