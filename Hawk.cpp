@@ -45,8 +45,8 @@ namespace user1
 				{
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
 					ob.Greed_chaseShip(index);
-					cout << "\n called find_ship_to_kill";
-					cout << "\n my id=>" << ob.getShipId() << " target id=>" << index;
+					//cout << "\n called find_ship_to_kill";
+					//cout << "\n my id=>" << ob.getShipId() << " target id=>" << index;
 				}
 			
 				

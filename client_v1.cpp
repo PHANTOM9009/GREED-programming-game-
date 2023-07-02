@@ -85,7 +85,7 @@ SOCKET connect_to_server()//first connection to the server
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_DGRAM;
 	struct addrinfo* peer_address;
-	if (getaddrinfo("192.168.129.209", "8080", &hints, &peer_address)) {
+	if (getaddrinfo("192.168.129.213", "8080", &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
@@ -180,6 +180,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	double avg_recv = 0;
 	double avg_send = 0;
 	double avg_processing = 0;
+	int prev_pack = 0;
 	while (1)
 	{
 		/*NOTES:
@@ -284,7 +285,12 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					cout << "\n front tile=>" << data1.shipdata_forMe.front_tile.r << " " << data1.shipdata_forMe.front_tile.c;
 					cout << "\n position is=>" << data1.shipdata_forMe.absolute_position.x << " " << data1.shipdata_forMe.absolute_position.y;
 					*/
-					cout << "\n packet id=>" << data1.packet_id;
+				//	cout << "\n packet id=>" << data1.packet_id;
+					if (data1.packet_id - prev_pack > 1)
+					{
+						cout<<"\n packet loss=>"<<data1.packet_id - prev_pack;
+					}
+					prev_pack = data1.packet_id;
 					control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);
 					control_ob.packet_to_me(data1.shipdata_forMe, ship_id, pl1);
 				}
