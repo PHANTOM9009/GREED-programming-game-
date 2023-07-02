@@ -267,7 +267,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					break;
 				}
 				//we have received the data.. now parse the data in original class structure.
-				if (bytes_recv > 0 && previous_packet<data1.packet_id)
+				if (bytes_recv > 0 )
 				{
 					//cout << "\n for frame=>" << total_time;
 					/*
@@ -290,7 +290,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				//	cout << "\n packet id=>" << data1.packet_id;
 					if (data1.packet_id - prev_pack > 1)
 					{
-						cout<<"\n packet loss=>"<<data1.packet_id - prev_pack;
+					//	cout<<"\n packet loss=>"<<data1.packet_id - prev_pack;
 					}
 					prev_pack = data1.packet_id;
 					control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);

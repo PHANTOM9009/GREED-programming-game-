@@ -486,7 +486,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			for (int i = 0; i < pl1.size(); i++)
 			{
 
-				if (bytes_received > 0 && previous_packet < ship_data.packet_no)
+				if (bytes_received > 0)
 				{
 					update_frame(pl1, ship_data.ob[i], i);//to unwrap the data into the ship object
 					previous_packet = ship_data.packet_no;
