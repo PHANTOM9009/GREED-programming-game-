@@ -331,6 +331,8 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	double previous_angle = 0;
 	double avg_bullet = 0;
 	top_layer ship_data;
+
+	int previous_packet = -1;
 	while (window.isOpen())
 	{
 		temp_set = master;
@@ -484,9 +486,10 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			for (int i = 0; i < pl1.size(); i++)
 			{
 
-				if (bytes_received > 0)
+				if (bytes_received > 0 && previous_packet < ship_data.packet_no)
 				{
 					update_frame(pl1, ship_data.ob[i], i);//to unwrap the data into the ship object
+					previous_packet = ship_data.packet_no;
 				}
 
 
