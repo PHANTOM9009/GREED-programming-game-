@@ -379,6 +379,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	cout << "\n size of recv_data=>" << sizeof(recv_data);
 	cout << "\n size of top player=>" << sizeof(top_layer);
 
+	vector<int> prev_packet_id(n, -1);//previous packet id received from the player so that any old packet may not be use
+
 	while (1)
 	{
 		sf::Time tt = clock1.restart();
@@ -1260,7 +1262,6 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&socket_id_display[0], sizeof(socket_id_display[0]));
 				if (bytes < 1)
 				{
-
 					cout << "\n couldn't sent bytes to the client display unit";
 				}
 				
@@ -1309,9 +1310,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						continue;
 					}
-					if (bytes > 0)
+					if (bytes > 0 && prev_packet_id[sid] < data2.packet_id)
 					{
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
+						prev_packet_id[sid] = data2.packet_id;
 					}
 
 					std::time_t result = std::time(nullptr);
