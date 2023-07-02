@@ -85,7 +85,7 @@ SOCKET connect_to_server()//first connection to the server
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_DGRAM;
 	struct addrinfo* peer_address;
-	if (getaddrinfo("192.168.129.213", "8080", &hints, &peer_address)) {
+	if (getaddrinfo("127.0.0.1", "8080", &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}

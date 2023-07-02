@@ -1310,7 +1310,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						continue;
 					}
-					if (bytes > 0 && prev_packet_id[sid] < data2.packet_id)
+					if (bytes > 0)
 					{
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
