@@ -68,7 +68,7 @@ class transfer_socket
 {
 public:
 	int length;
-	WSAPROTOCOL_INFO protocolInfo[100];
+	sockaddr_storage protocolInfo[100];
 
 };
 class debug
@@ -1478,7 +1478,33 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id)
 
 	}
 	//sending the startup data to all the connected clients
+	//making the udp socket which will be used to talk to the client terminals
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_PASSIVE;
 
+	struct addrinfo* bind_address;
+	getaddrinfo(0, "8081", &hints, &bind_address);//the server is now running at port 8081
+
+
+	printf("Creating socket...\n");
+
+	socket_listen = socket(bind_address->ai_family,
+		bind_address->ai_socktype, bind_address->ai_protocol);
+	if (!ISVALIDSOCKET(socket_listen)) {
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+	}
+
+
+	printf("Binding socket to local address...\n");
+	if (::bind(socket_listen,
+		bind_address->ai_addr, bind_address->ai_addrlen)) {
+		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+
+	}
+	freeaddrinfo(bind_address);
 
 	connector_show(socket_display,socket_id_display, 1);//connecting with display unit of the client
 
@@ -1536,25 +1562,25 @@ int main()
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
 	struct addrinfo* bind_address;
-	getaddrinfo(0, "8080", &hints, &bind_address);
+	getaddrinfo("127.0.0.1 ", "8080", &hints, &bind_address);
 
 
 	printf("Creating socket...\n");
 
-	socket_listen = socket(bind_address->ai_family,
+	SOCKET socket_server = socket(bind_address->ai_family,
 		bind_address->ai_socktype, bind_address->ai_protocol);
-	if (!ISVALIDSOCKET(socket_listen)) {
+	if (!ISVALIDSOCKET(socket_server)) {
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
 
 
 	printf("Binding socket to local address...\n");
-	if (::bind(socket_listen,
+	if (::bind(socket_server,
 		bind_address->ai_addr, bind_address->ai_addrlen)) {
 		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
@@ -1564,42 +1590,31 @@ int main()
 	unordered_map<int, sockaddr_storage> socket_id;
 	fd_set master;
 	FD_ZERO(&master);
-	FD_SET(socket_listen, &master);
+	FD_SET(socket_server, &master);
 	fd_set reads;
 	FD_ZERO(&reads);
-	
+	transfer_socket data;
 	while (max_player>n)
 	{
 		reads = master;
-		select(socket_listen, &reads, 0, 0, 0);
-		if (FD_ISSET(socket_listen,&reads))
+		select(socket_server, &reads, 0, 0, 0);
+		if (FD_ISSET(socket_server,&reads))
 		{
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
-			char read[1024];
-			int bytes_received = recvfrom(socket_listen,
-				read, sizeof(read),
-				0,
-				(struct sockaddr*)&client_address, &client_len);
+			memset(&data, 0, sizeof(data));
+			int bytes_received = recv(socket_server,(char*)&data, sizeof(data),	0);
 
-			printf("Received (%d bytes): %.*s\n",
-				bytes_received, bytes_received, read);
+			
 			if (bytes_received > 1)
 			{
-				cout << "\n client connected";
-				socket_id[n] = client_address;
-				n++;
+				for (int i = 0; i < data.length; i++)
+				{
+					socket_id[n] = data.protocolInfo[i];
+					n++;
+				}
 			}
 
-			printf("Remote address is: ");
-			char address_buffer[100];
-			char service_buffer[100];
-			getnameinfo(((struct sockaddr*)&client_address),
-				client_len,
-				address_buffer, sizeof(address_buffer),
-				service_buffer, sizeof(service_buffer),
-				NI_NUMERICHOST | NI_NUMERICSERV);
-			printf("%s %s\n", address_buffer, service_buffer);
 		}
 	}
 	startup(max_player, socket_id);
