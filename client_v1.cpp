@@ -83,7 +83,7 @@ SOCKET connect_to_server()//first connection to the server
 	printf("Configuring remote address...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* peer_address;
 	if (getaddrinfo("127.0.0.1", "8080", &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
@@ -107,21 +107,14 @@ SOCKET connect_to_server()//first connection to the server
 		peer_address->ai_socktype, peer_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_peer)) {
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
-		return 1;
+		return 0;
 	}
 
 	if (connect(socket_peer, peer_address->ai_addr, peer_address->ai_addrlen))
 	{
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
-		return 1;
+		return 0;
 	}
-	const char* message = "Hello World";
-	printf("Sending: %s\n", message);
-
-	int bytes_sent = send(socket_peer,	message, strlen(message),0);
-
-	printf("Sent %d bytes.\n", bytes_sent);
-
 	
 
 	return socket_peer;
@@ -1057,9 +1050,35 @@ int main()
 	//extracting the data
 	
 	
-	SOCKET socket_listen = connect_to_server();
+	SOCKET socket_list = connect_to_server();//here we will make TCP socket so that we can get a game server
 	
-	
+	//here we will make the UDP socket to recv the data
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	struct addrinfo* bind_address;
+	getaddrinfo("127.0.0.1", "8081", &hints, &bind_address);//the server is now running at port 8081
+
+
+	printf("Creating socket...\n");
+
+	SOCKET socket_listen = socket(bind_address->ai_family,
+		bind_address->ai_socktype, bind_address->ai_protocol);
+	if (!ISVALIDSOCKET(socket_listen)) {
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+	}
+
+
+	printf("Binding socket to local address...\n");
+	if (::bind(socket_listen,
+		bind_address->ai_addr, bind_address->ai_addrlen)) {
+		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+
+	}
+	freeaddrinfo(bind_address);
 	//receiving the startupinfo data
 	Startup_info_client start_data;
 	memset((void*)&start_data, 0, sizeof(start_data));
