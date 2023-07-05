@@ -71,6 +71,7 @@ std::string GetLastErrorAsString()
 deque<SOCKET> valid_connections;//valid connections which are coming but not given a lobby yet
 deque<pair<SOCKET,int>> free_lobby;//pair of socket and number of players in the lobby
 
+deque<sockaddr_storage> valid_connections_ad;//address of the sockets that will be transferred to the game server
 unordered_map<SOCKET, int> lobby;
 //(lobby number,no of players)
 class user_credentials
@@ -92,7 +93,7 @@ class transfer_socket
 {
 public:
 	int len;
-	WSAPROTOCOL_INFO socket_listen[100];
+	sockaddr_storage socket_listen[100];
 	
 };
 void listener()
@@ -161,6 +162,7 @@ void listener()
 					}
 					unique_lock<mutex> lk(m->m_valid);
 					valid_connections.push_back(socket_listen);
+					valid_connections_ad.push_back(client_address);
 					m->is_data.notify_one();
 				}
 				/*
@@ -250,7 +252,7 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 		}
 	}
 }
-void transferSocket(deque<SOCKET>& player_queue, const int st,const int end, SOCKET& recvr,int pid)//potential problem in this when the number of players in a game lobby increases
+void transferSocket(deque<sockaddr_storage>& player_queue, const int st,const int end, SOCKET& recvr,int pid)//potential problem in this when the number of players in a game lobby increases
 {
 	//pid is the process id of the receive process
 	const int num = end - st + 1;
@@ -264,35 +266,29 @@ void transferSocket(deque<SOCKET>& player_queue, const int st,const int end, SOC
 		ob.len = 100;
 	}
 	int j = 0;
-	WSAPROTOCOL_INFO protocolInfo;
-	for (int i = 0; i < player_queue.size(); i++)
+	for (int i = st; i <= end; i++)
 	{
-		if (WSADuplicateSocket(player_queue[0], pid, &protocolInfo) != 0)
-		{
-			std::cerr << "Failed to duplicate socket handle: " << WSAGetLastError() << std::endl;
-			cout << GetLastErrorAsString();
-		}
-		ob.socket_listen[i] = protocolInfo;
+		ob.socket_listen[j] = player_queue[i];
+		j++;
 	}
 	int bytes = send(recvr, (char*)&ob, sizeof(ob), 0);
 	cout << "\n sockets sent to process=>" << pid;
 	//transfering the sockets
-
-	
+		
 }
 void assign_lobby()//to assign the lobby to the incoming authenticated connections
 {
 	while (1)
 	{
 		unique_lock<mutex> lk(m->m_valid);
-		m->is_data.wait(lk, [] {return !valid_connections.empty(); });
+		m->is_data.wait(lk, [] {return !valid_connections_ad.empty(); });
 		//enter only when the there are connections asking for the lobby
-		deque<SOCKET> player_queue;
-		for (int i = 0; i < valid_connections.size(); i++)
+		deque<sockaddr_storage> player_queue;
+		for (int i = 0; i < valid_connections_ad.size(); i++)
 		{
-			player_queue.push_back(valid_connections[i]);
+			player_queue.push_back(valid_connections_ad[i]);
 		}
-		valid_connections.clear();
+		valid_connections_ad.clear();
 		lk.unlock();
 
 		unique_lock<mutex> lk1(m->m_lobby);
@@ -304,7 +300,7 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 		for (int i = 0; i < free_lobby.size(); i++)
 		{
 			
-			if (player_queue.size()  < max_player-free_lobby[i].second)
+			if (player_queue.size()  <= max_player-free_lobby[i].second)
 			{
 				//transfer all the sockets to that particular process
 				//....
@@ -315,22 +311,6 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 				player_queue.clear();
 				break;
 				
-			}
-			else if(player_queue.size() == max_player-free_lobby[i].second)//if the players are more than the required in that particular lobby
-			{
-				//transfer all the sockets to that particular process
-				//....
-				transferSocket(player_queue, 0, player_queue.size() - 1, free_lobby[i].first, lobby[free_lobby[i].first]);
-			//	lk1.lock();
-				free_lobby[i].second += player_queue.size();
-				player_queue.clear();
-
-			//	auto it = free_lobby.begin();
-				//advance(it, i);
-				//free_lobby.erase(it);
-				//i--;
-			
-				break;
 			}
 			else
 			{

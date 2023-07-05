@@ -1,0 +1,11 @@
+so, 
+the update for 3rd july 2023 is: 
+the game is working okay in UDP, We are using UDP alone, and no extra toppings over it.
+the problem seems to be in showing the timeline in the client display unit, the problem maybe in sending data one by one,
+this has to changed.
+more over we need to check if the game is responsive to the slightest commands of the algorithm. I know this may be difficult, but we need to make
+it most responsive in any scenario.
+now since the game is running on UDP, we need to make another logic for lobby_server now since socket transferring is obsolete now.
+But instead of sending the socket and recreating it, we can just send the client ip address and port to the game server.
+
+make the game production ready, add the database, prepare the leaderboard, we launch now.

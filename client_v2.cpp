@@ -90,7 +90,7 @@ SOCKET connect_to_server()//first connection to the server
 	struct addrinfo* server_add;
 	char buff[1000];
 
-	getaddrinfo("192.168.129.213", "8080", &hints, &server_add);
+	getaddrinfo("127.0.0.1", "8080", &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
