@@ -1555,71 +1555,48 @@ int main()
 		return 1;
 	}
 #endif
-	int max_player = 0;
-	cout << "\n enter the number of players=>";
+	cout << "\n input the number of players=>";
 	cin >> max_player;
-	printf("Configuring local address...\n");
+	
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
-
 	struct addrinfo* bind_address;
-	getaddrinfo("127.0.0.1 ", "8080", &hints, &bind_address);
+	getaddrinfo("127.0.0.1", "8080", &hints, &bind_address);
 
-
-	printf("Creating socket...\n");
-
-	SOCKET socket_server = socket(bind_address->ai_family,
-		bind_address->ai_socktype, bind_address->ai_protocol);
-	if (!ISVALIDSOCKET(socket_server)) {
-		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
-		return 1;
-	}
-
-
-	printf("Binding socket to local address...\n");
-	if (::bind(socket_server,
-		bind_address->ai_addr, bind_address->ai_addrlen)) {
-		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
-		return 1;
-	}
-	freeaddrinfo(bind_address);
-	int n = 0;
-	unordered_map<int, sockaddr_storage> socket_id;
-	fd_set master;
-	FD_ZERO(&master);
-	FD_SET(socket_server, &master);
-	fd_set reads;
-	FD_ZERO(&reads);
-	transfer_socket data;
-	while (max_player>n)
+	SOCKET moonlight=socket(bind_address->ai_family,bind_address->ai_socktype, bind_address->ai_protocol);
+	//connecting the socket
+	while (connect(moonlight, bind_address->ai_addr, bind_address->ai_addrlen))
 	{
-		reads = master;
-		select(socket_server, &reads, 0, 0, 0);
-		if (FD_ISSET(socket_server,&reads))
-		{
-			struct sockaddr_storage client_address;
-			socklen_t client_len = sizeof(client_address);
-			memset(&data, 0, sizeof(data));
-			int bytes_received = recv(socket_server,(char*)&data, sizeof(data),	0);
-
-			
-			if (bytes_received > 1)
-			{
-				for (int i = 0; i < data.length; i++)
-				{
-					socket_id[n] = data.protocolInfo[i];
-					n++;
-				}
-			}
-
-		}
+		cout<<"\n connecting to the server";
 	}
-	startup(max_player, socket_id);
-	CLOSESOCKET(socket_listen);
+	cout << "\n connected to the server";
+	freeaddrinfo(bind_address);
+	//sending the data to the server
+	char buff[100] = "hi server";
+	int bytes = send(moonlight, buff, sizeof(buff), 0);
+	cout << "\n bytes sent are=>" << bytes;
+	//receiving the data from the lobby server
+	unordered_map<int, sockaddr_storage> socket_id;
+	int count = 0;
+	while (count < max_player)
+	{
+		transfer_socket socket_data;
+		int bytes = recv(moonlight, (char*)&socket_data, sizeof(socket_data), 0);
+		if (bytes > 1)
+		{
+			for (int i = 0; i < socket_data.length; i++)
+			{
+				socket_id[count] = socket_data.protocolInfo[i];
+				count++;
+			}
+		}
 
+	}
+	
+	CLOSESOCKET(moonlight);
+	startup(max_player, socket_id);
 #if defined(_WIN32)
 	WSACleanup();
 #endif

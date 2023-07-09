@@ -152,16 +152,16 @@ void listener()
 				{
 					struct sockaddr_storage client_address;
 					socklen_t client_len = sizeof(client_address);
-					SOCKET socket_listen = accept(socket_listen, (sockaddr*)&client_address, &client_len);
-					temp_socket.push_back(pair<SOCKET,int>(socket_listen,count));
-					cout << "\n connection is=>" << socket_listen;
-					FD_SET(socket_listen, &master);
-					if (socket_listen > max_socket)
+					SOCKET socket_ = accept(socket_listen, (sockaddr*)&client_address, &client_len);
+					temp_socket.push_back(pair<SOCKET,int>(socket_,count));
+					cout << "\n connection is=>" << socket_;
+					FD_SET(socket_, &master);
+					if (socket_ > max_socket)
 					{
-						max_socket = socket_listen;
+						max_socket = socket_;
 					}
 					unique_lock<mutex> lk(m->m_valid);
-					valid_connections.push_back(socket_listen);
+					valid_connections.push_back(socket_);
 					valid_connections_ad.push_back(client_address);
 					m->is_data.notify_one();
 				}
@@ -374,6 +374,18 @@ int main()
 	{
 		cout << "\n socket failed";
 	}
+	/*
+	SOCKET moonlight=accept(socket_listen,(sockaddr*)&bind_address->ai_addr, (int*)&bind_address->ai_addrlen);
+	if (!ISVALIDSOCKET(moonlight))
+	{
+		cout << "\n failed to accept the connection";
+	}
+	cout << "\n waiting for bytes==>";
+	char buff[100];
+	int bytes = recv(moonlight, buff, 100, 0);
+	cout << "\n data is=>" << buff;
+	*/
+	
 	freeaddrinfo(bind_address);
 	fd_set master;//master set containing all the sockets
 	FD_ZERO(&master);
@@ -388,66 +400,43 @@ int main()
 		FD_ZERO(&reads);
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, &timeout);
-		if (FD_ISSET(socket_listen, &reads))
-		{
-
-			struct sockaddr_storage client_address;
-			socklen_t client_len = sizeof(client_address);
-			SOCKET socket_listen = accept(socket_listen, (sockaddr*)&client_address, &client_len);
-			
-			
-			
-			struct sockaddr_in serverAddress, clientAddress;
-			int clientAddressLength = sizeof(clientAddress);
-			char clientIP[INET_ADDRSTRLEN];
-
-			int ret=getpeername(socket_listen, (sockaddr*)&clientAddress, &clientAddressLength);
-			cout << "\n getpeername returned=>" << ret;
-			if (ret != 0)
-			{
-				cout << "\n error in getpeername=>" << GetLastErrorAsString();
-			}
-			inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN);
-			if (strcmp("127.0.0.1", clientIP) == 0)//a check if the connection is from the same computer or not
-			{
-				lobby[socket_listen] = 0;
-			}
-		}
-				
-	}
-	int count = 0;
-	FD_ZERO(&master);
-	max_socket = 0;
-	for (int i = 0; i < lobby.size(); i++)
-	{
-		auto it = lobby.begin();
-		advance(it, i);
-		FD_SET(it->first,&master);
-		if (it->first > max_socket)
-		{
-			max_socket = it->first;
-		}
-	}
-
-	while (count < GAME_SERVER_COUNT)
-	{
-		fd_set reads;
-		FD_ZERO(&reads);
-		reads = master;
-		select(max_socket + 1, &reads, 0, 0, &timeout);
 		for (int i = 1; i <= max_socket; i++)
 		{
+
+
 			if (FD_ISSET(i, &reads))
 			{
-				int pid;
-				int bytes = recv(i, (char*)&pid, sizeof(pid), 0);
-				lobby[i] = pid;
-				if(pid>=0)
-				count++;
+				if (i == socket_listen)
+				{
+
+					struct sockaddr_storage client_address;
+					socklen_t client_len = sizeof(client_address);
+					SOCKET moonlight = accept(socket_listen, (sockaddr*)&client_address, &client_len);
+					if (!ISVALIDSOCKET(moonlight))
+					{
+						cout << "\n failed to accept the connection";
+					}
+					if (moonlight > max_socket)
+					{
+						max_socket = moonlight;
+					}
+
+					FD_SET(moonlight, &master);
+					
+					
+						lobby[moonlight] = 0;
+						cout << "\n connection accepted";
+						char buff[100];
+						int bytes = recv(moonlight, buff, sizeof(buff), 0);
+						cout << "\n message is=>" << buff;
+					
+				}
+				
 			}
+
 		}
 	}
-	cout << "\n the sockets and their pid are==>";
+
 	vector<SOCKET> socks;
 	for (auto it : lobby)
 	{
@@ -455,10 +444,6 @@ int main()
 		socks.push_back(it.first);
 	}
 
-	for (auto it : lobby)
-	{
-		cout << it.first << " " << it.second << endl;
-	}
 	CLOSESOCKET(socket_listen);
 	thread t1(listener);
 	thread t2(assign_lobby);
@@ -467,7 +452,7 @@ int main()
 	t1.join();
 	t2.join();
 	t3.join();
-
+	
 }
 
 

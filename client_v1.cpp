@@ -1044,14 +1044,36 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	WSACleanup();
 
 }
+std::string GetLastErrorAsString()
+{
+	//Get the error message ID, if any.
+	DWORD errorMessageID = ::GetLastError();
+	if (errorMessageID == 0) {
+		return std::string(); //No error message has been recorded
+	}
 
+	LPSTR messageBuffer = nullptr;
+
+	//Ask Win32 to give us the string version of that message ID.
+	//The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
+	size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+	//Copy the error message into a std::string.
+	std::string message(messageBuffer, size);
+
+	//Free the Win32's string's buffer.
+	LocalFree(messageBuffer);
+
+	return message;
+}
 int main()
 {
 	//extracting the data
 	
 	
 	SOCKET socket_list = connect_to_server();//here we will make TCP socket so that we can get a game server
-	
+	CLOSESOCKET(socket_list);
 	//here we will make the UDP socket to recv the data
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -1087,6 +1109,10 @@ int main()
 	
 	int client_length = sizeof(client_address);
 	int bytes = recv(socket_listen, (char*)&start_data, sizeof(start_data), 0);
+	if (bytes < 1)
+	{
+		cout << "\n error is=>" << GetLastErrorAsString();
+	}
 	
 	cout << "\n received bytes are==>" << bytes;
 	cout << "\n my ship id is==>" << start_data.ship_id;
