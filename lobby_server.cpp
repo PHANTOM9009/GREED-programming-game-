@@ -105,7 +105,7 @@ void listener()
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* bind_address;
-	getaddrinfo(0, "8080", &hints, &bind_address);
+	getaddrinfo(0, "8081", &hints, &bind_address);
 
 	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_listen))
@@ -152,16 +152,16 @@ void listener()
 				{
 					struct sockaddr_storage client_address;
 					socklen_t client_len = sizeof(client_address);
-					SOCKET socket_listen = accept(socket_listen, (sockaddr*)&client_address, &client_len);
-					temp_socket.push_back(pair<SOCKET,int>(socket_listen,count));
-					cout << "\n connection is=>" << socket_listen;
-					FD_SET(socket_listen, &master);
-					if (socket_listen > max_socket)
+					SOCKET socket_ = accept(socket_listen, (sockaddr*)&client_address, &client_len);
+					temp_socket.push_back(pair<SOCKET,int>(socket_,count));
+					cout << "\n connection is=>" << socket_;
+					FD_SET(socket_, &master);
+					if (socket_ > max_socket)
 					{
-						max_socket = socket_listen;
+						max_socket = socket_;
 					}
 					unique_lock<mutex> lk(m->m_valid);
-					valid_connections.push_back(socket_listen);
+					valid_connections.push_back(socket_);
 					valid_connections_ad.push_back(client_address);
 					m->is_data.notify_one();
 				}
@@ -252,27 +252,20 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 		}
 	}
 }
-void transferSocket(deque<sockaddr_storage>& player_queue, const int st,const int end, SOCKET& recvr,int pid)//potential problem in this when the number of players in a game lobby increases
+void transferSocket(deque<SOCKET>& player_queue, const int st,const int end, SOCKET& recvr,int pid)//potential problem in this when the number of players in a game lobby increases
 {
 	//pid is the process id of the receive process
-	const int num = end - st + 1;
-	transfer_socket ob;
-	if (num <= 100)
-	{
-		ob.len = num;
-	}
-	else
-	{
-		ob.len = 100;
-	}
-	int j = 0;
+	cout << "\n sending data to the connected client";
+		
 	for (int i = st; i <= end; i++)
 	{
-		ob.socket_listen[j] = player_queue[i];
-		j++;
+		char msg[100] = "hi client";
+		int bytes = send(player_queue[i], msg, sizeof(msg), 0);
+		if (bytes < 1)
+		{
+			cout << "\n couldnt send bytes==>" << GetLastErrorAsString();
+		}
 	}
-	int bytes = send(recvr, (char*)&ob, sizeof(ob), 0);
-	cout << "\n sockets sent to process=>" << pid;
 	//transfering the sockets
 		
 }
@@ -281,14 +274,14 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 	while (1)
 	{
 		unique_lock<mutex> lk(m->m_valid);
-		m->is_data.wait(lk, [] {return !valid_connections_ad.empty(); });
+		m->is_data.wait(lk, [] {return !valid_connections.empty(); });
 		//enter only when the there are connections asking for the lobby
-		deque<sockaddr_storage> player_queue;
-		for (int i = 0; i < valid_connections_ad.size(); i++)
+		deque<SOCKET> player_queue;
+		for (int i = 0; i < valid_connections.size(); i++)
 		{
-			player_queue.push_back(valid_connections_ad[i]);
+			player_queue.push_back(valid_connections[i]);
 		}
-		valid_connections_ad.clear();
+		valid_connections.clear();
 		lk.unlock();
 
 		unique_lock<mutex> lk1(m->m_lobby);
@@ -350,7 +343,7 @@ int main()
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* bind_address;
-	getaddrinfo(0, "8080", &hints, &bind_address);//this server is running on port 8080
+	getaddrinfo(0, "8081", &hints, &bind_address);//this server is running on port 8080
 
 	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_listen))
@@ -393,25 +386,12 @@ int main()
 
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
-			SOCKET socket_listen = accept(socket_listen, (sockaddr*)&client_address, &client_len);
-			
-			
-			
-			struct sockaddr_in serverAddress, clientAddress;
-			int clientAddressLength = sizeof(clientAddress);
-			char clientIP[INET_ADDRSTRLEN];
-
-			int ret=getpeername(socket_listen, (sockaddr*)&clientAddress, &clientAddressLength);
-			cout << "\n getpeername returned=>" << ret;
-			if (ret != 0)
-			{
-				cout << "\n error in getpeername=>" << GetLastErrorAsString();
-			}
-			inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN);
-			if (strcmp("127.0.0.1", clientIP) == 0)//a check if the connection is from the same computer or not
-			{
-				lobby[socket_listen] = 0;
-			}
+			SOCKET socket_ = accept(socket_listen, (sockaddr*)&client_address, &client_len);
+			cout << "\n connected";
+			char msg[100];
+			int bytes = recv(socket_, msg, sizeof(msg), 0);
+			lobby[socket_listen] = 0;
+			cout << "\n msg recved is=>" << msg;
 		}
 				
 	}
@@ -429,25 +409,8 @@ int main()
 		}
 	}
 
-	while (count < GAME_SERVER_COUNT)
-	{
-		fd_set reads;
-		FD_ZERO(&reads);
-		reads = master;
-		select(max_socket + 1, &reads, 0, 0, &timeout);
-		for (int i = 1; i <= max_socket; i++)
-		{
-			if (FD_ISSET(i, &reads))
-			{
-				int pid;
-				int bytes = recv(i, (char*)&pid, sizeof(pid), 0);
-				lobby[i] = pid;
-				if(pid>=0)
-				count++;
-			}
-		}
-	}
-	cout << "\n the sockets and their pid are==>";
+	
+	
 	vector<SOCKET> socks;
 	for (auto it : lobby)
 	{
@@ -462,12 +425,13 @@ int main()
 	CLOSESOCKET(socket_listen);
 	thread t1(listener);
 	thread t2(assign_lobby);
-	thread t3(lobby_contact, ref(socks));
+	//thread t3(lobby_contact, ref(socks));
 	
 	t1.join();
 	t2.join();
-	t3.join();
-
+//	t3.join();
+	while(1)
+	{ }
 }
 
 

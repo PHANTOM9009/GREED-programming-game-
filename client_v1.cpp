@@ -72,18 +72,13 @@ bool find(int id, int hit[100],int size)
 
 SOCKET connect_to_server()//first connection to the server
 {
-#if defined(_WIN32)
-	WSADATA d;
-	if (WSAStartup(MAKEWORD(2, 2), &d)) {
-		fprintf(stderr, "Failed to initialize.\n");
-		return 1;
-	}
-#endif
+
 
 	printf("Configuring remote address...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
 	if (getaddrinfo("127.0.0.1", "8080", &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
@@ -1051,12 +1046,73 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	WSACleanup();
 
 }
+std::string GetLastErrorAsString()
+{
+	//Get the error message ID, if any.
+	DWORD errorMessageID = ::GetLastError();
+	if (errorMessageID == 0) {
+		return std::string(); //No error message has been recorded
+	}
+
+	LPSTR messageBuffer = nullptr;
+
+	//Ask Win32 to give us the string version of that message ID.
+	//The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
+	size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+	//Copy the error message into a std::string.
+	std::string message(messageBuffer, size);
+
+	//Free the Win32's string's buffer.
+	LocalFree(messageBuffer);
+
+	return message;
+}
+void connect_to_lobby_server()
+{
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	struct addrinfo* bind_address;
+	getaddrinfo("127.0.0.1", "8081", &hints, &bind_address);
+	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
+	if (!ISVALIDSOCKET(lobby_socket))
+	{
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		//return 1;
+	}
+	while (connect(lobby_socket, bind_address->ai_addr, bind_address->ai_addrlen))
+	{
+		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+		cout << GetLastErrorAsString();
+		//return 1;
+	}
+	freeaddrinfo(bind_address);
+	//sending hi to the server
+	cout << "\n connected to the server";
+	char msg[100];
+	memset((void*)msg, 0, sizeof(msg));
+	int bytes = recv(lobby_socket, msg, sizeof(msg), 0);
+	if (bytes < 1)
+	{
+		cout << "\n error in recv bytes from lobby server=>" << GetLastErrorAsString();
+	}
+}
 
 int main()
 {
 	//extracting the data
+#if defined(_WIN32)
+	WSADATA d;
+	if (WSAStartup(MAKEWORD(2, 2), &d)) {
+		fprintf(stderr, "Failed to initialize.\n");
+		return 1;
+	}
+#endif
 	
-	
+	connect_to_lobby_server();
 	SOCKET socket_listen = connect_to_server();
 	
 	
