@@ -1542,14 +1542,14 @@ std::string GetLastErrorAsString()
 
 	return message;
 }
-SOCKET connect_with_lobby()
+int connect_with_lobby()
 {
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo("127.0.0.1", "8081", &hints, &bind_address);
+	getaddrinfo("127.0.0.1", "8080", &hints, &bind_address);
 	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
@@ -1564,14 +1564,14 @@ SOCKET connect_with_lobby()
 	}
 	freeaddrinfo(bind_address);
 	//sending hi to the server
-	char msg[100] = "hi server";
-	int bytes = send(lobby_socket, msg, sizeof(msg), 0);
-	if (bytes == -1)
+	int port;
+	int bytes = recv(lobby_socket, (char*)&port, sizeof(port), 0);
+	if (bytes < 0)
 	{
-		fprintf(stderr, "send() failed. (%d)\n", GETSOCKETERRNO());
-		return 1;
+		cout << "\n couldnt recv the port==>" << GetLastErrorAsString();
 	}
-	return lobby_socket;
+	cout << "\n received port number=>" << port;
+	return port;
 	
 	
 }
@@ -1589,7 +1589,7 @@ int main()
 	int max_player = 0;
 	cout << "\n enter the number of players=>";
 	cin >> max_player;
-	SOCKET lobby_connect = connect_with_lobby();//to connect with the lobby
+	int port = connect_with_lobby();//to connect with the lobby
 	printf("Configuring local address...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -1598,7 +1598,11 @@ int main()
 	hints.ai_flags = AI_PASSIVE;
 
 	struct addrinfo* bind_address;
-	getaddrinfo(0, "8080", &hints, &bind_address);
+	//convert port to string
+	char port_str[10];
+	// Convert port to string
+	sprintf(port_str, "%d", port);
+	getaddrinfo(0, port_str, &hints, &bind_address);
 
 
 	printf("Creating socket...\n");

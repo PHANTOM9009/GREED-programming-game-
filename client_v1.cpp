@@ -70,9 +70,11 @@ bool find(int id, int hit[100],int size)
 	return false;
 }
 
-SOCKET connect_to_server()//first connection to the server
+SOCKET connect_to_server(int port)//first connection to the server
 {
-
+	char port_str[10];
+	// Convert port to string
+	sprintf(port_str, "%d", port);
 
 	printf("Configuring remote address...\n");
 	struct addrinfo hints;
@@ -80,7 +82,7 @@ SOCKET connect_to_server()//first connection to the server
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
-	if (getaddrinfo("127.0.0.1", "8080", &hints, &peer_address)) {
+	if (getaddrinfo("127.0.0.1",port_str, &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
@@ -1069,14 +1071,14 @@ std::string GetLastErrorAsString()
 
 	return message;
 }
-void connect_to_lobby_server()
+int connect_to_lobby_server()
 {
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo("127.0.0.1", "8081", &hints, &bind_address);
+	getaddrinfo("127.0.0.1", "8080", &hints, &bind_address);
 	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
@@ -1092,13 +1094,15 @@ void connect_to_lobby_server()
 	freeaddrinfo(bind_address);
 	//sending hi to the server
 	cout << "\n connected to the server";
-	char msg[100];
-	memset((void*)msg, 0, sizeof(msg));
-	int bytes = recv(lobby_socket, msg, sizeof(msg), 0);
+	
+	int port;
+	int bytes = recv(lobby_socket,(char*)&port, sizeof(port), 0);
 	if (bytes < 1)
 	{
 		cout << "\n error in recv bytes from lobby server=>" << GetLastErrorAsString();
 	}
+	cout << "\n received port=>" << port;
+	return port;
 }
 
 int main()
@@ -1112,8 +1116,8 @@ int main()
 	}
 #endif
 	
-	connect_to_lobby_server();
-	SOCKET socket_listen = connect_to_server();
+	int port=connect_to_lobby_server();
+	SOCKET socket_listen = connect_to_server(port);
 	
 	
 	//receiving the startupinfo data

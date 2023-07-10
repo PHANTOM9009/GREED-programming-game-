@@ -42,8 +42,13 @@
 #include<vector>
 #include<unordered_map>
 //#define max_player 3 //number of maximum players that can play simultaneously in a lobby
+
+//runs on the port 8080
+
 #define GAME_SERVER_COUNT 1
 using namespace std;
+
+
 int max_player;
 std::string GetLastErrorAsString()
 {
@@ -72,8 +77,9 @@ deque<SOCKET> valid_connections;//valid connections which are coming but not giv
 deque<pair<SOCKET,int>> free_lobby;//pair of socket and number of players in the lobby
 
 deque<sockaddr_storage> valid_connections_ad;//address of the sockets that will be transferred to the game server
-unordered_map<SOCKET, int> lobby;
-//(lobby number,no of players)
+unordered_map<SOCKET, int> lobby;//(lobby number,no of players)
+
+unordered_map<SOCKET, int> server_port;//socket and the port at which that server shall run.
 class user_credentials
 {
 public:
@@ -105,7 +111,7 @@ void listener()
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* bind_address;
-	getaddrinfo(0, "8081", &hints, &bind_address);
+	getaddrinfo(0, "8080", &hints, &bind_address);
 
 	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_listen))
@@ -252,15 +258,15 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 		}
 	}
 }
-void transferSocket(deque<SOCKET>& player_queue, const int st,const int end, SOCKET& recvr,int pid)//potential problem in this when the number of players in a game lobby increases
+void transferSocket(deque<SOCKET>& player_queue, const int st,const int end, SOCKET& recvr)//potential problem in this when the number of players in a game lobby increases
 {
 	//pid is the process id of the receive process
 	cout << "\n sending data to the connected client";
-		
+	int  port = server_port[recvr];
 	for (int i = st; i <= end; i++)
 	{
-		char msg[100] = "hi client";
-		int bytes = send(player_queue[i], msg, sizeof(msg), 0);
+	
+		int bytes = send(player_queue[i],(char*)&port, sizeof(port), 0);
 		if (bytes < 1)
 		{
 			cout << "\n couldnt send bytes==>" << GetLastErrorAsString();
@@ -297,7 +303,7 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 			{
 				//transfer all the sockets to that particular process
 				//....
-				transferSocket(player_queue, 0, player_queue.size() - 1,free_lobby[i].first,lobby[free_lobby[i].first]);
+				transferSocket(player_queue, 0, player_queue.size() - 1,free_lobby[i].first);
 			//	lk1.lock();
 				free_lobby[i].second += player_queue.size();
 				//lk1.unlock();
@@ -310,7 +316,7 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 				//transfer first "max_player-free_lobby[i].second" sockets to the process
 				//,....
 				//removing the first max_player-free_lobby[i].second sockets
-				transferSocket(player_queue, 0,max_player-free_lobby[i].second-1, free_lobby[i].first, lobby[free_lobby[i].first]);
+				transferSocket(player_queue, 0,max_player-free_lobby[i].second-1, free_lobby[i].first);
 				for (int j = 1; j <= (max_player - free_lobby[i].second); j++)
 				{
 					player_queue.pop_front();
@@ -343,7 +349,7 @@ int main()
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* bind_address;
-	getaddrinfo(0, "8081", &hints, &bind_address);//this server is running on port 8080
+	getaddrinfo(0, "8080", &hints, &bind_address);//this server is running on port 8080
 
 	SOCKET socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_listen))
@@ -375,8 +381,10 @@ int main()
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 0;
 	SOCKET max_socket = socket_listen;
+	
+	int start_port = 8081;
 	while (lobby.size() < GAME_SERVER_COUNT)
-	{
+	{ 
 		fd_set reads;
 		FD_ZERO(&reads);
 		reads = master;
@@ -387,11 +395,16 @@ int main()
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
 			SOCKET socket_ = accept(socket_listen, (sockaddr*)&client_address, &client_len);
+			lobby[socket_] = 0;
+			server_port[socket_]=start_port;
 			cout << "\n connected";
-			char msg[100];
-			int bytes = recv(socket_, msg, sizeof(msg), 0);
-			lobby[socket_listen] = 0;
-			cout << "\n msg recved is=>" << msg;
+			//sending the port number to the server:(at which port will the server listen for the clients)
+			int bytes = send(socket_, (char*)&start_port, sizeof(start_port), 0);
+			if (bytes < 0)
+			{
+				cout << "\n did not send the port to the server=>" << GetLastErrorAsString();
+			}
+			start_port++;
 		}
 				
 	}
