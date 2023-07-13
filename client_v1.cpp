@@ -1119,13 +1119,40 @@ int main()
 	int port=connect_to_lobby_server();
 	SOCKET socket_listen = connect_to_server(port);
 	
+
+	//starting the display unit of the client
+
+	STARTUPINFOA si;
+	PROCESS_INFORMATION pi;
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+	//LPTSTR* arg = { "hello.exe" };
+	//convert port to string and append in commandLine
+	string port_str = to_string(port);
+	string commandLine = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" " + port_str;
+	char str[100];
+	strcpy(str, commandLine.c_str());
+
+	//char commandLine[] = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" 8080";
+	if (!CreateProcessA(NULL, str, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
+	{
+		cout << "Error creating process" << GetLastErrorAsString();
+
+		return 1;
+	}
+	else
+	{
+		cout << "Process created";
+		//return 0;
+	}
+
 	
 	//receiving the startupinfo data
 	Startup_info_client start_data;
 	memset((void*)&start_data, 0, sizeof(start_data));
-	
+	 
 	struct sockaddr_storage client_address;
-	
 	int client_length = sizeof(client_address);
 	int bytes = recv(socket_listen, (char*)&start_data, sizeof(start_data), 0);
 	
@@ -1200,10 +1227,15 @@ int main()
 
 	control.cannon_list = cannon_list;
 	ship::cannon_list = cannon_list;
+
 	
 	graphics cg;
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
-	
+	//waiting for the child process to finish
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	cout << "\n child completed";
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
 
 }
 

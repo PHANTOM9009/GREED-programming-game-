@@ -38,6 +38,8 @@
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 
+int server_port;
+
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 {
 	pl1[i]->ship_id = ob.ship_id;
@@ -880,7 +882,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	cout << "\n avg bullet is=>" << avg_bullet / total_time;
 }
 
-int main()
+int main(int argc,char* argv[])
 {
 #if defined(_WIN32)
 	WSADATA d;
@@ -890,6 +892,17 @@ int main()
 	}
 #endif // defined
 	//extracting the data
+	
+	//setting the port number of the server that has to connected with
+	if (argc > 1)
+	{
+			server_port = std::stoi(argv[1]);
+			std::cout << "Received value from the parent process: " << server_port << std::endl;
+		
+	}
+	
+
+	
 	const int no_of_players = 6;
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
