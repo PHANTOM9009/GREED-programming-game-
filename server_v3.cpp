@@ -63,7 +63,31 @@ vector<int> socket_display;//vector of sockets for display unit of the client
 unordered_map<int,sockaddr_storage> socket_id_display;
 
 SOCKET socket_listen;//the only UDP socket that will be used to transmit the data
+SOCKET lobby_socket;
 
+std::string GetLastErrorAsString()
+{
+	//Get the error message ID, if any.
+	DWORD errorMessageID = ::GetLastError();
+	if (errorMessageID == 0) {
+		return std::string(); //No error message has been recorded
+	}
+
+	LPSTR messageBuffer = nullptr;
+
+	//Ask Win32 to give us the string version of that message ID.
+	//The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
+	size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+	//Copy the error message into a std::string.
+	std::string message(messageBuffer, size);
+
+	//Free the Win32's string's buffer.
+	LocalFree(messageBuffer);
+
+	return message;
+}
 class transfer_socket
 {
 public:
@@ -1334,8 +1358,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			
 	
 	
-	CLOSESOCKET(socket_display[0]);
-	WSACleanup();
+	//CLOSESOCKET(socket_display[0]);
+
 	cout << "\n average times are==>";
 	double sending0 = 0;
 	double sending1 = 0;
@@ -1518,30 +1542,18 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id)
 
 	graphics cg;
 	cg.callable(&mutx, code, map1,n,socket_id, socket_display);//dont call callable function its depricated
-}
-std::string GetLastErrorAsString()
-{
-	//Get the error message ID, if any.
-	DWORD errorMessageID = ::GetLastError();
-	if (errorMessageID == 0) {
-		return std::string(); //No error message has been recorded
+	//sending the message to the lobby server that i am free to start another game
+	int status = 1;
+	int bytes = send(lobby_socket, (char*)&status, sizeof(status), 0);
+	if (bytes < 1)
+	{
+		cout << "\n could not send bytes=>" << GetLastErrorAsString();
 	}
+	cout << "\n bytes sent to the server";
 
-	LPSTR messageBuffer = nullptr;
 
-	//Ask Win32 to give us the string version of that message ID.
-	//The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
-	size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-
-	//Copy the error message into a std::string.
-	std::string message(messageBuffer, size);
-
-	//Free the Win32's string's buffer.
-	LocalFree(messageBuffer);
-
-	return message;
 }
+
 int connect_with_lobby()
 {
 	struct addrinfo hints;
@@ -1550,7 +1562,7 @@ int connect_with_lobby()
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
 	getaddrinfo("127.0.0.1", "8080", &hints, &bind_address);
-	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
+	lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
@@ -1590,6 +1602,8 @@ int main()
 	cout << "\n enter the number of players=>";
 	cin >> max_player;
 	int port = connect_with_lobby();//to connect with the lobby
+
+
 	printf("Configuring local address...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
