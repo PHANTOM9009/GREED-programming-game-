@@ -1,8 +1,9 @@
 #include<iostream>
 #include<Windows.h>
 using namespace std;
-//program to call a child process..................
-//Returns the last Win32 error, in string format. Returns an empty string if there is no error.
+/*
+* 
+*/
 std::string GetLastErrorAsString()
 {
 	//Get the error message ID, if any.
@@ -30,22 +31,23 @@ int main()
 {
 	//system("run.exe");
 	
-	STARTUPINFO si;
+	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
 	//LPTSTR* arg = { "hello.exe" };
-	
-	if (!CreateProcess(L"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\GREED(programming game).exe",NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+	char commandLine[] = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\mock.exe\" 8080";
+	if (!CreateProcessA(NULL,commandLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
 	{
 		cout<<"Error creating process"<<GetLastErrorAsString();
+		
 		return 1;
 	}
 	else
 	{
 		cout << "Process created";
-		return 0;
+		//return 0;
 	}
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";

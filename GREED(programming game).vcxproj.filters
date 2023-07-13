@@ -141,6 +141,9 @@
     <ClCompile Include="test_serverv3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">
