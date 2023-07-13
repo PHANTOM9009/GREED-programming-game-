@@ -294,6 +294,7 @@ void connector_show(vector<int>& socks, unordered_map<int,sockaddr_storage>& soc
 			
 			int bytes = recvfrom(socket_listen, buff, sizeof(buff), 0, (sockaddr*)&client_address, &client_len);
 			sockets_id[count] = client_address;
+			
 			cout << "\n message received from the client=>" << buff;
 			count++;
 
@@ -1504,7 +1505,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id)
 	//sending the startup data to all the connected clients
 
 
-	connector_show(socket_display,socket_id_display, 1);//connecting with display unit of the client
+	//connector_show(socket_display,socket_id_display, 1);//connecting with display unit of the client
 
 	cout << "\n sending the data to the clients=>";
 	for (int i = 0; i < no_of_players; i++)
@@ -1645,7 +1646,7 @@ int main()
 	fd_set reads;
 	FD_ZERO(&reads);
 	
-	while (max_player>n)
+	while (max_player+1>n)
 	{
 		reads = master;
 		select(socket_listen, &reads, 0, 0, 0);
@@ -1653,21 +1654,24 @@ int main()
 		{
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
-			char read[1024];
-			int bytes_received = recvfrom(socket_listen,
-				read, sizeof(read),
-				0,
-				(struct sockaddr*)&client_address, &client_len);
+			int read;
+			int bytes_received = recvfrom(socket_listen,(char*)&read, sizeof(read),	0,(struct sockaddr*)&client_address, &client_len);
 
-			printf("Received (%d bytes): %.*s\n",
-				bytes_received, bytes_received, read);
 			if (bytes_received > 1)
 			{
-				cout << "\n client connected";
-				socket_id[n] = client_address;
+				cout << "\n client connected==>"<<read;
+				if (read == 0)
+				{
+					socket_id[n] = client_address;
+				}
+				else if
+				{
+					socket_id_display[n] = client_address;
+
+				}
 				n++;
 			}
-
+			/*
 			printf("Remote address is: ");
 			char address_buffer[100];
 			char service_buffer[100];
@@ -1677,6 +1681,7 @@ int main()
 				service_buffer, sizeof(service_buffer),
 				NI_NUMERICHOST | NI_NUMERICSERV);
 			printf("%s %s\n", address_buffer, service_buffer);
+			*/
 		}
 	}
 	startup(max_player, socket_id);

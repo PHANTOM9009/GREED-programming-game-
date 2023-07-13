@@ -112,16 +112,13 @@ SOCKET connect_to_server(int port)//first connection to the server
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
-	const char* message = "Hello World";
-	printf("Sending: %s\n", message);
+	int msg = 0;//0 means client_v1_process
 
-	int bytes_sent = send(socket_peer,	message, strlen(message),0);
+	int bytes_sent = send(socket_peer,(char*)&msg,sizeof(msg), 0);
 
 	printf("Sent %d bytes.\n", bytes_sent);
 
-	
-
-	return socket_peer;
+		return socket_peer;
 
 }
 

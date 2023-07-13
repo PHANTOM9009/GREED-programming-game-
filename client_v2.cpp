@@ -38,7 +38,7 @@
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 
-int server_port;
+char server_port[10];
 
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 {
@@ -92,7 +92,7 @@ SOCKET connect_to_server()//first connection to the server
 	struct addrinfo* server_add;
 	char buff[1000];
 
-	getaddrinfo("127.0.0.1", "8081", &hints, &server_add);
+	getaddrinfo("127.0.0.1",server_port, &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
@@ -105,8 +105,8 @@ SOCKET connect_to_server()//first connection to the server
 	/**/
 	connect(peer_socket, server_add->ai_addr, server_add->ai_addrlen);
 	//sending the bytes to the server
-	char msg[100] = { "hi server" };
-	int bytes = sendto(peer_socket, buff, sizeof(buff), 0, server_add->ai_addr, server_add->ai_addrlen);
+	int msg = 1;//1 means that  this is client_v2 process
+	int bytes = sendto(peer_socket, (char*)&msg, sizeof(msg), 0, server_add->ai_addr, server_add->ai_addrlen);
 	freeaddrinfo(server_add);
 
 	return peer_socket;
@@ -896,7 +896,7 @@ int main(int argc,char* argv[])
 	//setting the port number of the server that has to connected with
 	if (argc > 1)
 	{
-			server_port = std::stoi(argv[1]);
+		strcpy(server_port, argv[1]);
 			std::cout << "Received value from the parent process: " << server_port << std::endl;
 		
 	}
