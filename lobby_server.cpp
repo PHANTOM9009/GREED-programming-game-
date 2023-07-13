@@ -235,24 +235,28 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 			{
 				int data;//pair of socket,bool(in int)
 				int byes = recv(i, (char*)&data, sizeof(data), 0);
-				if (data == 0)//0 means that the server is busy
+				if (byes > 1)
 				{
-					for (int j = 0; j < free_lobby.size(); j++)
+					if (data == 0)//0 means that the server is busy
 					{
-						if (free_lobby[j].first == i)
+						for (int j = 0; j < free_lobby.size(); j++)
 						{
-							unique_lock<mutex> lk(m->m_lobby);
-							auto it = free_lobby.begin();
-							advance(it, j);
-							free_lobby.erase(it);
-							break;
+							if (free_lobby[j].first == i)
+							{
+								unique_lock<mutex> lk(m->m_lobby);
+								auto it = free_lobby.begin();
+								advance(it, j);
+								free_lobby.erase(it);
+								break;
+							}
 						}
 					}
-				}
-				else if(data==1)
-				{
-					unique_lock<mutex> lk(m->m_lobby);
-					free_lobby.push_back(pair<SOCKET, int>(i, 0));
+					else if (data == 1)
+					{
+						unique_lock<mutex> lk(m->m_lobby);
+						free_lobby.push_back(pair<SOCKET, int>(i, 0));
+						cout << "\n received available message from game server=>" << i;
+					}
 				}
 			}
 		}
@@ -296,7 +300,8 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 		//assuming now we know the status of the lobbies and are stored in free_lobbies dequeue
 	//	lk1.unlock();
 		sort(free_lobby.begin(), free_lobby.end(), comparator);
-		for (int i = 0; i < free_lobby.size(); i++)
+		int si = free_lobby.size();
+		for (int i = 0; i < si; i++)
 		{
 			
 			if (player_queue.size()  <= max_player-free_lobby[i].second)
@@ -307,8 +312,15 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 			//	lk1.lock();
 				free_lobby[i].second += player_queue.size();
 				//lk1.unlock();
-				player_queue.clear();
-				break;
+				player_queue.clear();//clearing the player queue
+
+				if(player_queue.size()==max_player-free_lobby[i].second)
+				{
+					auto it = free_lobby.begin();
+					advance(it, i);
+					free_lobby.erase(it);
+				}
+				
 				
 			}
 			else
@@ -325,7 +337,7 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 				auto it = free_lobby.begin();
 				advance(it, i);
 				free_lobby.erase(it);
-				i--;
+				
 			}
 		}
 
@@ -438,11 +450,11 @@ int main()
 	CLOSESOCKET(socket_listen);
 	thread t1(listener);
 	thread t2(assign_lobby);
-	//thread t3(lobby_contact, ref(socks));
+	thread t3(lobby_contact, ref(socks));
 	
 	t1.join();
 	t2.join();
-//	t3.join();
+	t3.join();
 	while(1)
 	{ }
 }
