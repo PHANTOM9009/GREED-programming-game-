@@ -16,3 +16,10 @@ so working on lobby server, refining it as much as i can.
 added the variable port thing for game servers
 add the select functionality to make the server robust. so tha it doesn't lag anywhere.
 make the lobby listen workable, and then we are done with the server.
+-------------------------------------------------------------------------------------------------------------------------------
+14 july 2023:
+
+so now client display unit gets started by client_v1, now to add the connection of client_v2 with server_v1, some authentication is required.
+the point where we are listening for the client_v1 in server_v3, at the same point we will be listening to client_v2, so for that we need to add some authenications,
+so that we can differentiate between the two clients.
+--------------------------------------------------------------------------------------------------------------------------------
