@@ -39,7 +39,7 @@
 #include "online_lib2.cpp"
 
 char server_port[10];
-
+int my_id;//id of the ship in the game
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 {
 	pl1[i]->ship_id = ob.ship_id;
@@ -105,8 +105,15 @@ SOCKET connect_to_server()//first connection to the server
 	/**/
 	connect(peer_socket, server_add->ai_addr, server_add->ai_addrlen);
 	//sending the bytes to the server
-	int msg = 1;//1 means that  this is client_v2 process
-	int bytes = sendto(peer_socket, (char*)&msg, sizeof(msg), 0, server_add->ai_addr, server_add->ai_addrlen);
+	
+	string msg = "1";//1 means that  this is client_v2 process
+	string tot = msg + to_string(my_id);
+	int var = stoi(tot);
+	int bytes = sendto(peer_socket, (char*)&var, sizeof(var), 0, server_add->ai_addr, server_add->ai_addrlen);
+	if (bytes > 1)
+	{
+		cout << "\n data sent to the server..=>" << var;
+	}
 	freeaddrinfo(server_add);
 
 	return peer_socket;
@@ -436,14 +443,12 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			}
 		}
 
-		if (!gameOver)
-		{
 			//receiving the data
 
 
 			struct timeval timeout;
 			timeout.tv_sec = 0;
-			timeout.tv_usec =10;
+			timeout.tv_usec = 10;
 
 			if (select(peer_socket + 1, &temp_set, NULL, NULL, &timeout) < 0)
 			{
@@ -457,14 +462,8 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				//receiving the data
 				gone = 1;
 				bytes_received = recv(peer_socket, (char*)&ship_data, sizeof(ship_data), 0);
-				
-				while (bytes_received < sizeof(ship_data))
-				{
-					bytes_received += recv(peer_socket, (char*)&ship_data + bytes_received, sizeof(ship_data) - bytes_received, 0);
 
-				}
-				
-				
+
 				if (bytes_received < 1)
 				{
 					cout << "\n server disconnected the connection";
@@ -476,8 +475,9 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				{
 					//cout << "\n difference is greater than 1=>" << diff << " " << previous;
 				}
-				
+
 				previous = ship_data.packet_no;
+				gameOver = ship_data.gameOver;
 			}
 
 			/*code to update the timer*/
@@ -774,20 +774,20 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 			}
 			//rendering the bullet here
-			
-				for (int i = 0; i < ship_data.no_of_bullets; i++)
+
+			for (int i = 0; i < ship_data.no_of_bullets; i++)
+			{
+				if (!(ship_data.bullet_pos[i].x == 0 && ship_data.bullet_pos[i].y == 0))
 				{
-					if (!(ship_data.bullet_pos[i].x == 0 && ship_data.bullet_pos[i].y == 0))
-					{
-						avg_bullet += ship_data.no_of_bullets;
-						bullet_entity.setPosition(::cx(ship_data.bullet_pos[i].x + origin_x), ::cy(ship_data.bullet_pos[i].y + origin_y));
-					
-						//cout << "\n mistake caught at=>" << i;
-					}
-					
-					window.draw(bullet_entity);
+					avg_bullet += ship_data.no_of_bullets;
+					bullet_entity.setPosition(::cx(ship_data.bullet_pos[i].x + origin_x), ::cy(ship_data.bullet_pos[i].y + origin_y));
+
+					//cout << "\n mistake caught at=>" << i;
 				}
-			
+
+				window.draw(bullet_entity);
+			}
+
 
 
 			//setting the base sprite on the cannon
@@ -802,7 +802,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				cannon_list[i].isDead = ship_data.cannon_ob[i].is_cannon_dead;
 
 			}
-			
+
 			for (int i = 0; i < cannon_list.howMany(); i++)
 			{
 				if (cannon_list[i].isDead == 0)
@@ -810,7 +810,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 					//cannon_list[i].cannon_sprite.setRotation(cannon_list[i].current_angle);
 					cannon_list[i].cannon_sprite.setTexture(cannon_tex_pack);
 					cannon_list[i].cannon_sprite.setTextureRect(sf::IntRect(::cx(ship_data.cannon_ob[i].picture * 80), 0, ::cx(80), ::cy(80)));
-				
+
 					cannon_list[i].cannon_sprite.setRotation(ship_data.cannon_ob[i].angle);
 					//cout << "\n angle is-=>" << ship_data.cannon_ob[2].angle;
 					window.draw(cannon_list[i].cannon_sprite);
@@ -843,24 +843,25 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 					}
 				}
 			}
-
+		
 			if (gameOver && ran == 0)
 			{
+				findWinner(pl1);
 
 				gui_renderer.final_window->setVisible(true);
 				for (int i = 0; i < pl1.size(); i++)
 				{
 					vector<tgui::String> data;
 					data.push_back(static_cast<tgui::String>(i + 1));
-					data.push_back(static_cast<tgui::String>(duplicate_pl1[i]->name));
-					data.push_back(static_cast<tgui::String>(duplicate_pl1[i]->score));
-					data.push_back(static_cast<tgui::String>(duplicate_pl1[i]->killed_ships.size()));
-					if (duplicate_pl1[i]->minutes == INT_MAX && duplicate_pl1[i]->seconds == INT_MAX)
+					data.push_back(static_cast<tgui::String>(pl1[i]->name));
+					data.push_back(static_cast<tgui::String>(pl1[i]->score));
+					data.push_back(static_cast<tgui::String>(pl1[i]->killed_ships.size()));
+					if (pl1[i]->minutes == INT_MAX && pl1[i]->seconds == INT_MAX)
 					{
 						data.push_back("Not Defeated");
 					}
 					else
-						data.push_back(static_cast<tgui::String>(to_string(duplicate_pl1[i]->minutes) + ":" + to_string(duplicate_pl1[i]->seconds)));
+						data.push_back(static_cast<tgui::String>(to_string(pl1[i]->minutes) + ":" + to_string(pl1[i]->seconds)));
 					gui_renderer.list1->addItem(data);
 				}
 				ran = 1;
@@ -876,7 +877,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 			window.display();
 
-		}
+		
 
 	}
 	cout << "\n avg bullet is=>" << avg_bullet / total_time;
@@ -894,12 +895,15 @@ int main(int argc,char* argv[])
 	//extracting the data
 	
 	//setting the port number of the server that has to connected with
-	if (argc > 1)
+	if (argc > 2)
 	{
 		strcpy(server_port, argv[1]);
 			std::cout << "Received value from the parent process: " << server_port << std::endl;
+			cout << "\n id is=>" << argv[2];
+			my_id = stoi(argv[2]);
 		
 	}
+	
 	
 
 	

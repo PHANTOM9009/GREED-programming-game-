@@ -367,11 +367,6 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	FD_ZERO(&write);
 	FD_SET(socket_listen,&master);
 	control1 control;
-	
-	
-	
-
-
 	thread t(&control1::nav_data_processor, &con, ref(pl1), mutx);
 	t.detach();
 	List<graphics::animator> animation_list;
@@ -487,6 +482,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 			sf::Clock processing1;
 			processing1.restart();
+
+			if (check_game_over(pl1))//if game is over
+			{
+				gameOver = true;
+			}
 			if (!gameOver)
 			{
 
@@ -1018,6 +1018,15 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			ship_packet.no_of_players = pl1.size();
 			int bullet_no = 0;//number of total bullets
 
+			if (gameOver == true)
+			{
+				ship_packet.gameOver = true;
+			}
+			else
+			{
+				ship_packet.gameOver = false;
+			}
+			
 			for (int i = 0; i < pl1.size(); i++)
 			{
 				ship_packet.ob[i].ship_id = i;
@@ -1277,17 +1286,21 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			* 
 			*/
 			sending.restart();
-			select(socket_listen+ 1, 0,&write, 0, &timeout);
+			select(socket_listen+ 1, 0,&write, 0, &timeout);//
 			
 			if (FD_ISSET(socket_listen, &write))
 			{
 
 				ship_packet.total_secs = total_secs;
-
-				int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&socket_id_display[0], sizeof(socket_id_display[0]));
-				if (bytes < 1)
+				for (int i = 0; i < socket_id_display.size(); i++)
 				{
-					cout << "\n couldn't sent bytes to the client display unit";
+					auto it = socket_id_display.begin();
+					advance(it, i);
+					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&it->second, sizeof(it->second));
+					if (bytes < 1)
+					{
+						cout << "\n couldn't sent bytes to the client display unit";
+					}
 				}
 				
 					
@@ -1355,7 +1368,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 	//closing all the left sockets
 	
-			CLOSESOCKET(socket_listen);
+	CLOSESOCKET(socket_listen);
 			
 	
 	
@@ -1588,7 +1601,7 @@ int connect_with_lobby()
 	
 	
 }
-int main()
+int main(int argc,char* argv[])
 {
 #if defined(_WIN32)
 	WSADATA d;
@@ -1617,6 +1630,7 @@ int main()
 	char port_str[10];
 	// Convert port to string
 	sprintf(port_str, "%d", port);
+	cout << "\n running on port=>" << port_str;
 	getaddrinfo(0, port_str, &hints, &bind_address);
 
 
@@ -1645,44 +1659,43 @@ int main()
 	FD_SET(socket_listen, &master);
 	fd_set reads;
 	FD_ZERO(&reads);
-	
+	int idc = 0;
 	while (max_player+1>n)
 	{
-		reads = master;
-		select(socket_listen, &reads, 0, 0, 0);
-		if (FD_ISSET(socket_listen,&reads))
-		{
+		
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
 			int read;
 			int bytes_received = recvfrom(socket_listen,(char*)&read, sizeof(read),	0,(struct sockaddr*)&client_address, &client_len);
-
-			if (bytes_received > 1)
+			if(bytes_received<1)
 			{
-				cout << "\n client connected==>"<<read;
-				if (read == 0)
+				cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
+			}
+			
+			else if (bytes_received > 1)
+			{
+				string sread = to_string(read);
+				//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
+				cout << "\n code recved is=>" << read;
+				if (sread[0] == '0')
 				{
-					socket_id[n] = client_address;
+					socket_id[idc] = client_address;
+					//sending the id of the client to the client
+					int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
+					idc++;
 				}
-				else if
+				else if (sread[0] == '1')
 				{
-					socket_id_display[n] = client_address;
+					//finding the id of the client through the code sent by the display unit
+					int id = stoi(sread.substr(1, sread.length() - 1));
+					cout << "\n id sent is==>" << id;
+					socket_id_display[id] = client_address;
 
 				}
 				n++;
 			}
-			/*
-			printf("Remote address is: ");
-			char address_buffer[100];
-			char service_buffer[100];
-			getnameinfo(((struct sockaddr*)&client_address),
-				client_len,
-				address_buffer, sizeof(address_buffer),
-				service_buffer, sizeof(service_buffer),
-				NI_NUMERICHOST | NI_NUMERICSERV);
-			printf("%s %s\n", address_buffer, service_buffer);
-			*/
-		}
+			
+		
 	}
 	startup(max_player, socket_id);
 	CLOSESOCKET(socket_listen);

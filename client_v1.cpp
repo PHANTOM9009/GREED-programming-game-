@@ -57,7 +57,7 @@
 */
 
 
-
+int my_id;//id of the player in the game
 bool find(int id, int hit[100],int size)
 {
 	for (int i = 0; i < size; i++)
@@ -118,6 +118,9 @@ SOCKET connect_to_server(int port)//first connection to the server
 
 	printf("Sent %d bytes.\n", bytes_sent);
 
+	cout << "\n waiting for the server to send me the id=>";
+	int bytes = recv(socket_peer, (char*)&my_id, sizeof(my_id), 0);
+	cout << "\n id sent by the client is=>" << my_id;
 		return socket_peer;
 
 }
@@ -1082,6 +1085,7 @@ int connect_to_lobby_server()
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		//return 1;
 	}
+	cout << "\n connecting with the lobby server.....";
 	while (connect(lobby_socket, bind_address->ai_addr, bind_address->ai_addrlen))
 	{
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
@@ -1090,7 +1094,7 @@ int connect_to_lobby_server()
 	}
 	freeaddrinfo(bind_address);
 	//sending hi to the server
-	cout << "\n connected to the server";
+	
 	
 	int port;
 	int bytes = recv(lobby_socket,(char*)&port, sizeof(port), 0);
@@ -1098,11 +1102,11 @@ int connect_to_lobby_server()
 	{
 		cout << "\n error in recv bytes from lobby server=>" << GetLastErrorAsString();
 	}
-	cout << "\n received port=>" << port;
+	cout << "\n received port from the lobby server=>" << port;
 	return port;
 }
 
-int main()
+int main(int argc,char* argv[])
 {
 	//extracting the data
 #if defined(_WIN32)
@@ -1116,9 +1120,9 @@ int main()
 	int port=connect_to_lobby_server();
 	SOCKET socket_listen = connect_to_server(port);
 	
-
+	
 	//starting the display unit of the client
-
+	/*
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
@@ -1127,7 +1131,8 @@ int main()
 	//LPTSTR* arg = { "hello.exe" };
 	//convert port to string and append in commandLine
 	string port_str = to_string(port);
-	string commandLine = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" " + port_str;
+	string id = to_string(my_id);
+	string commandLine = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" " + port_str+" "+id;
 	char str[100];
 	strcpy(str, commandLine.c_str());
 
@@ -1143,8 +1148,9 @@ int main()
 		cout << "Process created";
 		//return 0;
 	}
-
 	
+
+	*/
 	//receiving the startupinfo data
 	Startup_info_client start_data;
 	memset((void*)&start_data, 0, sizeof(start_data));
@@ -1229,10 +1235,13 @@ int main()
 	graphics cg;
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
+	/*
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
+	*/
+	
 
 }
 

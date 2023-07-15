@@ -22,4 +22,11 @@ make the lobby listen workable, and then we are done with the server.
 so now client display unit gets started by client_v1, now to add the connection of client_v2 with server_v1, some authentication is required.
 the point where we are listening for the client_v1 in server_v3, at the same point we will be listening to client_v2, so for that we need to add some authenications,
 so that we can differentiate between the two clients.
+
+The process is simple: server_v3 is accepting the connection from client_v1, sends him an id, that id is included in command line arguements of client_v2
+now client_v2 will convert it to a code starting from 1 and send it to the server, this way the server will know who is requesting.
 --------------------------------------------------------------------------------------------------------------------------------
+15th july 2023:
+
+-send if the game is over or not from the server end. also check how to end all the connections.
+-make server reusable.

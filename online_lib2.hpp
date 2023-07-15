@@ -538,7 +538,7 @@ public:
 	friend class ship;
 	friend class graphics;
 	friend class Greed::cannon;
-	friend int main();
+	friend int main(int argc,char* argv[]);
 	friend class control1;
 
 };
@@ -622,7 +622,7 @@ public:
 	}
 
 	friend graphics;
-	friend int main();
+	friend int main(int argc, char* argv[]);
 	friend class ship;
 	friend void startup(int n, unordered_map<int,sockaddr_storage>& socket_id);
 
@@ -680,7 +680,7 @@ public:
 	friend graphics;
 	friend control1;
 
-	friend int main();
+	friend int main(int argc, char* argv[]);
 
 };
 
@@ -1121,7 +1121,7 @@ public:
 		ship_id = s;
 		starting_pos = pos;
 	}
-	friend int main();
+	friend int main(int argc, char* argv[]);
 	friend class control1;
 	friend class graphcis;
 };
@@ -1994,7 +1994,7 @@ public:
 	friend class Event;
 	friend class graphics;
 	friend class Control;
-	friend int main();
+
 	friend class Greed::cannon;
 
 	friend void chaseShip1(int s_id, ship& ob);
@@ -2003,7 +2003,7 @@ public:
 	friend void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
 	friend class control1;
 	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id);
-	
+	friend int main(int argc, char* argv[]);
 };
 double avg_bullet = 0;
 int no_of_times = 0;
@@ -2440,7 +2440,7 @@ public:
 	friend class graphics;
 
 	friend class attribute;
-	friend int main();
+	friend int main(int argc, char* argv[]);
 	friend void filter();
 	friend class Greed::cannon;
 	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id);
@@ -2548,6 +2548,7 @@ public:
 	{
 		no_of_bullets = 0;
 	}
+	int gameOver;//0 for no, 1 for yes;
 
 
 };
