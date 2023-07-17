@@ -1461,7 +1461,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	FD_ZERO(&reads);
 	int idc = 0;
 	int nn = 0;
-	while (max_player + 1 > nn)
+	while (max_player*2> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 
 		struct sockaddr_storage client_address;
