@@ -64,7 +64,7 @@ unordered_map<int,sockaddr_storage> socket_id_display;
 
 SOCKET socket_listen;//the only UDP socket that will be used to transmit the data
 SOCKET lobby_socket;
-
+bool gameOver = false;//making it public so that the running theads of chaseShip1 and nav_data_processor can check its status and closes themselves.
 std::string GetLastErrorAsString()
 {
 	//Get the error message ID, if any.
@@ -147,7 +147,12 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 		if (next_frame != cur_frame)
 		{
 			cur_frame = next_frame;
-			
+			unique_lock<mutex> lk(mutx->gameOver_check);
+			if (gameOver == true)
+			{
+				return;
+			}
+			lk.unlock();
 			if (mutx->updating_data.try_lock())
 			{
 			
@@ -355,7 +360,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	//moveit.moving(window,gui,gui_renderer.firing_icon[0]);
 	//write a function to check if a number is even or odd
 	deque<int> dead_ship;//id of the dead ships
-	bool gameOver = false;
+	
 	bool display = true;
 	vector<int> winner;//id's of the winner of the game, this is a vector in case of a tie
 	int var = 0;
@@ -485,7 +490,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 			if (check_game_over(pl1))//if game is over
 			{
+				for (int k = 0; k < pl1.size(); k++)
+				{
+					pl1[k]->gameOver = true;
+				}
+				unique_lock<mutex> lk(mutx->gameOver_check);
 				gameOver = true;
+				lk.unlock();
 			}
 			if (!gameOver)
 			{
@@ -1018,14 +1029,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			ship_packet.no_of_players = pl1.size();
 			int bullet_no = 0;//number of total bullets
 
-			if (gameOver == true)
-			{
-				ship_packet.gameOver = true;
-			}
-			else
-			{
-				ship_packet.gameOver = false;
-			}
+			ship_packet.gameOver = gameOver;
 			
 			for (int i = 0; i < pl1.size(); i++)
 			{
@@ -1118,6 +1122,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			memset((void*)&data1, 0, sizeof(data1));
 			data1.packet_id = total_time;
 			data1.s1 = pl1.size();
+			data1.gameOver = gameOver;
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
 		
@@ -1706,6 +1711,12 @@ int main(int argc,char* argv[])
 		cout << "\n staring the server.....";
 		unordered_map<int, sockaddr_storage> socket_id;	//just a fake thing, so that i dont have to change the signature of startup in multiple classes
 		socket_id_display.clear();//clearing the unordered map for reuse
+		
+		//resetting here some static variables
+		Control::ship_list.clear();
+		Control::cannon_list.erase();
+		gameOver = 0;
+		graphics::total_secs = 0;
 		startup(max_player, socket_id, port);
 		CLOSESOCKET(socket_listen);
 		cout << "\n this round of game is over";

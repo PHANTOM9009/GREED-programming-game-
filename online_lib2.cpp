@@ -1784,7 +1784,7 @@ void filter(List<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship sob
 }
 void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 {
-
+	//how to terminate this thread??
 	ob.mutx->mchase[ob.ship_id].lock();
 	ob.autopilot = 1;
 	ob.mutx->mchase[ob.ship_id].unlock();
@@ -1796,6 +1796,10 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 	Greed::coords temp = l[s_id].getCurrentTile();
 	while (1)
 	{
+		if (ob.gameOver)
+		{
+			break;
+		}
 		if (ob.mutx->mchase[ob.ship_id].try_lock())
 		{
 			if (!ob.isInShipRadius(s_id, temp) && ob.autopilot == 1)//not in the ships radius now

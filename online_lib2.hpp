@@ -376,7 +376,7 @@ class Mutex//class protecting all the mutexes
 	mutex event_mutex[20];
 	mutex mchase[20];//mutex for follow up function of ship class
 	mutex updating_data;//for server only
-
+	mutex gameOver_check;
 
 
 public:
@@ -1310,6 +1310,7 @@ class recv_data//to be recv by the client and to be  sent by the server
 	shipData_exceptMe shipdata_exceptMe[20];
 	
 	shipData_forMe shipdata_forMe;
+	int gameOver;//0 for game not over, 1 for over;
 
 	friend class graphics;
 };
@@ -1372,6 +1373,7 @@ private:
 
 public: //this will be public the user will be able to access this object freely
 	//object 
+	bool gameOver;
 	bool isFiring;
 	int isShipInMotion()
 	{
@@ -2369,7 +2371,7 @@ protected:
 	mutex m2;//mutex lock for cannon_list;
 	mutex m3;//mutex for bonus
 	mutex m4;//mutex for storm
-	static deque<ship*> ship_list;
+	 static deque<ship*> ship_list;
 	static List<Greed::cannon> cannon_list;
 	static List<Greed::coords> bonus;//list of the coords having bonus
 	static List<Greed::coords> storm;//list of the coords having storm right now
