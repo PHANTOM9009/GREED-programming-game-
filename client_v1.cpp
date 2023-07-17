@@ -303,7 +303,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			//std::time_t result = std::time(nullptr);
 		    //cout << "\n----------------------------------------------------------";
 			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
-			
+			if (gameOver)
+			{
+				break;
+			}
 			if (!gameOver)
 			{
 				//using nav_data
@@ -1120,9 +1123,9 @@ int main(int argc,char* argv[])
 	int port=connect_to_lobby_server();
 	SOCKET socket_listen = connect_to_server(port);
 	
-	
+	//added the thing that when the game overs, the client will break the loop and close the connection.
 	//starting the display unit of the client
-	/*
+	
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
@@ -1132,7 +1135,7 @@ int main(int argc,char* argv[])
 	//convert port to string and append in commandLine
 	string port_str = to_string(port);
 	string id = to_string(my_id);
-	string commandLine = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" " + port_str+" "+id;
+	string commandLine = "\"C:\\greed\\greed\\client_v2_new.exe\" " + port_str+" "+id;
 	char str[100];
 	strcpy(str, commandLine.c_str());
 
@@ -1150,7 +1153,7 @@ int main(int argc,char* argv[])
 	}
 	
 
-	*/
+	
 	//receiving the startupinfo data
 	Startup_info_client start_data;
 	memset((void*)&start_data, 0, sizeof(start_data));
@@ -1235,12 +1238,12 @@ int main(int argc,char* argv[])
 	graphics cg;
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
-	/*
+	
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
-	*/
+	
 	
 
 }
