@@ -60,7 +60,7 @@ class ship;
 class graphics;
 class Control;
 /*some networking libs*/
-void startup(int n, unordered_map<int, sockaddr_storage>& socket_id);
+void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
 class control1;
 void chaseShip1(int s_id, ship& ob);
 enum class map
@@ -624,7 +624,7 @@ public:
 	friend graphics;
 	friend int main(int argc, char* argv[]);
 	friend class ship;
-	friend void startup(int n, unordered_map<int,sockaddr_storage>& socket_id);
+	friend void startup(int n, unordered_map<int,sockaddr_storage>& socket_id, int port);
 
 };
 class Greed::shipCannon
@@ -2002,7 +2002,7 @@ public:
 	friend class shipInfo;
 	friend void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
 	friend class control1;
-	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id);
+	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
 	friend int main(int argc, char* argv[]);
 };
 double avg_bullet = 0;
@@ -2443,7 +2443,7 @@ public:
 	friend int main(int argc, char* argv[]);
 	friend void filter();
 	friend class Greed::cannon;
-	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id);
+	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
 
 };
 /*networking libs*/

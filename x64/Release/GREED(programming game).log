@@ -352,8 +352,8 @@ F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cp
 F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1289,24): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
 F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1319,25): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
 F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(432,14): warning C4101: 'event': unreferenced local variable
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1585,66): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1650,38): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1451,38): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1670,66): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
 F:\Visual Studio setup\VC\Tools\MSVC\14.36.32532\include\type_traits(1592,77): warning C4244: 'argument': conversion from 'const float' to 'int', possible loss of data
 C:\TGUI-1.0-nightly\include\TGUI\Signal.hpp(249,18): message : see reference to function template instantiation 'void std::invoke<const Func&,graphics::GuiRenderer*const &,const float&>(_Callable,_Ty1,const float &) noexcept(false)' being compiled
           with
@@ -379,10 +379,11 @@ F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.
           ]
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3487,32): message : see the first reference to 'tgui::SignalTyped<float>::operator ()' in 'graphics::GuiRenderer::frameRateSlider_renderer'
   Generating code
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1560): warning C4715: 'ship::getPointPath': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1590): warning C4715: 'ship::getPathList': not all control paths return a value
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1545): warning C4715: 'ship::getGlobalMapref': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1470): warning C4715: 'ship::getAbsolutePosition1': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1590): warning C4715: 'ship::getPathList': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1560): warning C4715: 'ship::getPointPath': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2402): warning C4715: 'Control::getShipList': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2412): warning C4715: 'Control::getCannonList': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::point>::operator[]': not all control paths return a value
@@ -395,8 +396,6 @@ F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254):
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<graphics::animator>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::A>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2424): warning C4715: 'ship::isShipInMyRadius_forFire': not all control paths return a value
-  2385 of 2389 functions (99.8%) were compiled, the rest were copied from previous compilation.
-    446 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
+  All 2389 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   GREED(programming game).vcxproj -> F:\current projects\GREED(programming game)\x64\Release\GREED(programming game).exe

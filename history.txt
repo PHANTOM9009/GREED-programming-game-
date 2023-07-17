@@ -30,3 +30,6 @@ now client_v2 will convert it to a code starting from 1 and send it to the serve
 
 -send if the game is over or not from the server end. also check how to end all the connections.
 -make server reusable.
+left working on the server making it reusable,.....
+so now we will be working on it
+----------------------------------------------------------------------------------------------------------------------------------

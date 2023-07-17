@@ -52,14 +52,14 @@ start client_show
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 
-int max_player;
+int max_player=0;
 /*
 * 1. a function which connects the server with the clients and assign each client's ship an id
 * 2. after all required clients are connected properly or the time of connection is up, send all the connected clients initial configuration of the game
 * 3. when all the clients have received the initial configuration, send message to every client to start thier functions
 * 4. This gets the game running
 */
-vector<int> socket_display;//vector of sockets for display unit of the client
+vector<int> socket_display;//depracated we dont use it anymore, we are using an unordered_map for this
 unordered_map<int,sockaddr_storage> socket_id_display;
 
 SOCKET socket_listen;//the only UDP socket that will be used to transmit the data
@@ -1361,6 +1361,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sf::Time time4 = recv_data.getElapsedTime();
 			avg_recv += time4.asSeconds();
 
+			if (gameOver)
+			{
+				break;//break the loop
+			}
 		
 		}
 
@@ -1412,8 +1416,89 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	cout << "\n fire_ship=>" << fire_ship1 / total_frames;
 	cout << "\n fire _cannon=>" << fire_cannon1 / total_frames;
 }
-void startup(int n,unordered_map<int,sockaddr_storage> &socket_id)
+void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player
 {
+		//connecting for the clients
+	printf("Configuring local address...\n");
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	struct addrinfo* bind_address;
+	//convert port to string
+	char port_str[10];
+	// Convert port to string
+	sprintf(port_str, "%d", port);
+	cout << "\n running on port=>" << port_str;
+	getaddrinfo(0, port_str, &hints, &bind_address);
+
+
+	printf("Creating socket...\n");
+
+	socket_listen = socket(bind_address->ai_family,
+		bind_address->ai_socktype, bind_address->ai_protocol);
+	if (!ISVALIDSOCKET(socket_listen))
+	{
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		
+	}
+
+
+	printf("Binding socket to local address...\n");
+	if (::bind(socket_listen,
+		bind_address->ai_addr, bind_address->ai_addrlen)) {
+		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+	
+	}
+	freeaddrinfo(bind_address);
+	
+	fd_set master;
+	FD_ZERO(&master);
+	FD_SET(socket_listen, &master);
+	fd_set reads;
+	FD_ZERO(&reads);
+	int idc = 0;
+	int nn = 0;
+	while (max_player + 1 > nn)
+	{
+
+		struct sockaddr_storage client_address;
+		socklen_t client_len = sizeof(client_address);
+		int read;
+		int bytes_received = recvfrom(socket_listen, (char*)&read, sizeof(read), 0, (struct sockaddr*)&client_address, &client_len);
+		if (bytes_received < 1)
+		{
+			cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
+		}
+
+		else if (bytes_received > 1)
+		{
+			string sread = to_string(read);
+			//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
+			cout << "\n code recved is=>" << read;
+			if (sread[0] == '0')
+			{
+				socket_id[idc] = client_address;
+				//sending the id of the client to the client
+				int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
+				idc++;
+			}
+			else if (sread[0] == '1')
+			{
+				//finding the id of the client through the code sent by the display unit
+				int id = stoi(sread.substr(1, sread.length() - 1));
+				cout << "\n id sent is==>" << id;
+				socket_id_display[id] = client_address;
+
+			}
+			nn++;
+		}
+
+
+	}
+
 	int no_of_players = n;
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
@@ -1612,93 +1697,19 @@ int main(int argc,char* argv[])
 #endif
 
 	
-	int max_player = 0;
+
 	cout << "\n enter the number of players=>";
 	cin >> max_player;
 	int port = connect_with_lobby();//to connect with the lobby
-
-
-	printf("Configuring local address...\n");
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_DGRAM;
-	hints.ai_flags = AI_PASSIVE;
-
-	struct addrinfo* bind_address;
-	//convert port to string
-	char port_str[10];
-	// Convert port to string
-	sprintf(port_str, "%d", port);
-	cout << "\n running on port=>" << port_str;
-	getaddrinfo(0, port_str, &hints, &bind_address);
-
-
-	printf("Creating socket...\n");
-
-	socket_listen = socket(bind_address->ai_family,
-		bind_address->ai_socktype, bind_address->ai_protocol);
-	if (!ISVALIDSOCKET(socket_listen)) 
+	while (1)
 	{
-		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
-		return 1;
+		cout << "\n staring the server.....";
+		unordered_map<int, sockaddr_storage> socket_id;	//just a fake thing, so that i dont have to change the signature of startup in multiple classes
+		socket_id_display.clear();//clearing the unordered map for reuse
+		startup(max_player, socket_id, port);
+		CLOSESOCKET(socket_listen);
+		cout << "\n this round of game is over";
 	}
-
-
-	printf("Binding socket to local address...\n");
-	if (::bind(socket_listen,
-		bind_address->ai_addr, bind_address->ai_addrlen)) {
-		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
-		return 1;
-	}
-	freeaddrinfo(bind_address);
-	int n = 0;
-	unordered_map<int, sockaddr_storage> socket_id;
-	fd_set master;
-	FD_ZERO(&master);
-	FD_SET(socket_listen, &master);
-	fd_set reads;
-	FD_ZERO(&reads);
-	int idc = 0;
-	while (max_player+1>n)
-	{
-		
-			struct sockaddr_storage client_address;
-			socklen_t client_len = sizeof(client_address);
-			int read;
-			int bytes_received = recvfrom(socket_listen,(char*)&read, sizeof(read),	0,(struct sockaddr*)&client_address, &client_len);
-			if(bytes_received<1)
-			{
-				cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
-			}
-			
-			else if (bytes_received > 1)
-			{
-				string sread = to_string(read);
-				//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-				cout << "\n code recved is=>" << read;
-				if (sread[0] == '0')
-				{
-					socket_id[idc] = client_address;
-					//sending the id of the client to the client
-					int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
-					idc++;
-				}
-				else if (sread[0] == '1')
-				{
-					//finding the id of the client through the code sent by the display unit
-					int id = stoi(sread.substr(1, sread.length() - 1));
-					cout << "\n id sent is==>" << id;
-					socket_id_display[id] = client_address;
-
-				}
-				n++;
-			}
-			
-		
-	}
-	startup(max_player, socket_id);
-	CLOSESOCKET(socket_listen);
 
 #if defined(_WIN32)
 	WSACleanup();
