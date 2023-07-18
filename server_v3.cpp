@@ -498,8 +498,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				gameOver = true;
 				lk.unlock();
 			}
-			if (!gameOver)
-			{
+			
 
 				/*code to update the timer*/
 				int min = total_secs / 60;
@@ -1010,7 +1009,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				}
 				fire_cannon += processing4.getElapsedTime().asSeconds();
 
-			}
+		
 			top_layer ship_packet;
 			memset((void*)&ship_packet, 0, sizeof(ship_packet));
 			for (int i = 0; i < pl1.size(); i++)
@@ -1146,6 +1145,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						cout << GETSOCKETERRNO() << endl;
 							
+					}
+					if (data1.gameOver)
+					{
+						cout << "\n sent to the client terminal that the game is over at packet number==>" << data1.packet_id;
 					}
 					
 
@@ -1369,7 +1372,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			if (gameOver)
 			{
 				break;//break the loop
-			}
+			} 
 		
 		}
 
@@ -1466,7 +1469,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	FD_ZERO(&reads);
 	int idc = 0;
 	int nn = 0;
-	while (max_player*2> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
+	while (max_player+2> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 
 		struct sockaddr_storage client_address;
