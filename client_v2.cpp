@@ -38,6 +38,8 @@
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 
+SOCKET peer_socket;//the main socket that is used for all the data transfer in the game.
+int max_players;
 char server_port[10];
 int my_id;//id of the ship in the game
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
@@ -113,6 +115,12 @@ SOCKET connect_to_server()//first connection to the server
 	if (bytes > 1)
 	{
 		cout << "\n data sent to the server..=>" << var;
+	}
+	//receiving from the server how many players will play
+	int bytes1 = recv(peer_socket, (char*)&max_players, sizeof(max_players), 0);
+	if (bytes1 < 1)
+	{
+		cout << "\n couldnt recv the max player from the server=>" << GETSOCKETERRNO();
 	}
 	freeaddrinfo(server_add);
 
@@ -319,12 +327,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 	//starting the networking part from here
 	//calling to connect to the server
-	cout << "\n connecting to the server";
-	SOCKET peer_socket = connect_to_server();
-	if (peer_socket > 0)
-	{
-		cout << "\n client is connected to the server";
-	}
+	
 
 	fd_set master;
 	FD_ZERO(&master);
@@ -904,10 +907,11 @@ int main(int argc,char* argv[])
 		
 	}
 	
-	
+	//connecting with the server_v3 here
+	peer_socket = connect_to_server();
 
 	
-	const int no_of_players = 6;
+	const int no_of_players = max_players;
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
 	Mutex mutx;
