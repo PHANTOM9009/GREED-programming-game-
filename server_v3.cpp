@@ -1379,7 +1379,20 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	}
 
 	//closing all the left sockets
-	
+	//sending to all the connected clients that the game is over
+	recv_data last;
+	last.packet_id = INT_MAX;
+	last.gameOver = 1;
+	for (int i = 0; i < socket_id.size(); i++)
+	{
+		auto it = socket_id.begin();
+		advance(it, i);
+		int bytes = sendto(socket_listen, (char*)&last, sizeof(last), 0, (sockaddr*)&it->second, sizeof(it->second));
+		if (bytes < 1)
+		{
+			cout << "\n couldn't sent bytes to the client unit";
+		}
+	}
 	CLOSESOCKET(socket_listen);
 			
 	
@@ -1499,6 +1512,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 				int id = stoi(sread.substr(1, sread.length() - 1));
 				cout << "\n id sent is==>" << id;
 				socket_id_display[id] = client_address;
+				//sending the max_player to the display unit
+				int bytes1 = sendto(socket_listen, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address,client_len);
 
 			}
 			nn++;
