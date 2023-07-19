@@ -94,7 +94,7 @@ SOCKET connect_to_server()//first connection to the server
 	struct addrinfo* server_add;
 	char buff[1000];
 
-	getaddrinfo("127.0.0.1",server_port, &hints, &server_add);
+	getaddrinfo("192.168.31.213",server_port, &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
@@ -942,59 +942,8 @@ int main(int argc,char* argv[])
 		slist.push_back(&player[i]);
 	}
 	//generating the coords for spawning the ship
-	vector<Greed::coords> spawn;//spawning position for ships having different configurations
-	if (no_of_players == 1)//for 0 players
-	{
-		spawn.push_back(Greed::coords(10, 11));
-
-	}
-	else if (no_of_players == 2)
-	{
-
-		spawn.push_back(Greed::coords(1, 0));
-		spawn.push_back(Greed::coords(1, 23));
-
-	}
-	else if (no_of_players == 3)
-	{
-		spawn.push_back(Greed::coords(1, 0));
-		spawn.push_back(Greed::coords(1, 23));
-		spawn.push_back(Greed::coords(10, 11));
-	}
-	else if (no_of_players == 4)
-	{
-		spawn.push_back(Greed::coords(1, 0));
-		spawn.push_back(Greed::coords(1, 23));
-		spawn.push_back(Greed::coords(10, 0));
-		spawn.push_back(Greed::coords(10, 23));
-	}
-	else if (no_of_players == 5)
-	{
-		spawn.push_back(Greed::coords(1, 0));
-		spawn.push_back(Greed::coords(1, 23));
-		spawn.push_back(Greed::coords(10, 0));
-		spawn.push_back(Greed::coords(10, 23));
-		spawn.push_back(Greed::coords(10, 11));
-	}
-	else if (no_of_players == 6)
-	{
-		spawn.push_back(Greed::coords(1, 0));
-		spawn.push_back(Greed::coords(1, 23));
-		spawn.push_back(Greed::coords(10, 0));
-		spawn.push_back(Greed::coords(10, 23));
-		spawn.push_back(Greed::coords(10, 11));
-		spawn.push_back(Greed::coords(2, 11));
-	}
-	else if (no_of_players == 7)
-	{
-		spawn.push_back(Greed::coords(1, 0));
-		spawn.push_back(Greed::coords(1, 23));
-		spawn.push_back(Greed::coords(6, 0));
-		spawn.push_back(Greed::coords(6, 23));
-		spawn.push_back(Greed::coords(10, 0));
-		spawn.push_back(Greed::coords(10, 11));
-		spawn.push_back(Greed::coords(10, 23));
-	}
+	vector<Greed::coords> spawn(max_players,Greed::coords(0,0));//spawning position for ships having different configurations
+	
 	for (int i = 0; i < no_of_players; i++)
 	{
 		player[i].initialize_player(i,"hawk", &mutx, silist, code, 5, spawn[i]);//last element is the tile pos of the player

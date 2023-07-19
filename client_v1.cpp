@@ -82,7 +82,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
-	if (getaddrinfo("127.0.0.1",port_str, &hints, &peer_address)) {
+	if (getaddrinfo("192.168.31.213",port_str, &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
@@ -1085,7 +1085,7 @@ int connect_to_lobby_server()
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo("127.0.0.1", "8080", &hints, &bind_address);
+	getaddrinfo("192.168.31.213", "8080", &hints, &bind_address);
 	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
@@ -1139,7 +1139,7 @@ int main(int argc,char* argv[])
 	//convert port to string and append in commandLine
 	string port_str = to_string(port);
 	string id = to_string(my_id);
-	string commandLine = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" " + port_str+" "+id;
+	string commandLine = "\"C:\\greed\\greed\\client_v2_new.exe\" " + port_str+" "+id;
 	char str[100];
 	strcpy(str, commandLine.c_str());
 
