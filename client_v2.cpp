@@ -910,7 +910,7 @@ int main(int argc,char* argv[])
 	//connecting with the server_v3 here
 	peer_socket = connect_to_server();
 
-	
+	cout << "\n max player are==>" << max_players;
 	const int no_of_players = max_players;
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex

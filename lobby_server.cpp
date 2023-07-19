@@ -48,6 +48,7 @@
 #define GAME_SERVER_COUNT 1
 using namespace std;
 
+unordered_map<SOCKET, int> socket_pid;//socket to process id map
 
 int max_player;
 std::string GetLastErrorAsString()
@@ -99,7 +100,7 @@ class transfer_socket
 {
 public:
 	int len;
-	sockaddr_storage socket_listen[100];
+	WSAPROTOCOL_INFO  socket_listen[50];
 	
 };
 void listener()
@@ -270,13 +271,41 @@ void transferSocket(deque<SOCKET>& player_queue, const int st,const int end, SOC
 	for (int i = st; i <= end; i++)
 	{
 	
-		int bytes = send(player_queue[i],(char*)&port, sizeof(port), 0);
+		int bytes = send(player_queue[i],(char*)&port, sizeof(port), 0);//here we are sending the port number to the client
 		if (bytes < 1)
 		{
 			cout << "\n couldnt send bytes==>" << GetLastErrorAsString();
 		}
 	}
+	/*
 	//transfering the sockets
+		//pid is the process id of the receive process
+	const int num = end - st + 1;
+	transfer_socket ob;
+	if (num <= 100)
+	{
+		ob.len = num;
+	}
+	else
+	{
+		ob.len = 50;
+	} 
+	int j = 0;
+	WSAPROTOCOL_INFO protocolInfo;
+	for (int i = st; i < end; i++)
+	{
+		if (WSADuplicateSocket(player_queue[i],socket_pid[recvr], &protocolInfo) != 0)
+		{
+			std::cerr << "Failed to duplicate socket handle: " << WSAGetLastError() << std::endl;
+			cout << GetLastErrorAsString();
+		}
+		ob.socket_listen[i] = protocolInfo;
+	}
+	int bytes = send(recvr, (char*)&ob, sizeof(ob), 0);
+	cout << "\n sockets sent to process=>" << socket_pid[recvr];
+	//transfering the sockets
+	*/
+
 		
 }
 void assign_lobby()//to assign the lobby to the incoming authenticated connections
@@ -408,7 +437,7 @@ int main()
 			socklen_t client_len = sizeof(client_address);
 			SOCKET socket_ = accept(socket_listen, (sockaddr*)&client_address, &client_len);
 			lobby[socket_] = 0;
-			server_port[socket_]=start_port;
+			server_port[socket_] = start_port;
 			cout << "\n connected";
 			//sending the port number to the server:(at which port will the server listen for the clients)
 			int bytes = send(socket_, (char*)&start_port, sizeof(start_port), 0);
@@ -417,6 +446,16 @@ int main()
 				cout << "\n did not send the port to the server=>" << GetLastErrorAsString();
 			}
 			start_port++;
+			/*
+			//receiving the process id for the process
+			int process_id;
+			int bytes = recv(socket_, (char*)&process_id, sizeof(process_id), 0);
+			if (bytes < 0)
+			{
+				cout << "\n coulndnt recv the process id from the server==>" << GetLastErrorAsString();
+			}
+			socket_pid[socket_] = process_id;
+			*/
 		}
 				
 	}
