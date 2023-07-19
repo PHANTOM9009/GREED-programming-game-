@@ -144,6 +144,9 @@
     <ClCompile Include="mock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="token_generate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">

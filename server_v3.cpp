@@ -53,6 +53,8 @@ start client_show
 #include "online_lib2.cpp"
 
 int max_player=0;
+string my_token;//token of the current game instance
+
 /*
 * 1. a function which connects the server with the clients and assign each client's ship an id
 * 2. after all required clients are connected properly or the time of connection is up, send all the connected clients initial configuration of the game
@@ -61,6 +63,7 @@ int max_player=0;
 */
 vector<int> socket_display;//depracated we dont use it anymore, we are using an unordered_map for this
 unordered_map<int,sockaddr_storage> socket_id_display;
+unordered_map<int, user_credentials> user_cred;
 
 SOCKET socket_listen;//the only UDP socket that will be used to transmit the data
 SOCKET lobby_socket;
@@ -1118,6 +1121,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sending.restart();
 			//sending the data over here to the client terminal
 			recv_data data1;
+			data1.token = my_token;
 			memset((void*)&data1, 0, sizeof(data1));
 			data1.packet_id = total_time;
 			data1.s1 = pl1.size();
@@ -1341,10 +1345,6 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						FD_CLR(i, &master);
 					}
 					*/
-					while (bytes < sizeof(data2))
-					{
-						bytes += recvfrom(socket_listen, (char*)&data2 + bytes, sizeof(data2) - bytes, 0,(sockaddr*)&client_address,&client_len);
-					}
 					
 					//data is received now convert it to appropriate form
 					int sid = data2.shipdata_forServer.ship_id;
@@ -1356,7 +1356,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						continue;
 					}
-					if (bytes > 0)
+					if (bytes > 0 && strcmp(user_cred[sid].username, data2.user_cred.username) == 0 && strcmp(user_cred[sid].password, data2.user_cred.password) == 0)
 					{
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
@@ -1439,8 +1439,21 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 }
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player
 {
+	//recving the client credentials from the lobby server
+	user_credentials_array uob;
+	cout << "\n waiting for lobby server to send the credentials of the clients...";
+	int bits = recv(lobby_socket, (char*)&uob, sizeof(uob), 0);
+	if (bits < 0)
+	{
+		cout << "\n did not recv the  client credentials=>" << GetLastErrorAsString();
+	}
+	vector<user_credentials> temp_cred;
+	for (int i = 0; i < uob.length; i++)
+	{
+		temp_cred.push_back(uob.arr[i]);
+	}
 		//connecting for the clients
-	printf("Configuring local address...\n");
+	printf("now waiting for the clients to connect...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -1484,39 +1497,61 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	int nn = 0;
 	while (max_player+2> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
-
+		greet_client gc;
 		struct sockaddr_storage client_address;
 		socklen_t client_len = sizeof(client_address);
 		int read;
-		int bytes_received = recvfrom(socket_listen, (char*)&read, sizeof(read), 0, (struct sockaddr*)&client_address, &client_len);
+		int bytes_received = recvfrom(socket_listen, (char*)&gc, sizeof(gc), 0, (struct sockaddr*)&client_address, &client_len);
 		if (bytes_received < 1)
 		{
 			cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
 		}
-
+		
 		else if (bytes_received > 1)
 		{
-			string sread = to_string(read);
-			//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-			cout << "\n code recved is=>" << read;
-			if (sread[0] == '0')
+			//checking if the client is authentic or not, if authentic move forwrd and givee the client an id, else reject the connection
+			int found = 0;
+			int ind = -1;
+			for (int j = 0; j < temp_cred.size(); j++)
 			{
-				socket_id[idc] = client_address;
-				//sending the id of the client to the client
-				int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
-				idc++;
+				if (strcmp(temp_cred[j].password, gc.user_cred.password)==0 && strcmp(temp_cred[j].username, gc.user_cred.username)==0)
+				{
+					found = 1;
+					ind = j;
+					break;
+				}
 			}
-			else if (sread[0] == '1')
+			if (found == 1)
 			{
-				//finding the id of the client through the code sent by the display unit
-				int id = stoi(sread.substr(1, sread.length() - 1));
-				cout << "\n id sent is==>" << id;
-				socket_id_display[id] = client_address;
-				//sending the max_player to the display unit
-				int bytes1 = sendto(socket_listen, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address,client_len);
+				read = gc.code;
+				
+				string sread = to_string(read);
+				//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
+				cout << "\n code recved is=>" << read;
+				if (sread[0] == '0')
+				{
+					socket_id[idc] = client_address;
+					//sending the id of the client to the client
+					int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
+					user_cred[idc] = temp_cred[ind];//setting the user credential
+					idc++;
+				}
+				else if (sread[0] == '1')
+				{
+					//finding the id of the client through the code sent by the display unit
+					int id = stoi(sread.substr(1, sread.length() - 1));
+					cout << "\n id sent is==>" << id;
+					socket_id_display[id] = client_address;
+					//sending the max_player to the display unit
+					int bytes1 = sendto(socket_listen, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address, client_len);
 
+				}
+				nn++;
 			}
-			nn++;
+			else
+			{
+				continue;
+			}
 		}
 
 
@@ -1671,7 +1706,18 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	{
 		cout << "\n could not send bytes=>" << GetLastErrorAsString();
 	}
-	cout << "\n bytes sent to the server";
+	cout << "\nsent to the server that i am ready to start a new game";
+	//recving the new token from the server
+	char token[20];
+	bytes = recv(lobby_socket, token, sizeof(token), 0);
+	if (bytes > 0)
+	{
+		my_token = token;
+	}
+	else
+	{
+		cout << "\n did not recv the new token from the lobby server=>" << GetLastErrorAsString();
+	}
 
 
 }
@@ -1698,14 +1744,15 @@ int connect_with_lobby()
 	}
 	freeaddrinfo(bind_address);
 	//sending hi to the server
-	int port;
-	int bytes = recv(lobby_socket, (char*)&port, sizeof(port), 0);
+	server_startup ob;
+	int bytes = recv(lobby_socket, (char*)&ob, sizeof(ob), 0);
 	if (bytes < 0)
 	{
 		cout << "\n couldnt recv the port==>" << GetLastErrorAsString();
 	}
-	cout << "\n received port number=>" << port;
-	return port;
+	cout << "\n received port number=>" << ob.port;
+	my_token = ob.token;
+	return ob.port;
 	
 	
 }
@@ -1735,6 +1782,7 @@ int main(int argc,char* argv[])
 		Control::cannon_list.erase();
 		gameOver = 0;
 		graphics::total_secs = 0;
+		user_cred.clear();
 		startup(max_player, socket_id, port);
 		CLOSESOCKET(socket_listen);
 		cout << "\n this round of game is over";

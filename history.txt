@@ -33,3 +33,20 @@ now client_v2 will convert it to a code starting from 1 and send it to the serve
 left working on the server making it reusable,.....
 so now we will be working on it
 ----------------------------------------------------------------------------------------------------------------------------------
+ 19th july 2023:
+ now the remaining work is:
+ authentication of the network.
+ checking how many windows of client terminal and display unit is open
+ now start preparing for the launch of the game, we are almost done here:
+
+
+
+ stack:
+ client is sending id and password at the time of connection(TCP) to the lobby server
+ sending the combination of token and port the first time game server contacts the lobby server
+ sending the new token only everytime the server gets a new game;
+ sending the client credential to the game server in transfer socket function
+ 
+
+ ----------------------------------------------------------------------------------------------------------------------------------
+ 
