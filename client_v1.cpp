@@ -56,7 +56,9 @@
 * recv the information of other ships enough to process its own algorithm
 */
 
-
+string username = "username";
+string password = "password";
+string game_token;
 int my_id;//id of the player in the game
 bool find(int id, int hit[100],int size)
 {
@@ -82,7 +84,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
-	if (getaddrinfo("192.168.31.213",port_str, &hints, &peer_address)) {
+	if (getaddrinfo("127.0.0.1",port_str, &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
@@ -112,9 +114,14 @@ SOCKET connect_to_server(int port)//first connection to the server
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
-	int msg = 0;//0 means client_v1_process
+	//sending the greet_client object to the game server, with my code and credentials.
 
-	int bytes_sent = send(socket_peer,(char*)&msg,sizeof(msg), 0);
+	int msg = 0;//0 means client_v1_process
+	greet_client gc;
+	gc.code = msg;
+	gc.user_cred = user_credentials(username, password);
+
+	int bytes_sent = send(socket_peer,(char*)&gc,sizeof(gc), 0);
 
 	printf("Sent %d bytes.\n", bytes_sent);
 
@@ -247,10 +254,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				bytes_recv = recv(peer_socket, (char*)&data1, sizeof(data1), 0);
 				
 				
-				while (bytes_recv < sizeof(data1))
-				{
-					bytes_recv += recv(peer_socket, (char*)&data1 + bytes_recv, sizeof(data1) - bytes_recv,0);
-				}
+				
 				if (bytes_recv < 1)//connection is broken
 				{
 					//try to reconnect to the server
@@ -264,7 +268,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					break;
 				}
 				//we have received the data.. now parse the data in original class structure.
-				if (bytes_recv > 0 )
+				if (bytes_recv > 0 && strcmp(data1.token,game_token.c_str())==0)
 				{
 					//cout << "\n for frame=>" << total_time;
 					/*
@@ -1085,7 +1089,7 @@ int connect_to_lobby_server()
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo("192.168.31.213", "8080", &hints, &bind_address);
+	getaddrinfo("127.0.0.1","8080", &hints, &bind_address);
 	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
@@ -1101,14 +1105,28 @@ int connect_to_lobby_server()
 	}
 	freeaddrinfo(bind_address);
 	//sending hi to the server
+	//sending my credentials to the server
+	user_credentials ob(username, password);
+	cout << "\n connected with the lobby server, now sending the bytes to the lobby server..";
+
+	int bytes = send(lobby_socket, (char*)&ob, sizeof(ob), 0);
+	if (bytes < 0)
+	{
+		cout << "\n could not send the credentials to the lobby server=>" << GetLastErrorAsString();
+	}
+	cout << "\n sent the credentials to the lobby server..";
+	cout << "\n waiting for game token and port of the game server...";
 	
-	
+	server_startup start;
 	int port;
-	int bytes = recv(lobby_socket,(char*)&port, sizeof(port), 0);
+	bytes = recv(lobby_socket,(char*)&start, sizeof(start), 0);
 	if (bytes < 1)
 	{
 		cout << "\n error in recv bytes from lobby server=>" << GetLastErrorAsString();
+		cout << GETSOCKETERRNO();
 	}
+	port = start.port;
+	game_token = start.token;
 	cout << "\n received port from the lobby server=>" << port;
 	return port;
 }
@@ -1128,8 +1146,8 @@ int main(int argc,char* argv[])
 	SOCKET socket_listen = connect_to_server(port);
 	
 	//added the thing that when the game overs, the client will break the loop and close the connection.
-	//sta
 	
+	/*
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
@@ -1139,7 +1157,7 @@ int main(int argc,char* argv[])
 	//convert port to string and append in commandLine
 	string port_str = to_string(port);
 	string id = to_string(my_id);
-	string commandLine = "\"C:\\greed\\greed\\client_v2_new.exe\" " + port_str+" "+id;
+	string commandLine = "\"C:\\greed\\greed\\client_v2_new.exe\" " + port_str + " " + id + " " + username + " " + password;
 	char str[100];
 	strcpy(str, commandLine.c_str());
 
@@ -1156,7 +1174,7 @@ int main(int argc,char* argv[])
 		//return 0;
 	}
 	
-	
+	*/
 	
 	//receiving the startupinfo data
 	Startup_info_client start_data;
@@ -1243,12 +1261,12 @@ int main(int argc,char* argv[])
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
 	
-	
+	/*
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
-	
+	*/
 	
 	
 

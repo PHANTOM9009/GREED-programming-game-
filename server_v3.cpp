@@ -1121,7 +1121,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sending.restart();
 			//sending the data over here to the client terminal
 			recv_data data1;
-			data1.token = my_token;
+			strcpy(data1.token, my_token.c_str());
 			memset((void*)&data1, 0, sizeof(data1));
 			data1.packet_id = total_time;
 			data1.s1 = pl1.size();
@@ -1440,17 +1440,23 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player
 {
 	//recving the client credentials from the lobby server
-	user_credentials_array uob;
-	cout << "\n waiting for lobby server to send the credentials of the clients...";
-	int bits = recv(lobby_socket, (char*)&uob, sizeof(uob), 0);
-	if (bits < 0)
-	{
-		cout << "\n did not recv the  client credentials=>" << GetLastErrorAsString();
-	}
 	vector<user_credentials> temp_cred;
-	for (int i = 0; i < uob.length; i++)
+	int count_p = 0;
+	cout << "\n waiting for lobby server to send the credentials of the clients...";
+	while (count_p < n)//untill the number of players are less than n
 	{
-		temp_cred.push_back(uob.arr[i]);
+
+		user_credentials_array uob;		
+		int bits = recv(lobby_socket, (char*)&uob, sizeof(uob), 0);
+		if (bits < 0)
+		{
+			cout << "\n did not recv the  client credentials=>" << GetLastErrorAsString();
+		}
+		for (int i = 0; i < uob.length; i++)
+		{
+			temp_cred.push_back(uob.arr[i]);
+			count_p++;
+		}
 	}
 		//connecting for the clients
 	printf("now waiting for the clients to connect...\n");
@@ -1751,9 +1757,9 @@ int connect_with_lobby()
 		cout << "\n couldnt recv the port==>" << GetLastErrorAsString();
 	}
 	cout << "\n received port number=>" << ob.port;
+	cout << "\n received game token=>" << ob.token;
 	my_token = ob.token;
 	return ob.port;
-	
 	
 }
 int main(int argc,char* argv[])

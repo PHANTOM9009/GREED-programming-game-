@@ -50,13 +50,13 @@
 class user_credentials
 {
 public:
-	string username;
-	string password;
+	char username[20];
+	char password[20];
 	user_credentials(){ }
 	user_credentials(string user, string pass)
 	{
-		this->username = user;
-		this->password = pass;
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
 	}
 };
 class user_credentials_array
@@ -70,6 +70,12 @@ class server_startup//startup configuration file sent to the game server by the 
 public:
 	char token[20];
 	int port;
+};
+class greet_client
+{
+public:
+	int code;
+	user_credentials user_cred;
 };
 int cx(int x);
 int cy(int y);
@@ -1331,6 +1337,7 @@ class shipData_exceptMe //updated data that the server will send for the client
 class recv_data//to be recv by the client and to be  sent by the server
 {
 	int packet_id; //for debugging purpose only
+	char token[20];//current token for the game
 	int s1;
 	shipData_exceptMe shipdata_exceptMe[20];
 	
@@ -1342,6 +1349,7 @@ class recv_data//to be recv by the client and to be  sent by the server
 class send_data// to be sent by the client and to be received by the server
 {
 	int packet_id; //for debugging purpose only
+	user_credentials user_cred;
 
 	shipData_forServer shipdata_forServer;//my data to be sent to the server
 

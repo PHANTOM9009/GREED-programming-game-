@@ -42,6 +42,9 @@ SOCKET peer_socket;//the main socket that is used for all the data transfer in t
 int max_players;
 char server_port[10];
 int my_id;//id of the ship in the game
+
+string username;
+string password;
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 {
 	pl1[i]->ship_id = ob.ship_id;
@@ -94,7 +97,7 @@ SOCKET connect_to_server()//first connection to the server
 	struct addrinfo* server_add;
 	char buff[1000];
 
-	getaddrinfo("192.168.31.213",server_port, &hints, &server_add);
+	getaddrinfo("127.0.0.1",server_port, &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
@@ -111,7 +114,11 @@ SOCKET connect_to_server()//first connection to the server
 	string msg = "1";//1 means that  this is client_v2 process
 	string tot = msg + to_string(my_id);
 	int var = stoi(tot);
-	int bytes = sendto(peer_socket, (char*)&var, sizeof(var), 0, server_add->ai_addr, server_add->ai_addrlen);
+	greet_client ob;
+	ob.code = var;
+	ob.user_cred = user_credentials(username, password);
+
+	int bytes = sendto(peer_socket, (char*)&ob, sizeof(ob), 0, server_add->ai_addr, server_add->ai_addrlen);
 	if (bytes > 1)
 	{
 		cout << "\n data sent to the server..=>" << var;
@@ -886,7 +893,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	cout << "\n avg bullet is=>" << avg_bullet / total_time;
 }
 
-int main(int argc,char* argv[])
+int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is password
 {
 #if defined(_WIN32)
 	WSADATA d;
@@ -898,12 +905,14 @@ int main(int argc,char* argv[])
 	//extracting the data
 	
 	//setting the port number of the server that has to connected with
-	if (argc > 2)
+	if (argc > 4)
 	{
 		strcpy(server_port, argv[1]);
 			std::cout << "Received value from the parent process: " << server_port << std::endl;
 			cout << "\n id is=>" << argv[2];
 			my_id = stoi(argv[2]);
+			username = argv[3];
+			password = argv[4];
 		
 	}
 	
