@@ -44,8 +44,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
-#include "online_lib2.hpp"
-#include "online_lib2.cpp"
+//#include "online_lib2.hpp"
+//#include "online_lib2.cpp"
 
 //#define max_player 3 //number of maximum players that can play simultaneously in a lobby
 
@@ -53,7 +53,36 @@
 
 #define GAME_SERVER_COUNT 1
 using namespace std;
-
+class user_credentials
+{
+public:
+	char username[20];
+	char password[20];
+	user_credentials() { }
+	user_credentials(string user, string pass)
+	{
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+	}
+};
+class user_credentials_array
+{
+public:
+	int length;
+	user_credentials arr[50];
+};
+class server_startup//startup configuration file sent to the game server by the lobby server
+{
+public:
+	char token[20];
+	int port;
+};
+class greet_client
+{
+public:
+	int code;
+	user_credentials user_cred;
+};
 unordered_map<SOCKET, int> socket_pid;//socket to process id map
 unordered_map<SOCKET, string> socket_token;//token of every server. changes every time when a new game begins
 int max_player;
@@ -76,6 +105,7 @@ std::string generateRandomSequence()
 		int randomIndex = std::rand() % characters.length();
 		randomSequence += characters[randomIndex];
 	}
+	return randomSequence;
 }
 
 
@@ -164,11 +194,12 @@ void listener()
 	SOCKET max_socket = socket_listen;
 	deque<pair<SOCKET,int>> temp_socket;//temporary holder of new incoming connections
 	int count = 0;
+	fd_set reads;
+	FD_ZERO(&reads);
 	while (1)
 	{
 		count++;
-		fd_set reads;
-		FD_ZERO(&reads);
+		
 		reads = master;
 		timeval timeout;
 		timeout.tv_sec = 0;
@@ -183,27 +214,32 @@ void listener()
 					struct sockaddr_storage client_address;
 					socklen_t client_len = sizeof(client_address);
 					SOCKET socket_ = accept(socket_listen, (sockaddr*)&client_address, &client_len);
-					temp_socket.push_back(pair<SOCKET,int>(socket_,count));
-					cout << "\n connection is=>" << socket_;
+					temp_socket.push_back(pair<SOCKET, int>(socket_, count));
+
 					FD_SET(socket_, &master);
 					if (socket_ > max_socket)
 					{
 						max_socket = socket_;
 					}
-				
-				}				
-				else//asking for username and passowrd
-				{
+
+					//}				
+					//else//asking for username and passowrd
+					//{
 					user_credentials cred;
 					int bytes = recv(i, (char*)&cred, sizeof(cred), 0);
+					if (bytes < 1)
+					{
+						cout << "\n could not recv bytes from the incoming client=>" << GetLastErrorAsString();
+					}
 					if (bytes > 0)
 					{
-						if (cred.username=="username" && cred.password=="password")//put the condition if the current user is verified or not
+						if (cred.username == "username" && cred.password == "password")//put the condition if the current user is verified or not
 						{
 							unique_lock<mutex> lk(m->m_valid);
 							valid_connections.push_back(i);
 							user_cred.push_back(user_credentials(cred.username, cred.password));
 							m->is_data.notify_one();
+							cout << "\n connected with a valid user";
 						}
 						else//if the user is not authenticated then tear down the socket connection and remove it from the set of master
 						{
@@ -212,7 +248,8 @@ void listener()
 
 						}
 					}
-					
+
+					//}
 				}
 				
 			}
@@ -501,7 +538,7 @@ int main()
 			cout << "\n connected";
 			//sending the port number to the server:(at which port will the server listen for the clients)
 			
-			start_port++;
+			
 			socket_token[socket_] = generateRandomSequence();//generated random sequence
 			server_startup start;
 			strcpy(start.token, socket_token[socket_].c_str());
@@ -512,6 +549,7 @@ int main()
 			{
 				cout << "\n did not send the port to the server=>" << GetLastErrorAsString();
 			}
+			start_port++;
 			
 			/*
 			//receiving the process id for the process
