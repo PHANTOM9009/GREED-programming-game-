@@ -49,19 +49,26 @@
 
 class user_credentials
 {
+	/*
+	* basic wrapper over username and password
+	*/
 public:
-	string username;
-	string password;
+	char username[20];
+	char password[20];
 	user_credentials(){ }
 	user_credentials(string user, string pass)
 	{
-		this->username = user;
-		this->password = pass;
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+		
 	}
 };
 class user_credentials_array
 {
 public:
+	/*
+	* currently used to send client authentication data to the game server by the loobby server
+	*/
 	int length;
 	user_credentials arr[50];
 };
@@ -70,6 +77,13 @@ class server_startup//startup configuration file sent to the game server by the 
 public:
 	char token[20];
 	int port;
+};
+class greet_client
+{
+public:
+	user_credentials user_cred;
+	int code;//code that the sender sends to tell the server whether it is a display unit or terminal unit
+	
 };
 int cx(int x);
 int cy(int y);
@@ -1330,6 +1344,9 @@ class shipData_exceptMe //updated data that the server will send for the client
 };
 class recv_data//to be recv by the client and to be  sent by the server
 {
+	//for authentication adding some new things
+	string token;//will be used by client to authenticate server
+	
 	int packet_id; //for debugging purpose only
 	int s1;
 	shipData_exceptMe shipdata_exceptMe[20];
@@ -1342,7 +1359,7 @@ class recv_data//to be recv by the client and to be  sent by the server
 class send_data// to be sent by the client and to be received by the server
 {
 	int packet_id; //for debugging purpose only
-
+	user_credentials user_cred;//to be verified at the server end, to be added by the client
 	shipData_forServer shipdata_forServer;//my data to be sent to the server
 
 public:
