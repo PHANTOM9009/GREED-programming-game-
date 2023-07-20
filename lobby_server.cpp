@@ -41,6 +41,12 @@
 #include<algorithm>
 #include<vector>
 #include<unordered_map>
+#include <cstdlib>
+#include <ctime>
+#include <string>
+#include "online_lib2.hpp"
+#include "online_lib2.cpp"
+
 //#define max_player 3 //number of maximum players that can play simultaneously in a lobby
 
 //runs on the port 8080
@@ -49,8 +55,30 @@
 using namespace std;
 
 unordered_map<SOCKET, int> socket_pid;//socket to process id map
-
+unordered_map<SOCKET, string> socket_token;//token of every server. changes every time when a new game begins
 int max_player;
+deque<user_credentials> user_cred;//id and password of the active users.
+
+
+std::string generateRandomSequence()
+{
+	const std::string characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*+=|?><";
+	const int length = 16;
+
+	std::string randomSequence;
+	randomSequence.reserve(length);
+
+	// Set the seed for the random number generator
+
+
+	for (int i = 0; i < length; ++i)
+	{
+		int randomIndex = std::rand() % characters.length();
+		randomSequence += characters[randomIndex];
+	}
+}
+
+
 std::string GetLastErrorAsString()
 {
 	//Get the error message ID, if any.
@@ -81,12 +109,7 @@ deque<sockaddr_storage> valid_connections_ad;//address of the sockets that will 
 unordered_map<SOCKET, int> lobby;//(lobby number,no of players)
 
 unordered_map<SOCKET, int> server_port;//socket and the port at which that server shall run.
-class user_credentials
-{
-public:
-	string username;
-	string password;
-};
+
 class Mutex
 {
 public:
@@ -99,7 +122,7 @@ Mutex* m=&mm;
 class transfer_socket
 {
 public:
-	int len;
+	int length;
 	WSAPROTOCOL_INFO  socket_listen[50];
 	
 };
@@ -167,31 +190,31 @@ void listener()
 					{
 						max_socket = socket_;
 					}
-					unique_lock<mutex> lk(m->m_valid);
-					valid_connections.push_back(socket_);
-					valid_connections_ad.push_back(client_address);
-					m->is_data.notify_one();
-				}
-				/*
+				
+				}				
 				else//asking for username and passowrd
 				{
 					user_credentials cred;
 					int bytes = recv(i, (char*)&cred, sizeof(cred), 0);
-					if (1)//put the condition if the current user is verified or not
+					if (bytes > 0)
 					{
-						unique_lock<mutex> lk(m->m_valid);
-						valid_connections.push_back(i);
-						m->is_data.notify_one();
-					}
-					else//if the user is not authenticated then tear down the socket connection and remove it from the set of master
-					{
-						CLOSESOCKET(i);
-						FD_CLR(i, &master);
-						
+						if (cred.username=="username" && cred.password=="password")//put the condition if the current user is verified or not
+						{
+							unique_lock<mutex> lk(m->m_valid);
+							valid_connections.push_back(i);
+							user_cred.push_back(user_credentials(cred.username, cred.password));
+							m->is_data.notify_one();
+						}
+						else//if the user is not authenticated then tear down the socket connection and remove it from the set of master
+						{
+							CLOSESOCKET(i);
+							FD_CLR(i, &master);
+
+						}
 					}
 					
 				}
-				*/
+				
 			}
 
 		}
@@ -257,26 +280,54 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 						unique_lock<mutex> lk(m->m_lobby);
 						free_lobby.push_back(pair<SOCKET, int>(i, 0));
 						cout << "\n received available message from game server=>" << i;
+						//re assigning the token to the server for security purpose
+						socket_token[i] = generateRandomSequence();
+						char token[20];
+						strcpy(token, socket_token[i].c_str());
+						int bytes = send(i, (char*)&token, sizeof(token), 0);//sending the new token to the server
 					}
 				}
 			}
 		}
 	}
 }
-void transferSocket(deque<SOCKET>& player_queue, const int st,const int end, SOCKET& recvr)//potential problem in this when the number of players in a game lobby increases
+void transferSocket(deque<SOCKET>& player_queue, deque<user_credentials> &player_cred,const int st,const int end, SOCKET& recvr)//potential problem in this when the number of players in a game lobby increases
 {
 	//pid is the process id of the receive process
 	cout << "\n sending data to the connected client";
 	int  port = server_port[recvr];
+	server_startup start;
+	//we are sending the token of the game, and the port of the game server
+	strcpy(start.token, socket_token[recvr].c_str());
+	start.port = port;
 	for (int i = st; i <= end; i++)
 	{
 	
-		int bytes = send(player_queue[i],(char*)&port, sizeof(port), 0);//here we are sending the port number to the client
+		int bytes = send(player_queue[i],(char*)&start, sizeof(start), 0);
 		if (bytes < 1)
 		{
 			cout << "\n couldnt send bytes==>" << GetLastErrorAsString();
 		}
 	}
+	//now sendint the recvr server the credentials of the incoming user
+
+	//preparing the packet
+	int length = end - st + 1;
+	user_credentials_array ob;
+	ob.length = length;
+	int j = 0;
+	for (int i = st; i <= end; i++)
+	{
+		ob.arr[j] = player_cred[i];
+		j++;
+	}
+	int bytes = send(recvr, (char*)&ob, sizeof(ob), 0);
+	if (bytes < 1)
+	{
+		cout << "\n couldnt send bytes to the game server(i was sending credentials)==>" << GetLastErrorAsString();
+	}
+	
+	
 	/*
 	//transfering the sockets
 		//pid is the process id of the receive process
@@ -310,40 +361,45 @@ void transferSocket(deque<SOCKET>& player_queue, const int st,const int end, SOC
 }
 void assign_lobby()//to assign the lobby to the incoming authenticated connections
 {
+	deque<SOCKET> player_queue;
+	deque<user_credentials> player_cred;
 	while (1)
 	{
 		unique_lock<mutex> lk(m->m_valid);
 		m->is_data.wait(lk, [] {return !valid_connections.empty(); });
 		//enter only when the there are connections asking for the lobby
-		deque<SOCKET> player_queue;
+		
 		for (int i = 0; i < valid_connections.size(); i++)
 		{
 			player_queue.push_back(valid_connections[i]);
+			player_cred.push_back(user_cred[i]);
 		}
 		valid_connections.clear();
+		user_cred.clear();
 		lk.unlock();
 
 		unique_lock<mutex> lk1(m->m_lobby);
 		m->is_lobby.wait(lk1, [] { return !free_lobby.empty(); });
 		//now queue has the connections to whom we will provide the lobbies
 		//assuming now we know the status of the lobbies and are stored in free_lobbies dequeue
-	//	lk1.unlock();
+		//	lk1.unlock();
 		sort(free_lobby.begin(), free_lobby.end(), comparator);
 		int si = free_lobby.size();
 		for (int i = 0; i < si; i++)
 		{
 			
-			if (player_queue.size()  <= max_player-free_lobby[i].second)
+			if (player_queue.size()  <= max_player-free_lobby[i].second)//game server has more requirment
 			{
 				//transfer all the sockets to that particular process
 				//....
-				transferSocket(player_queue, 0, player_queue.size() - 1,free_lobby[i].first);
+				transferSocket(player_queue,player_cred,0, player_queue.size() - 1,free_lobby[i].first);
 			//	lk1.lock();
 				free_lobby[i].second += player_queue.size();
 				//lk1.unlock();
 				player_queue.clear();//clearing the player queue
+				player_cred.clear();
 
-				if(player_queue.size()==max_player-free_lobby[i].second)
+				if(player_queue.size()==max_player-free_lobby[i].second)//if supply and demand are equal then remove the game server from free_lobby
 				{
 					auto it = free_lobby.begin();
 					advance(it, i);
@@ -357,10 +413,11 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 				//transfer first "max_player-free_lobby[i].second" sockets to the process
 				//,....
 				//removing the first max_player-free_lobby[i].second sockets
-				transferSocket(player_queue, 0,max_player-free_lobby[i].second-1, free_lobby[i].first);
+				transferSocket(player_queue, player_cred, 0,max_player-free_lobby[i].second-1, free_lobby[i].first);
 				for (int j = 1; j <= (max_player - free_lobby[i].second); j++)
 				{
 					player_queue.pop_front();
+					player_cred.pop_front();
 				}
 				//remove the lobby from free lobbies queue
 				auto it = free_lobby.begin();
@@ -382,6 +439,9 @@ int main()
 	}
 #endif // defined
 	//we need 2 connections to game servers
+
+	std::srand(static_cast<unsigned int>(std::time(nullptr)));
+	
 	cout << "\n input the number of players=>";
 	cin >> max_player;
 	struct addrinfo hints;
@@ -440,12 +500,19 @@ int main()
 			server_port[socket_] = start_port;
 			cout << "\n connected";
 			//sending the port number to the server:(at which port will the server listen for the clients)
-			int bytes = send(socket_, (char*)&start_port, sizeof(start_port), 0);
+			
+			start_port++;
+			socket_token[socket_] = generateRandomSequence();//generated random sequence
+			server_startup start;
+			strcpy(start.token, socket_token[socket_].c_str());
+			start.port = start_port;
+			
+			int bytes = send(socket_, (char*)&start, sizeof(start), 0);
 			if (bytes < 0)
 			{
 				cout << "\n did not send the port to the server=>" << GetLastErrorAsString();
 			}
-			start_port++;
+			
 			/*
 			//receiving the process id for the process
 			int process_id;

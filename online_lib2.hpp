@@ -46,6 +46,31 @@
 * Tile has to be a square unless navigation functions wont work
 * Origin is (17,19)
 */
+
+class user_credentials
+{
+public:
+	string username;
+	string password;
+	user_credentials(){ }
+	user_credentials(string user, string pass)
+	{
+		this->username = user;
+		this->password = pass;
+	}
+};
+class user_credentials_array
+{
+public:
+	int length;
+	user_credentials arr[50];
+};
+class server_startup//startup configuration file sent to the game server by the lobby server
+{
+public:
+	char token[20];
+	int port;
+};
 int cx(int x);
 int cy(int y);
 int rx(int x);
