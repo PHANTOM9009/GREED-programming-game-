@@ -84,7 +84,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
-	if (getaddrinfo("127.0.0.1",port_str, &hints, &peer_address)) {
+	if (getaddrinfo("192.168.31.213",port_str, &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
@@ -1089,7 +1089,7 @@ int connect_to_lobby_server()
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo("127.0.0.1","8080", &hints, &bind_address);
+	getaddrinfo("192.168.31.213","8080", &hints, &bind_address);
 	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
@@ -1147,7 +1147,7 @@ int main(int argc,char* argv[])
 	
 	//added the thing that when the game overs, the client will break the loop and close the connection.
 	
-	/*
+	
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
@@ -1174,7 +1174,7 @@ int main(int argc,char* argv[])
 		//return 0;
 	}
 	
-	*/
+	
 	
 	//receiving the startupinfo data
 	Startup_info_client start_data;
@@ -1261,12 +1261,12 @@ int main(int argc,char* argv[])
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
 	
-	/*
+	
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
-	*/
+	
 	
 	
 
