@@ -1121,8 +1121,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sending.restart();
 			//sending the data over here to the client terminal
 			recv_data data1;
-			strcpy(data1.token, my_token.c_str());
+			
+			
 			memset((void*)&data1, 0, sizeof(data1));
+			strcpy(data1.token, my_token.c_str());
 			data1.packet_id = total_time;
 			data1.s1 = pl1.size();
 			data1.gameOver = gameOver;
@@ -1361,6 +1363,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
 					}
+					else
+					{
+						cout << "\n non verified user sending data..";
+
+					}
 
 					std::time_t result = std::time(nullptr);
 					//cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec << " server frame=>" << total_time << " " << "received frame=>" << data2.packet_id;
@@ -1506,7 +1513,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	FD_ZERO(&reads);
 	int idc = 0;
 	int nn = 0;
-	while (max_player+2> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
+	while (max_player+1> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		greet_client gc;
 		struct sockaddr_storage client_address;

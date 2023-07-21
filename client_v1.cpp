@@ -84,7 +84,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
-	if (getaddrinfo("192.168.31.213",port_str, &hints, &peer_address)) {
+	if (getaddrinfo("127.0.0.1",port_str, &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
@@ -303,6 +303,12 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					previous_packet = data1.packet_id;
 					gameOver = data1.gameOver;
 				}
+				else
+				{
+					cout << "\n unverified server sending data..";
+
+				}
+
 				
 
 			}
@@ -1023,6 +1029,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
 						data2.packet_id = frame_number;
 						data2.shipdata_forServer = shipdata;
+						data2.user_cred = user_credentials(username, password);
 						//sending the data
 						if (shipdata.size_navigation > 0)
 						{
@@ -1033,11 +1040,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 
 						int bytes = send(peer_socket, (char*)&data2, sizeof(data2), 0);
-						while (bytes < sizeof(data2))
-						{
-							bytes += send(peer_socket, (char*)&data2 + bytes, sizeof(data2) - bytes, 0);
-						}
-					
+											
 						if (bytes < 1)
 						{
 							CLOSESOCKET(peer_socket);
@@ -1089,7 +1092,7 @@ int connect_to_lobby_server()
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo("192.168.31.213","8080", &hints, &bind_address);
+	getaddrinfo("127.0.0.1","8080", &hints, &bind_address);
 	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
@@ -1127,7 +1130,7 @@ int connect_to_lobby_server()
 	}
 	port = start.port;
 	game_token = start.token;
-	cout << "\n received port from the lobby server=>" << port;
+	cout << "\n received port and token from the lobby server=>" << port<<" "<<start.token;
 	return port;
 }
 

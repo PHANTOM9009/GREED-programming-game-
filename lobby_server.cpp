@@ -233,6 +233,8 @@ void listener()
 					if (bytes < 1)
 					{
 						cout << "\n could not recv bytes from the incoming client=>" << GetLastErrorAsString();
+						cout << GETSOCKETERRNO();
+
 					}
 					if (bytes > 0)
 					{
