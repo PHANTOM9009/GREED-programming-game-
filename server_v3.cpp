@@ -1449,6 +1449,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	//recving the client credentials from the lobby server
 	
 		//connecting for the clients
+	
 	printf("now waiting for the clients to connect...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -1487,6 +1488,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 
 	//getting credentials from the lobby_server
+	/*
 	vector<user_credentials> temp_cred;
 	int count_p = 0;
 	cout << "\n waiting for lobby server to send the credentials of the clients...";
@@ -1505,6 +1507,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 			count_p++;
 		}
 	}
+	*/
 	///////////////////////////////////////////////////////////////
 	fd_set master;
 	FD_ZERO(&master);
@@ -1529,21 +1532,10 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		{
 			//checking if the client is authentic or not, if authentic move forwrd and givee the client an id, else reject the connection
 			int found = 0;
-			int ind = -1;
-			for (int j = 0; j < temp_cred.size(); j++)
-			{
-				if (strcmp(temp_cred[j].password, gc.user_cred.password)==0 && strcmp(temp_cred[j].username, gc.user_cred.username)==0)
-				{
-					found = 1;
-					ind = j;
-					break;
-				}
-			}
-			if (found == 1)
-			{
+			
 				read = gc.code;
-				
 				string sread = to_string(read);
+				//to be completedif()
 				//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
 				cout << "\n code recved is=>" << read;
 				if (sread[0] == '0')
@@ -1551,7 +1543,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 					socket_id[idc] = client_address;
 					//sending the id of the client to the client
 					int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
-					user_cred[idc] = temp_cred[ind];//setting the user credential
+					user_cred[idc] = gc.user_cred;//setting the user credential
 					idc++;
 				}
 				else if (sread[0] == '1')
@@ -1565,11 +1557,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 				}
 				nn++;
-			}
-			else
-			{
-				continue;
-			}
+			
+			
 		}
 
 
