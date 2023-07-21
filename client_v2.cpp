@@ -915,6 +915,13 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 			password = argv[4];
 		
 	}
+	char ch[] = "8081";
+	strcpy(ch, server_port);
+	my_id = 0;
+	username = "username";
+	password = "password";
+	
+	
 	
 	//connecting with the server_v3 here
 	peer_socket = connect_to_server();

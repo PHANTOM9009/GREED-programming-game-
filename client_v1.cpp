@@ -60,6 +60,29 @@ string username = "username";
 string password = "password";
 string game_token;
 int my_id;//id of the player in the game
+std::string GetLastErrorAsString()
+{
+	//Get the error message ID, if any.
+	DWORD errorMessageID = ::GetLastError();
+	if (errorMessageID == 0) {
+		return std::string(); //No error message has been recorded
+	}
+
+	LPSTR messageBuffer = nullptr;
+
+	//Ask Win32 to give us the string version of that message ID.
+	//The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
+	size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+	//Copy the error message into a std::string.
+	std::string message(messageBuffer, size);
+
+	//Free the Win32's string's buffer.
+	LocalFree(messageBuffer);
+
+	return message;
+}
 bool find(int id, int hit[100],int size)
 {
 	for (int i = 0; i < size; i++)
@@ -122,11 +145,18 @@ SOCKET connect_to_server(int port)//first connection to the server
 	gc.user_cred = user_credentials(username, password);
 
 	int bytes_sent = send(socket_peer,(char*)&gc,sizeof(gc), 0);
-
+	if (bytes_sent < 0)
+	{
+		cout << "\n did not send code and credentials to the game server=>" << GetLastErrorAsString();
+	}
 	printf("Sent %d bytes.\n", bytes_sent);
 
 	cout << "\n waiting for the server to send me the id=>";
 	int bytes = recv(socket_peer, (char*)&my_id, sizeof(my_id), 0);
+	if (bytes < 0)
+	{
+		cout << "\n could not recv my id from the game server=>" << GetLastErrorAsString();
+	}
 	cout << "\n id sent by the client is=>" << my_id;
 		return socket_peer;
 
@@ -1059,29 +1089,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	WSACleanup();
 
 }
-std::string GetLastErrorAsString()
-{
-	//Get the error message ID, if any.
-	DWORD errorMessageID = ::GetLastError();
-	if (errorMessageID == 0) {
-		return std::string(); //No error message has been recorded
-	}
 
-	LPSTR messageBuffer = nullptr;
-
-	//Ask Win32 to give us the string version of that message ID.
-	//The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
-	size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-
-	//Copy the error message into a std::string.
-	std::string message(messageBuffer, size);
-
-	//Free the Win32's string's buffer.
-	LocalFree(messageBuffer);
-
-	return message;
-}
 int connect_to_lobby_server()
 {
 	struct addrinfo hints;
@@ -1146,8 +1154,8 @@ int main(int argc,char* argv[])
 	SOCKET socket_listen = connect_to_server(port);
 	
 	//added the thing that when the game overs, the client will break the loop and close the connection.
+	cout << "\n staring the child process";
 	
-	/*
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
@@ -1157,7 +1165,7 @@ int main(int argc,char* argv[])
 	//convert port to string and append in commandLine
 	string port_str = to_string(port);
 	string id = to_string(my_id);
-	string commandLine = "\"C:\\greed\\greed\\client_v2_new.exe\" " + port_str + " " + id + " " + username + " " + password;
+	string commandLine = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" " + port_str + " " + id + " " + username + " " + password;
 	char str[100];
 	strcpy(str, commandLine.c_str());
 
@@ -1174,7 +1182,7 @@ int main(int argc,char* argv[])
 		//return 0;
 	}
 	
-	*/
+	
 	
 	//receiving the startupinfo data
 	Startup_info_client start_data;
@@ -1261,12 +1269,12 @@ int main(int argc,char* argv[])
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
 	
-	/*
+	
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
-	*/
+	
 	
 	
 

@@ -1440,24 +1440,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player
 {
 	//recving the client credentials from the lobby server
-	vector<user_credentials> temp_cred;
-	int count_p = 0;
-	cout << "\n waiting for lobby server to send the credentials of the clients...";
-	while (count_p < n)//untill the number of players are less than n
-	{
-
-		user_credentials_array uob;		
-		int bits = recv(lobby_socket, (char*)&uob, sizeof(uob), 0);
-		if (bits < 0)
-		{
-			cout << "\n did not recv the  client credentials=>" << GetLastErrorAsString();
-		}
-		for (int i = 0; i < uob.length; i++)
-		{
-			temp_cred.push_back(uob.arr[i]);
-			count_p++;
-		}
-	}
+	
 		//connecting for the clients
 	printf("now waiting for the clients to connect...\n");
 	struct addrinfo hints;
@@ -1494,6 +1477,28 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	}
 	freeaddrinfo(bind_address);
 	
+
+
+	//getting credentials from the lobby_server
+	vector<user_credentials> temp_cred;
+	int count_p = 0;
+	cout << "\n waiting for lobby server to send the credentials of the clients...";
+	while (count_p < n)//untill the number of players are less than n
+	{
+
+		user_credentials_array uob;
+		int bits = recv(lobby_socket, (char*)&uob, sizeof(uob), 0);
+		if (bits < 0)
+		{
+			cout << "\n did not recv the  client credentials=>" << GetLastErrorAsString();
+		}
+		for (int i = 0; i < uob.length; i++)
+		{
+			temp_cred.push_back(uob.arr[i]);
+			count_p++;
+		}
+	}
+	///////////////////////////////////////////////////////////////
 	fd_set master;
 	FD_ZERO(&master);
 	FD_SET(socket_listen, &master);

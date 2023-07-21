@@ -225,6 +225,9 @@ void listener()
 					//}				
 					//else//asking for username and passowrd
 					//{
+				}
+				else
+				{
 					user_credentials cred;
 					int bytes = recv(i, (char*)&cred, sizeof(cred), 0);
 					if (bytes < 1)
@@ -233,7 +236,8 @@ void listener()
 					}
 					if (bytes > 0)
 					{
-						if (cred.username == "username" && cred.password == "password")//put the condition if the current user is verified or not
+						cout << "\n received credentials are==>" << cred.username << " " << cred.password;
+						if (strcmp("username",cred.username)==0 && strcmp("password",cred.password)==0)//put the condition if the current user is verified or not
 						{
 							unique_lock<mutex> lk(m->m_valid);
 							valid_connections.push_back(i);
