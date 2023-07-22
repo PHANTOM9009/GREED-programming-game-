@@ -67,6 +67,7 @@ unordered_map<int, user_credentials> user_cred;
 
 SOCKET socket_listen;//the only UDP socket that will be used to transmit the data
 SOCKET lobby_socket;
+
 bool gameOver = false;//making it public so that the running theads of chaseShip1 and nav_data_processor can check its status and closes themselves.
 std::string GetLastErrorAsString()
 {
@@ -1525,7 +1526,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		int bytes_received = recvfrom(socket_listen, (char*)&gc, sizeof(gc), 0, (struct sockaddr*)&client_address, &client_len);
 		if (bytes_received < 1)
 		{
-			cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
+			//cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
 		}
 		
 		else if (bytes_received > 1)
@@ -1533,30 +1534,37 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 			//checking if the client is authentic or not, if authentic move forwrd and givee the client an id, else reject the connection
 			int found = 0;
 			
-				read = gc.code;
-				string sread = to_string(read);
-				//to be completedif()
-				//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-				cout << "\n code recved is=>" << read;
-				if (sread[0] == '0')
+				
+				if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
 				{
-					socket_id[idc] = client_address;
-					//sending the id of the client to the client
-					int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
-					user_cred[idc] = gc.user_cred;//setting the user credential
-					idc++;
-				}
-				else if (sread[0] == '1')
-				{
-					//finding the id of the client through the code sent by the display unit
-					int id = stoi(sread.substr(1, sread.length() - 1));
-					cout << "\n id sent is==>" << id;
-					socket_id_display[id] = client_address;
-					//sending the max_player to the display unit
-					int bytes1 = sendto(socket_listen, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address, client_len);
+					read = gc.code;
+					string sread = to_string(read);
+					//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
+					cout << "\n code recved is=>" << read;
+					if (sread[0] == '0')
+					{
+						socket_id[idc] = client_address;
+						//sending the id of the client to the client
+						int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
+						user_cred[idc] = gc.user_cred;//setting the user credential
+						idc++;
+					}
+					else if (sread[0] == '1')
+					{
+						//finding the id of the client through the code sent by the display unit
+						int id = stoi(sread.substr(1, sread.length() - 1));
+						cout << "\n id sent is==>" << id;
+						socket_id_display[id] = client_address;
+						//sending the max_player to the display unit
+						int bytes1 = sendto(socket_listen, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address, client_len);
 
+					}
+					nn++;
 				}
-				nn++;
+				else
+				{
+					cout << "\n client who did not have the correct game token tried to contact the game server..";
+				}
 			
 			
 		}
@@ -1707,25 +1715,13 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	graphics cg;
 	cg.callable(&mutx, code, map1,n,socket_id, socket_display);//dont call callable function its depricated
 	//sending the message to the lobby server that i am free to start another game
+
 	int status = 1;
 	int bytes = send(lobby_socket, (char*)&status, sizeof(status), 0);
 	if (bytes < 1)
 	{
 		cout << "\n could not send bytes=>" << GetLastErrorAsString();
 	}
-	cout << "\nsent to the server that i am ready to start a new game";
-	//recving the new token from the server
-	char token[20];
-	bytes = recv(lobby_socket, token, sizeof(token), 0);
-	if (bytes > 0)
-	{
-		my_token = token;
-	}
-	else
-	{
-		cout << "\n did not recv the new token from the lobby server=>" << GetLastErrorAsString();
-	}
-
 
 }
 
@@ -1791,6 +1787,7 @@ int main(int argc,char* argv[])
 		graphics::total_secs = 0;
 		user_cred.clear();
 		startup(max_player, socket_id, port);
+	
 		CLOSESOCKET(socket_listen);
 		cout << "\n this round of game is over";
 	}

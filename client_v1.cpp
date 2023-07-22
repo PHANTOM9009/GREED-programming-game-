@@ -120,6 +120,8 @@ SOCKET connect_to_server(int port)//first connection to the server
 	greet_client gc;
 	gc.code = msg;
 	gc.user_cred = user_credentials(username, password);
+	strcpy(gc.token, game_token.c_str());
+	
 
 	int bytes_sent = send(socket_peer,(char*)&gc,sizeof(gc), 0);
 
@@ -128,7 +130,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 	cout << "\n waiting for the server to send me the id=>";
 	int bytes = recv(socket_peer, (char*)&my_id, sizeof(my_id), 0);
 	cout << "\n id sent by the client is=>" << my_id;
-		return socket_peer;
+	return socket_peer;
 
 }
 
@@ -1160,7 +1162,7 @@ int main(int argc,char* argv[])
 	//convert port to string and append in commandLine
 	string port_str = to_string(port);
 	string id = to_string(my_id);
-	string commandLine = "\"C:\\greed\\greed\\client_v2_new.exe\" " + port_str + " " + id + " " + username + " " + password;
+	string commandLine = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" " + port_str + " " + id + " " + username + " " + password+" "+game_token;
 	char str[100];
 	strcpy(str, commandLine.c_str());
 

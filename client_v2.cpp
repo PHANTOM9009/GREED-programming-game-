@@ -42,7 +42,7 @@ SOCKET peer_socket;//the main socket that is used for all the data transfer in t
 int max_players;
 char server_port[10];
 int my_id;//id of the ship in the game
-
+string game_token;//token of the game
 string username;
 string password;
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
@@ -117,6 +117,7 @@ SOCKET connect_to_server()//first connection to the server
 	greet_client ob;
 	ob.code = var;
 	ob.user_cred = user_credentials(username, password);
+	strcpy(ob.token, game_token.c_str());
 
 	int bytes = sendto(peer_socket, (char*)&ob, sizeof(ob), 0, server_add->ai_addr, server_add->ai_addrlen);
 	if (bytes > 1)
@@ -913,13 +914,10 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 			my_id = stoi(argv[2]);
 			username = argv[3];
 			password = argv[4];
+			game_token = argv[5];
 		
 	}
-	char ch[] = "8081";
-	strcpy(ch, server_port);
-	my_id = 0;
-	username = "username";
-	password = "password";
+
 	
 	
 	

@@ -76,6 +76,7 @@ class greet_client
 public:
 	int code;
 	user_credentials user_cred;
+	char token[20];
 };
 int cx(int x);
 int cy(int y);

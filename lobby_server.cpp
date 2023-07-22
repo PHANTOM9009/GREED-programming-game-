@@ -246,11 +246,12 @@ void listener()
 							user_cred.push_back(user_credentials(cred.username, cred.password));
 							m->is_data.notify_one();
 							cout << "\n connected with a valid user";
+							FD_CLR(i, &master);
 						}
 						else//if the user is not authenticated then tear down the socket connection and remove it from the set of master
 						{
 							CLOSESOCKET(i);
-							FD_CLR(i, &master);
+							
 
 						}
 					}
@@ -286,15 +287,15 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 			max_socket = sockets[i];
 		}
 	}
-	
+	fd_set reads;
+	FD_ZERO(&reads);
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
 	while (1)
 	{
-		fd_set reads;
-		FD_ZERO(&reads);
 		reads = master;
-		struct timeval timeout;
-		timeout.tv_sec = 0;
-		timeout.tv_usec = 0;
+	
 		select(max_socket + 1, &reads, 0, 0, &timeout);
 		for (int i = 1;i<=max_socket; i++)
 		{
@@ -302,8 +303,10 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 			{
 				int data;//pair of socket,bool(in int)
 				int byes = recv(i, (char*)&data, sizeof(data), 0);
+				
 				if (byes > 1)
 				{
+					cout << "\n received data is==>" << data;
 					if (data == 0)//0 means that the server is busy
 					{
 						for (int j = 0; j < free_lobby.size(); j++)
@@ -324,10 +327,7 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 						free_lobby.push_back(pair<SOCKET, int>(i, 0));
 						cout << "\n received available message from game server=>" << i;
 						//re assigning the token to the server for security purpose
-						socket_token[i] = generateRandomSequence();
-						char token[20];
-						strcpy(token, socket_token[i].c_str());
-						int bytes = send(i, (char*)&token, sizeof(token), 0);//sending the new token to the server
+						
 					}
 				}
 			}
@@ -352,6 +352,12 @@ void transferSocket(deque<SOCKET>& player_queue, deque<user_credentials> &player
 			cout << "\n couldnt send bytes==>" << GetLastErrorAsString();
 		}
 	}
+	//close all the client sockets, since now there is no use of all those sockets
+	for (int i = st; i <= end; i++)
+	{
+		CLOSESOCKET(player_queue[i]);
+	}
+		
 	//now sendint the recvr server the credentials of the incoming user
 
 	//preparing the packet
@@ -512,7 +518,6 @@ int main()
 	{
 		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO();
 	}
-
 	if (listen(socket_listen, 20) < 0)
 	{
 		cout << "\n socket failed";
