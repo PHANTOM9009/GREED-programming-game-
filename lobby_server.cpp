@@ -327,16 +327,6 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 						free_lobby.push_back(pair<SOCKET, int>(i, 0));
 						cout << "\n received available message from game server=>" << i;
 						//re assigning the token to the server for security purpose
-						string token = generateRandomSequence();
-						server_startup start;
-						strcpy(start.token, token.c_str());	
-						start.port = 8081;
-						int bytes = send(i, (char*)&start, sizeof(start), 0);
-						if (bytes < 0)
-						{
-							cout << "\n could not send bytes==>" << GetLastErrorAsString();
-						}
-						
 						
 					}
 				}
@@ -415,7 +405,8 @@ void transferSocket(deque<SOCKET>& player_queue, deque<user_credentials> &player
 	cout << "\n sockets sent to process=>" << socket_pid[recvr];
 	//transfering the sockets
 	*/
-			
+
+		
 }
 void assign_lobby()//to assign the lobby to the incoming authenticated connections
 {
