@@ -1510,6 +1510,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	}
 	*/
 	///////////////////////////////////////////////////////////////
+	
 	fd_set master;
 	FD_ZERO(&master);
 	FD_SET(socket_listen, &master);
@@ -1571,7 +1572,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 
 	}
-
+	
 	int no_of_players = n;
 	Control control;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
@@ -1713,16 +1714,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 
 	graphics cg;
-	cg.callable(&mutx, code, map1,n,socket_id, socket_display);//dont call callable function its depricated
-	//sending the message to the lobby server that i am free to start another game
-
-	int status = 1;
-	int bytes = send(lobby_socket, (char*)&status, sizeof(status), 0);
-	if (bytes < 1)
-	{
-		cout << "\n could not send bytes=>" << GetLastErrorAsString();
-	}
-
+	//cg.callable(&mutx, code, map1,n,socket_id, socket_display);//dont call callable function its depricated
+	
 }
 
 int connect_with_lobby()
@@ -1774,6 +1767,8 @@ int main(int argc,char* argv[])
 	cout << "\n enter the number of players=>";
 	cin >> max_player;
 	int port = connect_with_lobby();//to connect with the lobby
+	unordered_map<int, sockaddr_storage> socket_id;
+	startup(max_player, socket_id, port);
 	while (1)
 	{
 		cout << "\n staring the server.....";
@@ -1786,8 +1781,21 @@ int main(int argc,char* argv[])
 		gameOver = 0;
 		graphics::total_secs = 0;
 		user_cred.clear();
-		startup(max_player, socket_id, port);
-	
+		
+		Sleep(1000);
+		int status = 1;
+		int bytes = send(lobby_socket, (char*)&status, sizeof(status), 0);
+		if (bytes < 1)
+		{
+			cout << "\n could not send bytes=>" << GetLastErrorAsString();
+		}
+		server_startup start;
+		bytes = recv(lobby_socket, (char*)&start, sizeof(start), 0);
+		if (bytes < 1)
+		{
+			cout << "\n couldnt recv the port==>" << GetLastErrorAsString();
+		}
+		cout << "\n received stuff is=>" << start.token << " port=>" << start.port << " bytes=>" << bytes;
 		CLOSESOCKET(socket_listen);
 		cout << "\n this round of game is over";
 	}

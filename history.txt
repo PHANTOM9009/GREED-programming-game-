@@ -50,3 +50,11 @@ so now we will be working on it
 
  ----------------------------------------------------------------------------------------------------------------------------------
  the new game token sending is not happening...
+ A bug that is not yet resolved:
+ when the game is over and a new game instance is started in the game server, the lobby_server is sending the new token after receiving the status of the game server
+ the status is perfectly received by the lobby_server, but the token that the lobby server is sending is not well received by the game server, it is only receiving
+ the first character of the token, and the rest is not received, this is a bug that needs to be resolved.
+
+ the testing with multiple servers is still pending, after it is thoroughly tested, we may begin on the client_display unit, to enhance the experience of the end user
+ and working on the website simultaneously...
+ ----------------------------------------------------------------------------------------------------------------------------------
