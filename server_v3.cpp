@@ -409,7 +409,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	cout << "\n size of top player=>" << sizeof(top_layer);
 
 	vector<int> prev_packet_id(n, -1);//previous packet id received from the player so that any old packet may not be use
-
+	int game_over_frame;//at which frame did the game get over
+	int checked = 0;
 	while (1)
 	{
 		sf::Time tt = clock1.restart();
@@ -492,8 +493,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sf::Clock processing1;
 			processing1.restart();
 
-			if (check_game_over(pl1))//if game is over
+			if (check_game_over(pl1) )//if game is over
 			{
+				if (!checked)
+				{
+					game_over_frame = total_time;
+				}
+				checked = 1;
 				for (int k = 0; k < pl1.size(); k++)
 				{
 					pl1[k]->gameOver = true;
@@ -501,6 +507,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				unique_lock<mutex> lk(mutx->gameOver_check);
 				gameOver = true;
 				lk.unlock();
+				
 			}
 			
 
@@ -1131,37 +1138,37 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			data1.gameOver = gameOver;
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-		
-			for (int sid = 0; sid < n; sid++)
+			
+			select(socket_listen + 1, 0, &write, 0, &timeout);
+			if (FD_ISSET(socket_listen, &write))
 			{
-				select(socket_listen + 1, 0, &write, 0, &timeout);
-				if (FD_ISSET(socket_listen, &write))
+				for (int sid = 0; sid < n; sid++)
 				{
+					//
+					//if (FD_ISSET(socket_listen, &write))
+					//{
 
-					if (pl1[sid]->died == 1)
-					{
-						continue;
-					}//dont send the data if dead
 					shipData_forMe sdfm;
 					control.me_to_packet(sdfm, sid, pl1);
 					data1.shipdata_forMe = sdfm;
 					//sending the data
 					data1.packet_id = total_time;
 					int bytes = sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&socket_id[sid], sizeof(socket_id[sid]));
-					if (bytes==-1)
+					if (bytes == -1)
 					{
 						cout << GETSOCKETERRNO() << endl;
-							
+
 					}
 					if (data1.gameOver)
 					{
-						cout << "\n sent to the client terminal that the game is over at packet number==>" << data1.packet_id;
+						//cout << "\n sent to the client terminal that the game is over at packet number==>" << data1.packet_id;
 					}
-					
+
 
 					//data is sent
-				}
+				//}
 
+				}
 			}
 		
 			sf::Time time2 = sending.getElapsedTime();
@@ -1316,6 +1323,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						cout << "\n couldn't sent bytes to the client display unit";
 					}
+					if (ship_packet.gameOver)
+					{
+						cout << "\n sent to the client display unit that the game is over at==>" << ship_packet.packet_no;
+					}
 				}
 				
 					
@@ -1367,6 +1378,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					else
 					{
 						cout << "\n non verified user sending data..";
+						cout << "\n the authenticated data sent is==>" << data2.user_cred.username << " " << data2.user_cred.password;
 
 					}
 
@@ -1377,7 +1389,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sf::Time time4 = recv_data.getElapsedTime();
 			avg_recv += time4.asSeconds();
 
-			if (gameOver)
+			if (gameOver   &&  game_over_frame+4 == total_time)//so that the packet reaches to everyone.
 			{
 				break;//break the loop
 			} 
@@ -1385,7 +1397,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		}
 
 	}
-
+	//closing it for some time......
+	
 	//closing all the left sockets
 	//sending to all the connected clients that the game is over
 	recv_data last;
@@ -1399,10 +1412,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		if (bytes < 1)
 		{
 			cout << "\n couldn't sent bytes to the client unit";
-		}
+		}  
 	}
 	CLOSESOCKET(socket_listen);
-			
+	
 	
 	
 	//CLOSESOCKET(socket_display[0]);
