@@ -84,7 +84,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
-	if (getaddrinfo("127.0.0.1",port_str, &hints, &peer_address)) {
+	if (getaddrinfo("192.168.31.213",port_str, &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
@@ -245,6 +245,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			int bytes_recv = -1;
 			if (pl1[ship_id]->died == 1)
 			{
+				cout << "\n breaking because the ship is dead.";
 				break;
 			}
 			sf::Clock recvt;
@@ -266,13 +267,15 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					cout << "\n connection disconnected to the server..retrying to connect";
 					//peer_socket = connect_to_server();
 					cout << "\n connection is back.";
+					cout << "\n server disconnected or the data is not able to be received==>" << GETSOCKETERRNO();
 					CLOSESOCKET(peer_socket); 
+					cout << "\n breaking due to not being able to recv the data";
 					break;
 				}
 				//we have received the data.. now parse the data in original class structure.
 				if (bytes_recv > 0 && strcmp(data1.token,game_token.c_str())==0)
 				{
-					//cout << "\n for frame=>" << total_time;
+					//cout << "\n for frame=>" << total_time;w
 					/*
 					cout << "\n the data received by the server is==>";
 					//print all the members of data1
@@ -290,7 +293,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					cout << "\n front tile=>" << data1.shipdata_forMe.front_tile.r << " " << data1.shipdata_forMe.front_tile.c;
 					cout << "\n position is=>" << data1.shipdata_forMe.absolute_position.x << " " << data1.shipdata_forMe.absolute_position.y;
 					*/
-				//	cout << "\n packet id=>" << data1.packet_id;
+					//cout << "\n packet id=>" << data1.packet_id;
 					if (data1.packet_id - prev_pack > 1)
 					{
 					//	cout<<"\n packet loss=>"<<data1.packet_id - prev_pack;
@@ -319,8 +322,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			//std::time_t result = std::time(nullptr);
 		    //cout << "\n----------------------------------------------------------";
 			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
-			if (gameOver || pl1[ship_id]->gameOver||pl1[ship_id]->died==1)
+			if (gameOver)       
+
 			{
+				cout << "\n breaking because the game is over(as told by the server, or the ship has died)";
 				break;
 			}
 			if (!gameOver)
@@ -366,6 +371,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 										{
 											check = true;
 											break;
+
 
 										}
 									}
@@ -1045,6 +1051,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 											
 						if (bytes < 1)
 						{
+							cout << "\n breaking because not being able to the send the data";
 							CLOSESOCKET(peer_socket);
 							break;
 						}
@@ -1094,7 +1101,7 @@ int connect_to_lobby_server()
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo("127.0.0.1","8080", &hints, &bind_address);
+	getaddrinfo("192.168.31.213", "8080", &hints, &bind_address);
 	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
@@ -1162,7 +1169,7 @@ int main(int argc,char* argv[])
 	//convert port to string and append in commandLine
 	string port_str = to_string(port);
 	string id = to_string(my_id);
-	string commandLine = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" " + port_str + " " + id + " " + username + " " + password+" "+game_token;
+	string commandLine = "\"C:\\greed\\greed\\client_v2_new.exe\" " + port_str + " " + id + " " + username + " " + password+" "+game_token;
 	char str[100];
 	strcpy(str, commandLine.c_str());
 
