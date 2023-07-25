@@ -51,7 +51,7 @@
 
 //runs on the port 8080
 
-#define GAME_SERVER_COUNT 1
+#define GAME_SERVER_COUNT 2
 using namespace std;
 class user_credentials
 {
@@ -416,6 +416,7 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 	{
 		unique_lock<mutex> lk(m->m_valid);
 		m->is_data.wait(lk, [] {return !valid_connections.empty(); });
+		
 		//enter only when the there are connections asking for the lobby
 		
 		for (int i = 0; i < valid_connections.size(); i++)
@@ -434,9 +435,14 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 		//	lk1.unlock();
 		sort(free_lobby.begin(), free_lobby.end(), comparator);
 		int si = free_lobby.size();
-		for (int i = 0; i < si; i++)
+		for(int i=0;i<free_lobby.size();i++)
 		{
 			
+			if (i == 0)
+			{
+				cout << "\n yes it was 0 once";
+			}
+		
 			if (player_queue.size()  <= max_player-free_lobby[i].second)//game server has more requirment
 			{
 				//transfer all the sockets to that particular process
@@ -448,14 +454,14 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 				player_queue.clear();//clearing the player queue
 				player_cred.clear();
 
-				if(player_queue.size()==max_player-free_lobby[i].second)//if supply and demand are equal then remove the game server from free_lobby
+				if(max_player==free_lobby[i].second)//if supply and demand are equal then remove the game server from free_lobby
 				{
 					auto it = free_lobby.begin();
 					advance(it, i);
 					free_lobby.erase(it);
+					i--;
 				}
-				
-				
+								
 			}
 			else
 			{
@@ -472,8 +478,10 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 				auto it = free_lobby.begin();
 				advance(it, i);
 				free_lobby.erase(it);
+				i--;
 				
 			}
+			i++;
 		}
 
 	}

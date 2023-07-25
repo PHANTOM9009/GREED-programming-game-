@@ -50,3 +50,18 @@ so now we will be working on it
 
  ----------------------------------------------------------------------------------------------------------------------------------
  the new game token sending is not happening...
+ ------------------------------------------------------------------------------------------------------------------------------
+ 24 july 2023
+ solved the problem of sending to the client that the game is over.
+ the problem was:
+ as soon as the ship gets dead, we were not sending anything to that ship,  so that ship would never know that he is dead, so i am sending to every ship now
+ irrespective of if it is dead or not.
+ i am also running the server for 4 more frames after the game is over, to incur any packet loss in UDP, so that everyone knows safely that the game is over.,
+ 
+ the only thing left is to check with the multiple servers. and add a policy so that a client can get reconnected in case of client gets out, only possible with 
+ the client display unit, and not with the algorithm part of the client.
+ -------------------------------------------------------------------------------------------------------------------------------
+ 25 july 2023
+ a little bit change in server_v3, put the time limit on each game, the game ends after 10 minutes of time, or when all the clients have disconnected(this may be not
+ easy to implement, but we will try to do it maybe later) for now after 10 minutes of time, the game fucking ends.....
+ 
