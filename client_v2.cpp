@@ -298,6 +298,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	gui_renderer.name_id_renderer(gui, font1);
 	gui_renderer.time_line_text_renderer(gui, font_bold);
 	gui_renderer.gameOverRenderer(font2);
+	gui_renderer.waitRenderer(font2);
 	gui_renderer.winner_renderer(font2);
 	gui_renderer.timer_renderer(gui);
 	gui_renderer.setting_button_renderer(setting1, setting2, gui);
@@ -353,6 +354,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	top_layer ship_data;
 
 	int previous_packet = -1;
+	bool started = false;//to check if the game has started or not;
 	while (window.isOpen())
 	{
 		temp_set = master;
@@ -489,6 +491,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 				previous = ship_data.packet_no;
 				gameOver = ship_data.gameOver;
+				started = true;
 			}
 
 			/*code to update the timer*/
@@ -878,6 +881,10 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				ran = 1;
 
 
+			}
+			if (!started)
+			{
+				window.draw(gui_renderer.wait);
 			}
 			if (gameOver)
 			{

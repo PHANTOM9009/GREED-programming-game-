@@ -147,6 +147,9 @@
     <ClCompile Include="token_generate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sql_server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">

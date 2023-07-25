@@ -3550,6 +3550,15 @@ void graphics::GuiRenderer::gameOverRenderer(sf::Font& font)
 	gameOver.setPosition(::cx(100), ::cy(350));//position of  the text
 	gameOver.setFont(font);
 }
+void graphics::GuiRenderer::waitRenderer(sf::Font& font)
+{
+	wait.setString("Waiting for others to join..");
+	wait.setCharacterSize((::cx(120) + ::cy(120)) / 2);
+	wait.setColor(sf::Color::White);
+	wait.setFillColor(sf::Color(255, 255, 255, 180));
+	wait.setPosition(::cx(100), ::cy(400));//position of  the text
+	wait.setFont(font);
+}
 void graphics::GuiRenderer::winner_renderer(sf::Font& font)
 {
 	winner_text.setString("WINNER IS :");

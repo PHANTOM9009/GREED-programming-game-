@@ -2675,6 +2675,7 @@ public:
 
 		tgui::ChildWindow::Ptr final_window;
 		tgui::ListView::Ptr list1;
+		sf::Text wait;//text to tell the user to wait for others to join'.
 
 
 	public:
@@ -2714,6 +2715,8 @@ public:
 		void sp2_renderer();
 		void childWindowRenderer(tgui::Gui& gui);
 		void gameOverRenderer(sf::Font& font);
+		
+		void waitRenderer(sf::Font& font);
 		void winner_renderer(sf::Font& font);
 		void time_line_text_renderer(tgui::Gui& gui, tgui::Font& font);
 		void timer_renderer(tgui::Gui& gui);

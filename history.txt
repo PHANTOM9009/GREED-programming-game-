@@ -64,4 +64,9 @@ so now we will be working on it
  25 july 2023
  a little bit change in server_v3, put the time limit on each game, the game ends after 10 minutes of time, or when all the clients have disconnected(this may be not
  easy to implement, but we will try to do it maybe later) for now after 10 minutes of time, the game fucking ends.....
+ done the first part.
+ 
+ Now i will try to explore the database options...
+ I have tried to connect the code with azure SQL but all the efforts went in vain. Now we go for SQLite since this is the only viable and sped up option here
+ 
  
