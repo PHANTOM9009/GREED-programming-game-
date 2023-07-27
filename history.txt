@@ -68,5 +68,8 @@ so now we will be working on it
  
  Now i will try to explore the database options...
  I have tried to connect the code with azure SQL but all the efforts went in vain. Now we go for SQLite since this is the only viable and sped up option here
+ ----------------------------------------------------------------------------------------------------------------------------------------
+ SQL schema for the game
+ 
  
  

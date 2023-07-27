@@ -1138,12 +1138,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			data1.gameOver = gameOver;
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-			
-			select(socket_listen + 1, 0, &write, 0, &timeout);
-			if (FD_ISSET(socket_listen, &write))
+			for (int sid = 0; sid < n; sid++)
 			{
-				for (int sid = 0; sid < n; sid++)
+				select(socket_listen + 1, 0, &write, 0, &timeout);
+				if (FD_ISSET(socket_listen, &write))
 				{
+
 					//
 					//if (FD_ISSET(socket_listen, &write))
 					//{
@@ -1170,6 +1170,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 				}
 			}
+			
 		
 			sf::Time time2 = sending.getElapsedTime();
 			avg_send1 += time2.asSeconds();

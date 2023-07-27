@@ -51,13 +51,14 @@
 
 //runs on the port 8080
 
-#define GAME_SERVER_COUNT 2
+#define GAME_SERVER_COUNT 1
 using namespace std;
 class user_credentials
 {
 public:
 	char username[20];
 	char password[20];
+	
 	user_credentials() { }
 	user_credentials(string user, string pass)
 	{
