@@ -411,8 +411,18 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	vector<int> prev_packet_id(n, -1);//previous packet id received from the player so that any old packet may not be use
 	int game_over_frame;//at which frame did the game get over
 	int checked = 0;
+	
 	while (1)
 	{
+		//creating a vector for keeping tab who are left for sending the data
+		deque<int> client_terminal;
+		deque<int> client_display;
+		for (int i = 0; i < max_player; i++)
+		{
+			client_terminal.push_back(i);
+			client_display.push_back(i);
+		}
+		
 		sf::Time tt = clock1.restart();
 		ep += tt.asSeconds();
 		if (ep > 1)
@@ -1138,15 +1148,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			data1.gameOver = gameOver;
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-			for (int sid = 0; sid < n; sid++)
+			for(int sid=0;sid<max_player;sid++)
 			{
+				//int sid = client_terminal[0];				
 				select(socket_listen + 1, 0, &write, 0, &timeout);
 				if (FD_ISSET(socket_listen, &write))
 				{
-
-					//
-					//if (FD_ISSET(socket_listen, &write))
-					//{
 
 					shipData_forMe sdfm;
 					control.me_to_packet(sdfm, sid, pl1);
@@ -1161,12 +1168,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					}
 					if (data1.gameOver)
 					{
-						//cout << "\n sent to the client terminal that the game is over at packet number==>" << data1.packet_id;
+						cout << "\n sent to the client terminal that the game is over at packet number==>" << data1.packet_id;
 					}
-
-
-					//data is sent
-				//}
+					
+					client_terminal.pop_front();					
 
 				}
 			}
@@ -1309,25 +1314,32 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			* 
 			*/
 			sending.restart();
-			select(socket_listen+ 1, 0,&write, 0, &timeout);//
-			
-			if (FD_ISSET(socket_listen, &write))
-			{
 
-				ship_packet.total_secs = total_secs;
-				for (int i = 0; i < socket_id_display.size(); i++)
+			while(client_display.size()!=0)
+			{
+				if (socket_id_display.find(client_display[0]) == socket_id_display.end())//if an entry for this does not exists
 				{
-					auto it = socket_id_display.begin();
-					advance(it, i);
-					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&it->second, sizeof(it->second));
-					if (bytes < 1)
-					{
-						cout << "\n couldn't sent bytes to the client display unit";
-					}
-					if (ship_packet.gameOver)
-					{
-						cout << "\n sent to the client display unit that the game is over at==>" << ship_packet.packet_no;
-					}
+					client_display.pop_front();
+					continue;
+				}
+				
+				select(socket_listen+ 1, 0,&write, 0, &timeout);//
+			
+				if (FD_ISSET(socket_listen, &write))
+				{
+
+					ship_packet.total_secs = total_secs;
+						
+						int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&socket_id_display[client_display[0]], sizeof(socket_id_display[client_display[0]]));
+						if (bytes < 1)
+						{
+							cout << "\n couldn't sent bytes to the client display unit";
+						}
+						if (ship_packet.gameOver)
+						{
+							cout << "\n sent to the client display unit that the game is over at==>" << ship_packet.packet_no;
+						}
+						client_display.pop_back();
 				}
 				
 					
