@@ -1721,6 +1721,23 @@ private:
 	bool isShipInMyRadius_forFire(int s_id, cannon myside, ShipSide oppSide);
 	void setBullet(Greed::bullet& bull, cannon can, int s_id, ShipSide s);//used to set the location and trajectory of the bullet in the graphics part
 	bool isOverlapping(shipEntity, shipEntity, int);
+
+	//making some functions private, these are not to be used by the end user
+
+	bool sail(Direction d, int tiles);
+
+	Greed::path_attribute setTarget(Greed::coords ob);
+
+	Greed::path_attribute setTarget(int s_id);//overloaded function for returning the object of path_attribute
+	//Greed::path_attribute setTarget(Greed::abs_pos ob) ;//overloaded function
+	
+	bool setPath(List<Greed::coords> ob, int state = 1); //set the path of coords
+	bool fireCannon(cannon can, int s_id, ShipSide ship);//target is true for ships and false for cannons
+	//defining the ctor
+	bool fireAtCannon(int c_id, cannon can);//fire at any cannon: can is the side of the ship's cannon
+	bool upgradeHealth(int n);
+	bool upgradeAmmo(int n);
+	bool upgradeFuel(int n);
 public:
 
 	vector<int> cannonsInMyRadius();
@@ -1728,9 +1745,7 @@ public:
 	vector<int> cannonsIamInRadiusOf();//this function returns the cannon id having ship in radius.
 	vector<int> shipsIamInRadiusOf();//returns the list of the ships who are overshadowing the current ship
 
-	bool fireCannon(cannon can, int s_id, ShipSide ship);//target is true for ships and false for cannons
-	//defining the ctor
-	bool fireAtCannon(int c_id, cannon can);//fire at any cannon: can is the side of the ship's cannon
+
 	vector<Greed::coords> getRadiusCoords_ship(int s_id);//function to return the tiles that are in the radius of a particular entity, just pass the id of the ship
 	vector<Greed::coords> getRadiusCoords_cannon(int c_id);//function to return the tiles that are in the radius of the cannon
 	ship();
@@ -1862,21 +1877,11 @@ public:
 	//functions for updating some values of the game
 
 	//starting of the API
-	bool setPath(List<Greed::coords> ob, int state = 1); //set the path of coords
-
-
-
-
-
+	
 	attribute whatsHere(Greed::coords ob, int m = 0);//leave this for now
 	// List<attribute> whatsHere(Map::abs_pos ob);
 
-	bool sail(Direction d, int tiles);
-
-	Greed::path_attribute setTarget(Greed::coords ob);
-
-	Greed::path_attribute setTarget(int s_id);//overloaded function for returning the object of path_attribute
-	//Greed::path_attribute setTarget(Greed::abs_pos ob) ;//overloaded function
+	
 private:
 	//checkCollision is to check collision between a ship and the bullet
 	bool checkCollision(int sid, const Greed::bullet& ob);//sid is the ship id of  the victim ship.
@@ -1995,9 +2000,7 @@ public:
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		bullet_info.push_back(bullet_data(1,can,-1,ShipSide::NA,c_id));
 	}
-	bool upgradeHealth(int n);
-	bool upgradeAmmo(int n);
-	bool upgradeFuel(int n);
+
 
 	void Greed_upgradeHealth(int n)
 	{

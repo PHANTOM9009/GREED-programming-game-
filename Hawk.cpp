@@ -2,13 +2,13 @@
 namespace user1
 {
 
-	int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob)
+	int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob,int hate_id)
 	{
 		int mini = INT_MAX;
 		int index = 0;
 		for (int i = 0; i < shipList.size(); i++)
 		{
-			if (shipList[i].getDiedStatus() == 0 && i != myid)
+			if (shipList[i].getDiedStatus() == 0 && i != myid && i!=hate_id)
 			{
 				int score = 0.6 * shipList[i].getCurrentHealth() + 0.4 * ob.getDistance(i);
 				if (score < mini)
@@ -26,7 +26,7 @@ namespace user1
 	{
 		//setting the aim
 		deque<shipInfo> shipList = ob.getShipList();
-		int index = find_ship_to_kill(shipList, ob.getShipId(), ob);
+		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
 		if (index >= 0)
 		ob.Greed_chaseShip(index);
 		
@@ -43,7 +43,7 @@ namespace user1
 				ob.getNextCurrentEvent(e);
 				if (index >= 0 && shipList[index].getDiedStatus() == 1)
 				{
-					index = find_ship_to_kill(shipList, ob.getShipId(), ob);
+					index = find_ship_to_kill(shipList, ob.getShipId(), ob,ob.getShipId());
 					ob.Greed_chaseShip(index);
 					//cout << "\n called find_ship_to_kill";
 					//cout << "\n my id=>" << ob.getShipId() << " target id=>" << index;
@@ -69,6 +69,14 @@ namespace user1
 				if (e.eventType == Event::EventType::LowAmmo)
 				{
 					//ob.Greed_upgradeAmmo(20);
+				}
+				if (e.eventType == Event::EventType::ShipCollision)
+				{
+					cout << "\n my ship collided,"<<e.shipCollision.getShipId()[0]<<" finding new hunt..";
+					index = find_ship_to_kill(shipList, ob.getShipId(), ob,e.shipCollision.getShipId()[0]);
+					cout << "\n new hunt is==>" << index;
+					ob.Greed_chaseShip(index);
+
 				}
 				deque<Event> q = ob.getPassiveEvent();
 
