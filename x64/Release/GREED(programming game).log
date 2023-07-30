@@ -1,17 +1,1 @@
-﻿  lobby_server.cpp
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(208,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(300,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(438,10): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(451,68): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(453,46): warning C4267: '+=': conversion from 'size_t' to '_Ty2', possible loss of data
-          with
-          [
-              _Ty2=int
-          ]
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(549,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-  Generating code
-  973 of 973 functions (100.0%) were compiled.
-    767 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
-  Finished generating code
-  GREED(programming game).vcxproj -> F:\current projects\GREED(programming game)\x64\Release\GREED(programming game).exe
+﻿  GREED(programming game).vcxproj -> F:\current projects\GREED(programming game)\x64\Release\GREED(programming game).exe

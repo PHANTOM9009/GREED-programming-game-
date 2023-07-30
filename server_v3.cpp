@@ -493,7 +493,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sf::Clock processing1;
 			processing1.restart();
 
-			if (check_game_over(pl1) && (total_secs/60) >= 10)//if game is over/if time of the game is 10 minutes, then the game will be over.
+			if (check_game_over(pl1) || (total_secs/60) >= 10)//if game is over/if time of the game is 10 minutes, then the game will be over.
 			{
 				if (!checked)
 				{
@@ -1138,12 +1138,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			data1.gameOver = gameOver;
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-			for (int sid = 0; sid < n; sid++)
-			{
+			
 				select(socket_listen + 1, 0, &write, 0, &timeout);
 				if (FD_ISSET(socket_listen, &write))
 				{
-
+					for (int sid = 0; sid < n; sid++)
+					{
 					//
 					//if (FD_ISSET(socket_listen, &write))
 					//{
