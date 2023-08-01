@@ -84,7 +84,8 @@ SOCKET connect_to_server(int port)//first connection to the server
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
-	if (getaddrinfo("127.0.0.1",port_str, &hints, &peer_address)) {
+	
+	if (getaddrinfo("172.171.234.70",port_str, &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
@@ -189,6 +190,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int prev_pack = 0;
 
 	int previous_packet = -1;
+	//accepting the testing message from the servser
+
+
 	while (1)
 	{
 		/*NOTES:
@@ -251,7 +255,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			sf::Clock recvt;
 			recvt.restart();
 			select(peer_socket + 1, &reads, 0, 0, &timeout);
-			if (FD_ISSET(peer_socket, &reads))//socket is ready to read from
+			if (FD_ISSET(peer_socket,&reads))//socket is ready to read from
 			{
 				memset((void*)&data1, 0, sizeof(data1));
 				bytes_recv = recv(peer_socket, (char*)&data1, sizeof(data1), 0);
@@ -299,8 +303,11 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					//	cout<<"\n packet loss=>"<<data1.packet_id - prev_pack;
 					}
 					prev_pack = data1.packet_id;
+					//cout << "\n packet id==>" << data1.packet_id;
 					control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);
 					control_ob.packet_to_me(data1.shipdata_forMe, ship_id, pl1);
+					
+					
 					if (data1.shipdata_forMe.died == 1)
 					{
 						cout << "\n sent that i have died";
@@ -323,7 +330,6 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		    //cout << "\n----------------------------------------------------------";
 			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
 			if (gameOver)       
-
 			{
 				cout << "\n breaking because the game is over(as told by the server, or the ship has died)";
 				break;
@@ -1101,7 +1107,7 @@ int connect_to_lobby_server()
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo("127.0.0.1", "8080", &hints, &bind_address);
+	getaddrinfo("172.171.234.70", "8080", &hints, &bind_address);
 	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
@@ -1146,6 +1152,7 @@ int connect_to_lobby_server()
 int main(int argc,char* argv[])
 {
 	//extracting the data
+		
 #if defined(_WIN32)
 	WSADATA d;
 	if (WSAStartup(MAKEWORD(2, 2), &d)) {
@@ -1153,13 +1160,20 @@ int main(int argc,char* argv[])
 		return 1;
 	}
 #endif
+	int port = 0;
+	SOCKET socket_listen = 0;
+	 port=connect_to_lobby_server();
+	socket_listen = connect_to_server(port);   
 	
-	int port=connect_to_lobby_server();
-	SOCKET socket_listen = connect_to_server(port);
 	
 	//added the thing that when the game overs, the client will break the loop and close the connection.
-	
-	
+	char path_c[MAX_PATH];
+	string path;
+	if (GetCurrentDirectoryA(MAX_PATH, path_c) != 0)
+	{
+		path = path_c;
+	}
+	path += "\\client_v2_new.exe ";
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
@@ -1167,9 +1181,13 @@ int main(int argc,char* argv[])
 	ZeroMemory(&pi, sizeof(pi));
 	//LPTSTR* arg = { "hello.exe" };
 	//convert port to string and append in commandLine
+	
 	string port_str = to_string(port);
 	string id = to_string(my_id);
-	string commandLine = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" " + port_str + " " + id + " " + username + " " + password+" "+game_token;
+	char cwd[256];
+
+	string commandLine = path + port_str + " " + id + " " + username + " " + password+" "+game_token;
+	cout << "\n command line is==>" << commandLine;
 	char str[100];
 	strcpy(str, commandLine.c_str());
 

@@ -425,13 +425,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		}
 		next_frame = ep * 60;
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-		{
-			break;
-		}
-
+	
 		if (next_frame != current_frame)
 		{
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+			{
+				break;
+			}
 
 			//creating a method for sending data to the clients
 			deque<int> client_terminal;
@@ -1152,9 +1152,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			data1.gameOver = gameOver;
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-			while(client_terminal.size()!=0)
+			for(int sid=0;sid<max_player;sid++)
 			{
-				int sid = client_terminal[0];
+				write = master;
 				select(socket_listen + 1, 0, &write, 0, &timeout);
 				if (FD_ISSET(socket_listen, &write))
 				{
@@ -1175,9 +1175,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					}
 					if (bytes > 0)
 					{
-						client_terminal.pop_front();//popped back
-						//cout << "\n bytes sent to the client..";
-						//cout << "\nsent to the client with the id===>" << sid;
+						
 					}
 
 
@@ -1327,20 +1325,17 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sending.restart();
 			
 			//apply this logic and then check if it is  working with 7 players or not
-			while (client_display.size() != 0)
+			for(int i=0;i<socket_id_display.size();i++)
 			{
-				if (socket_id_display.find(client_display[0]) == socket_id_display.end())
-				{
-					client_display.pop_front();
-					//cout << "\n popped the value";
-					continue;
-				}
+				auto it = socket_id_display.begin();
+				advance(it, i);
+				write = master;
 				select(socket_listen + 1, 0, &write, 0, &timeout);//
-				if (1)
+				if (FD_ISSET(socket_listen,&write))
 				{
 
 					ship_packet.total_secs = total_secs;
-					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&socket_id_display[client_display[0]], sizeof(socket_id_display[client_display[0]]));
+					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&it->second, sizeof(it->second));
 						if (bytes < 1)
 						{
 							cout << "\n couldn't sent bytes to the client display unit";
@@ -1364,8 +1359,14 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
       		//recv the data here and update for the next frame
 			sf::Clock recv_data;
 			recv_data.restart();
+			
 			for(int j=0;j<n;j++)
 			{
+				if (pl1[j]->died == 1)
+				{
+					continue;
+				}
+				read = master;
 				select(socket_listen+1, &read, 0, 0, &timeout);
 			
 				if (FD_ISSET(socket_listen, &read))
@@ -1375,14 +1376,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					struct sockaddr_storage client_address;
 					socklen_t client_len = sizeof(client_address);
 					int bytes = recvfrom(socket_listen, (char*)&data2, sizeof(data2), 0, (sockaddr*)&client_address, &client_len);
-					/*
+					
 					if (bytes < 1)
 					{
-						//close the socket
-						CLOSESOCKET(i);
-						FD_CLR(i, &master);
+					    cout << "\n could not recv the data from the client==>" <<j<<" "<< GetLastErrorAsString();
 					}
-					*/
+					
 					
 					//data is received now convert it to appropriate form
 					int sid = data2.shipdata_forServer.ship_id;
@@ -1398,8 +1397,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
+						cout << "\n data came from the client==>" << sid;
 					}
-					else
+					else if(bytes>0)
 					{
 						cout << "\n non verified user sending data..";
 						cout << "\n the authenticated data sent is==>" << data2.user_cred.username << " " << data2.user_cred.password;
@@ -1482,12 +1482,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	cout << "\n fire_ship=>" << fire_ship1 / total_frames;
 	cout << "\n fire _cannon=>" << fire_cannon1 / total_frames;
 }
+
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player
 {
 	//recving the client credentials from the lobby server
-	
-		//connecting for the clients
-	
+				
 	printf("now waiting for the clients to connect...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -1506,8 +1505,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 	printf("Creating socket...\n");
 
-	socket_listen = socket(bind_address->ai_family,
-		bind_address->ai_socktype, bind_address->ai_protocol);
+	socket_listen = socket(bind_address->ai_family,bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_listen))
 	{
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
@@ -1523,30 +1521,6 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	}
 	freeaddrinfo(bind_address);
 	
-
-
-	//getting credentials from the lobby_server
-	/*
-	vector<user_credentials> temp_cred;
-	int count_p = 0;
-	cout << "\n waiting for lobby server to send the credentials of the clients...";
-	while (count_p < n)//untill the number of players are less than n
-	{
-
-		user_credentials_array uob;
-		int bits = recv(lobby_socket, (char*)&uob, sizeof(uob), 0);
-		if (bits < 0)
-		{
-			cout << "\n did not recv the  client credentials=>" << GetLastErrorAsString();
-		}
-		for (int i = 0; i < uob.length; i++)
-		{
-			temp_cred.push_back(uob.arr[i]);
-			count_p++;
-		}
-	}
-	*/
-	///////////////////////////////////////////////////////////////
 	fd_set master;
 	FD_ZERO(&master);
 	FD_SET(socket_listen, &master);
@@ -1568,7 +1542,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		
 		else if (bytes_received > 1)
 		{
-			//checking if the client is authentic or not, if authentic move forwrd and givee the client an id, else reject the connection
+			//checking if the client is authentic or not, if authentic move forwrd and give the client an id, else reject the connection
 			int found = 0;
 			
 				

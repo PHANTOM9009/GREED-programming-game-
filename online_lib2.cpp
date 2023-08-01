@@ -1041,6 +1041,8 @@ bool ship::frame_rate_limiter()
 
 ship::ship()//default ctor for now
 {
+	gameOver = false;
+	
 	lock_ammo = 0;
 	lock_fuel = 0;
 	lock_health = 0;
@@ -1798,6 +1800,7 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 	{
 		if (ob.gameOver)
 		{
+			cout << "\n from chaseShip, breaking because of ob.gameOver is true";
 			break;
 		}
 		if (ob.mutx->mchase[ob.ship_id].try_lock())
@@ -1813,6 +1816,7 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 			else if (ob.autopilot == 0)
 			{
 				ob.mutx->mchase[ob.ship_id].unlock();
+				cout << "\n breaking because autopilot is true";
 				break;
 			}
 			ob.mutx->mchase[ob.ship_id].unlock();

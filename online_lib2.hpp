@@ -18,6 +18,7 @@
 #include<TGUI/Backend/SFML-Graphics.hpp>
 #include<TGUI/TGUI.hpp>
 #include<chrono>
+#include<condition_variable>
 
 
 #pragma once
@@ -409,6 +410,11 @@ class Mutex//class protecting all the mutexes
 	mutex mchase[20];//mutex for follow up function of ship class
 	mutex updating_data;//for server only
 	mutex gameOver_check;
+	
+	mutex send_terminal;//for sending the data to the client terminal
+	mutex send_display;//for sending the data to the client display unit
+	condition_variable cond_terminal;//to check if terminal is ready to recv the data
+	condition_variable cond_display;//to check if the display is ready to recv the data
 
 
 public:
@@ -422,6 +428,7 @@ public:
 	friend class Greed::bullet;
 	friend class Greed::shipCannon;
 	friend void chaseShip1(int, ship&);
+	//friend void send_data_terminal(unordered_map<int, sockaddr_storage>,Mutex*);
 	friend class Event;
 	friend class control1;
 
@@ -2104,6 +2111,8 @@ class control1
 				pl1[i]->front_abs_pos = ob[i].front_abs_pos;
 				pl1[i]->rear_abs_pos = ob[i].rear_abs_pos;
 				pl1[i]->absolutePosition = ob[i].absolutePosition;
+
+				//cout << "\n position of the other ship==>" << ob[i].tile_pos_front.r << " " << ob[i].tile_pos_front.c;
 				
 				
 			}
@@ -2167,6 +2176,7 @@ class control1
 		pl1[id]->absolutePosition = ob.absolute_position;
 	
 		pl1[id]->collided_ships.clear();
+	//	cout << "\n my ship position is==>" << ob.front_tile.r << " " << ob.front_tile.c;
 		for (int i = 0; i < ob.size_collided_ships; i++)
 		{
 			pl1[id]->collided_ships.push_back(ob.collided_ships[i]);

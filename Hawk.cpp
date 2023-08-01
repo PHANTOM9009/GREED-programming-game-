@@ -5,7 +5,7 @@ namespace user1
 	int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob,int hate_id)
 	{
 		int mini = INT_MAX;
-		int index = 0;
+		int index = -1;
 		for (int i = 0; i < shipList.size(); i++)
 		{
 			if (shipList[i].getDiedStatus() == 0 && i != myid && i!=hate_id)
@@ -29,22 +29,25 @@ namespace user1
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
 		if (index >= 0)
 		ob.Greed_chaseShip(index);
-		
+		cout << "\n chasing the ship==>" << index;
 		while (1)
 		{
 
 			if (ob.frame_rate_limiter())
-			{
+			{//this is anchit rana talking to the world and i want ot know the difference between
 
 				//ob.chaseShip(2);
 				deque<shipInfo> shipList = ob.getShipList();
 				Event e;
-				
+				//cout << "\n position of alternate ship==>" << shipList[0].getCurrentTile().r << " " << shipList[0].getCurrentTile().c;
+				//cout << "\n position of my ship==>" <<ob.getCurrentTile().r<<" "<<ob.getCurrentTile().c;//anchit rana is the greatest man in the whole wold and we all know that cheers
 				ob.getNextCurrentEvent(e);
 				if (index >= 0 && shipList[index].getDiedStatus() == 1)
 				{
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob,ob.getShipId());
+					if(index!=-1)
 					ob.Greed_chaseShip(index);
+					cout << "\n my target died and now chasing another ship==>" << index;
 					//cout << "\n called find_ship_to_kill";
 					//cout << "\n my id=>" << ob.getShipId() << " target id=>" << index;
 				}
@@ -74,8 +77,11 @@ namespace user1
 				{
 					cout << "\n my ship collided,"<<e.shipCollision.getShipId()[0]<<" finding new hunt..";
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob,e.shipCollision.getShipId()[0]);
-					cout << "\n new hunt is==>" << index;
-					ob.Greed_chaseShip(index);
+					if (index != -1)
+					{
+						cout << "\n new hunt is==>" << index;
+						ob.Greed_chaseShip(index);
+					}
 
 				}
 				deque<Event> q = ob.getPassiveEvent();
