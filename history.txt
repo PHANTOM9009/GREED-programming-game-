@@ -71,8 +71,5 @@ so now we will be working on it
  ----------------------------------------------------------------------------------------------------------------------------------------
  SQL schema for the game
  
- --------------------------------------------------------------------------------------------
- Testing is left of the new logic to increase frame rate in case of more number of players,
- now i am starting to work on the database for the game.
- then i will work on the website of the game.
+ 
  

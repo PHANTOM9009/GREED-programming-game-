@@ -67,8 +67,6 @@ unordered_map<int, user_credentials> user_cred;
 
 SOCKET socket_listen;//the only UDP socket that will be used to transmit the data
 SOCKET lobby_socket;
-SOCKET send_terminal;//special UDP socket to send data to the client terminal
-vector<recv_data> data_terminal;//data for the client terminal
 
 bool gameOver = false;//making it public so that the running theads of chaseShip1 and nav_data_processor can check its status and closes themselves.
 std::string GetLastErrorAsString()
@@ -316,29 +314,7 @@ void connector_show(vector<int>& socks, unordered_map<int,sockaddr_storage>& soc
 }
 
 
-void send_data_terminal(unordered_map<int, sockaddr_storage> socket_id,Mutex *mutx)
-{
-	while (1)
-	{
-		unique_lock<mutex> lk(mutx->send_terminal);
-		mutx->cond_terminal.wait(lk, [] {return !data_terminal.empty(); });
-		vector<recv_data> data_terminal_copy;
-		for (auto i : data_terminal)
-		{
-			data_terminal_copy.push_back(i);
-		}
-		data_terminal.clear();
-		lk.unlock();
-		for (int i = 0; i < data_terminal_copy.size(); i++)
-		{
-			int bytes = sendto(socket_listen, (char*)&data_terminal_copy[i], sizeof(data_terminal_copy[i]), 0, (sockaddr*)&socket_id[i], sizeof(socket_id[i]));
-			if (bytes < 1)
-			{
-				cout << "\n could not send data to==>" << i << " due to the reason==>" << GetLastErrorAsString();
-			}
-		}
-	}
-}
+
 void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n,unordered_map<int,sockaddr_storage>& socket_id,vector<int> &socket_display)//taking the ship object so as to access the list of the player
 {
 
@@ -403,8 +379,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	thread t(&control1::nav_data_processor, &con, ref(pl1), mutx);
 	t.detach();
 	List<graphics::animator> animation_list;
-	thread t1(send_data_terminal, socket_id, mutx);
-	t1.detach();
+
 	vector<int> checker;
 
     double avg_send = 0;//total send
@@ -1177,19 +1152,39 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			data1.gameOver = gameOver;
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-						
-			for(int sid=0;sid<n;sid++)
+			while(client_terminal.size()!=0)
 			{
-			
-				
+				int sid = client_terminal[0];
+				select(socket_listen + 1, 0, &write, 0, &timeout);
+				if (FD_ISSET(socket_listen, &write))
+				{
 					shipData_forMe sdfm;
 					control.me_to_packet(sdfm, sid, pl1);
 					data1.shipdata_forMe = sdfm;
 					//sending the data
 					data1.packet_id = total_time;
-					unique_lock<mutex> lk(mutx->send_terminal);
-					data_terminal.push_back(data1);
-				
+					int bytes = sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&socket_id[sid], sizeof(socket_id[sid]));
+					if (bytes < 1)
+					{
+						cout <<"\n could not send the bytes to the client terminal==>"<< GETSOCKETERRNO() << endl;
+
+					}
+					if (data1.gameOver)
+					{
+						//cout << "\n sent to the client terminal that the game is over at packet number==>" << data1.packet_id;
+					}
+					if (bytes > 0)
+					{
+						client_terminal.pop_front();//popped back
+						//cout << "\n bytes sent to the client..";
+						//cout << "\nsent to the client with the id===>" << sid;
+					}
+
+
+					//data is sent
+				//}
+
+				}
 			}
 			
 		
@@ -1332,18 +1327,20 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sending.restart();
 			
 			//apply this logic and then check if it is  working with 7 players or not
-			select(socket_listen + 1, 0, &write, 0, &timeout);//
-			if (FD_ISSET(socket_listen, &write))
+			while (client_display.size() != 0)
 			{
-			for(int i=0;i<socket_id_display.size();i++)
-			{
-			auto it = socket_id_display.begin();
-			advance(it, i);
-				write = master;
-				
+				if (socket_id_display.find(client_display[0]) == socket_id_display.end())
+				{
+					client_display.pop_front();
+					//cout << "\n popped the value";
+					continue;
+				}
+				select(socket_listen + 1, 0, &write, 0, &timeout);//
+				if (1)
+				{
 
 					ship_packet.total_secs = total_secs;
-					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&it->second, sizeof(it->second));
+					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&socket_id_display[client_display[0]], sizeof(socket_id_display[client_display[0]]));
 						if (bytes < 1)
 						{
 							cout << "\n couldn't sent bytes to the client display unit";
@@ -1369,7 +1366,6 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			recv_data.restart();
 			for(int j=0;j<n;j++)
 			{
-				read = master;
 				select(socket_listen+1, &read, 0, 0, &timeout);
 			
 				if (FD_ISSET(socket_listen, &read))
@@ -1512,8 +1508,6 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 	socket_listen = socket(bind_address->ai_family,
 		bind_address->ai_socktype, bind_address->ai_protocol);
-	send_terminal= socket(bind_address->ai_family,
-		bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(socket_listen))
 	{
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
@@ -1526,11 +1520,6 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		bind_address->ai_addr, bind_address->ai_addrlen)) {
 		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
 	
-	}
-	if (::bind(send_terminal,
-		bind_address->ai_addr, bind_address->ai_addrlen)) {
-		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
-
 	}
 	freeaddrinfo(bind_address);
 	
@@ -1837,7 +1826,6 @@ int main(int argc,char* argv[])
 		startup(max_player, socket_id, port);
 	
 		CLOSESOCKET(socket_listen);
-		CLOSESOCKET(send_terminal);
 		cout << "\n this round of game is over";
 	}
 
