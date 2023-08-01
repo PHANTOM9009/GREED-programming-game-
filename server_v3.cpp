@@ -411,8 +411,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	vector<int> prev_packet_id(n, -1);//previous packet id received from the player so that any old packet may not be use
 	int game_over_frame;//at which frame did the game get over
 	int checked = 0;
+	//checking for the socket connection
+	
 	while (1)
 	{
+
+		
 		sf::Time tt = clock1.restart();
 		ep += tt.asSeconds();
 		if (ep > 1)
@@ -428,6 +432,15 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 		if (next_frame != current_frame)
 		{
+
+			//creating a method for sending data to the clients
+			deque<int> client_terminal;
+			deque<int> client_display;
+			for (int i = 0; i < max_player; i++)
+			{
+				client_terminal.push_back(i);
+				client_display.push_back(i);
+			}
 			current_frame = next_frame;
 
 			read = master;
@@ -502,6 +515,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				checked = 1;
 				for (int k = 0; k < pl1.size(); k++)
 				{
+					unique_lock<mutex> lk(mutx->m[k]);
 					pl1[k]->gameOver = true;
 				}
 				unique_lock<mutex> lk(mutx->gameOver_check);
@@ -1138,30 +1152,32 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			data1.gameOver = gameOver;
 			shipData_exceptMe sdem[20];
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-			
+			while(client_terminal.size()!=0)
+			{
+				int sid = client_terminal[0];
 				select(socket_listen + 1, 0, &write, 0, &timeout);
 				if (FD_ISSET(socket_listen, &write))
 				{
-					for (int sid = 0; sid < n; sid++)
-					{
-					//
-					//if (FD_ISSET(socket_listen, &write))
-					//{
-
 					shipData_forMe sdfm;
 					control.me_to_packet(sdfm, sid, pl1);
 					data1.shipdata_forMe = sdfm;
 					//sending the data
 					data1.packet_id = total_time;
 					int bytes = sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&socket_id[sid], sizeof(socket_id[sid]));
-					if (bytes == -1)
+					if (bytes < 1)
 					{
-						cout << GETSOCKETERRNO() << endl;
+						cout <<"\n could not send the bytes to the client terminal==>"<< GETSOCKETERRNO() << endl;
 
 					}
 					if (data1.gameOver)
 					{
 						//cout << "\n sent to the client terminal that the game is over at packet number==>" << data1.packet_id;
+					}
+					if (bytes > 0)
+					{
+						client_terminal.pop_front();//popped back
+						//cout << "\n bytes sent to the client..";
+						//cout << "\nsent to the client with the id===>" << sid;
 					}
 
 
@@ -1309,30 +1325,37 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			* 
 			*/
 			sending.restart();
-			select(socket_listen+ 1, 0,&write, 0, &timeout);//
 			
-			if (FD_ISSET(socket_listen, &write))
+			//apply this logic and then check if it is  working with 7 players or not
+			while (client_display.size() != 0)
 			{
-
-				ship_packet.total_secs = total_secs;
-				for (int i = 0; i < socket_id_display.size(); i++)
+				if (socket_id_display.find(client_display[0]) == socket_id_display.end())
 				{
-					auto it = socket_id_display.begin();
-					advance(it, i);
-					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&it->second, sizeof(it->second));
-					if (bytes < 1)
-					{
-						cout << "\n couldn't sent bytes to the client display unit";
-					}
-					if (ship_packet.gameOver)
-					{
-						cout << "\n sent to the client display unit that the game is over at==>" << ship_packet.packet_no;
-					}
+					client_display.pop_front();
+					//cout << "\n popped the value";
+					continue;
 				}
-				
-					
-			
-				//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
+				select(socket_listen + 1, 0, &write, 0, &timeout);//
+				if (1)
+				{
+
+					ship_packet.total_secs = total_secs;
+					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&socket_id_display[client_display[0]], sizeof(socket_id_display[client_display[0]]));
+						if (bytes < 1)
+						{
+							cout << "\n couldn't sent bytes to the client display unit";
+						}
+						if (ship_packet.gameOver)
+						{
+							cout << "\n sent to the client display unit that the game is over at==>" << ship_packet.packet_no;
+						}
+						if (bytes > 0)
+						{
+							client_display.pop_front();
+						}
+
+					//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
+				}
 			}
 			avg_send2 += sending.getElapsedTime().asSeconds();
 			avg_send += sending.getElapsedTime().asSeconds();
