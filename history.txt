@@ -70,6 +70,29 @@ so now we will be working on it
  I have tried to connect the code with azure SQL but all the efforts went in vain. Now we go for SQLite since this is the only viable and sped up option here
  ----------------------------------------------------------------------------------------------------------------------------------------
  SQL schema for the game
+ ------------------------------------------
+ the player 1 is not sending the navigation data to the server in one attempt;
+ i checked if the client server communication is okay or not, in one try, it was okay and the server should respond with proper frame rate
+ the issue seems to be with the client_v2 this will be checked next after i am done with the navigation issue.
+ ------------------------------------------------------------------------------------
+ the issue seems to be the packet missing, the missing is not small, its about 100 packets missing while sending to the client display unit which is running 
+ in the same computer as the server. check for the clients that what is the missing packet, and then solve this issue.
+ this is the biggest issue. the problem does not seem to be with the client terminal.
+ the problem is missing packets that the server is sending to the client display unit. this shit has to be solved. by tomorrow
+ -----------------------------------------------------------------------
  
- 
+ the new concept is as follows:
+ every game server will have 3 ports:
+ 1. for sending data to the client terminal
+ 2. for sending data to the client display unit.
+ 3. for recving data from the client terminal unit.
+
+ recving will run in the same thread as that of game loop, while sending will run in 2 threads one for each because sending is taking ample of time
+ and we need to make sure no one is left in getting the new and updted data specially the client display unit which is frame intensive.
+ this concept seems to be okay and working, we code it tomorrow, and test it tomorrow's night. if this is successfull, i dont think anything is left
+ we should start working on the database and the website for the game.
+ PS: i didn't do anything with the game, just printed some texts and it started workin fine, i dont know why does this happen
+ for the client display unit, i am not using select as to check whether the socket is ready to send the data or not. I am just sending it.
+ beacuase the missing packet range was too high to be taken causually.
+ ------------------------------------------------------------------------------------------------------------------------------------
  

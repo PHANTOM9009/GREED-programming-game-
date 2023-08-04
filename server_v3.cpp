@@ -413,6 +413,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	int checked = 0;
 	//checking for the socket connection
 	
+	int prev_packet_terminal = 0;
+	int prev_packet_display = 0;
+	
 	while (1)
 	{
 
@@ -561,6 +564,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						}
 					}
 					pl1[i]->udata.clear();
+					//printing the position of ship one
+					
 
 					for (int j = 0; j < pl1[i]->bullet_info.size(); j++)
 					{
@@ -1049,7 +1054,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				}
 				//	lk.unlock();
 			}
-			ship_packet.packet_no = total_time;
+			
 			ship_packet.no_of_players = pl1.size();
 			int bullet_no = 0;//number of total bullets
 
@@ -1175,7 +1180,23 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					}
 					if (bytes > 0)
 					{
+						if (sid == 1)//for 1 only
+						{
+							auto now = std::chrono::system_clock::now();
+							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+							//cout << "\n sent data to client terminal=>" << data1.packet_id << " at the time==> " <<
+							//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						
+							if (data1.packet_id - prev_packet_terminal > 5)
+							{
+								cout << "\n the packet difference between client terminal and server is==>" << data1.packet_id - prev_packet_terminal;
+							}
+							prev_packet_terminal = data1.packet_id;
+						}
 					}
 
 
@@ -1331,9 +1352,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				advance(it, i);
 				write = master;
 				select(socket_listen + 1, 0, &write, 0, &timeout);//
-				if (FD_ISSET(socket_listen,&write))
+				if (1)
 				{
-
+					ship_packet.packet_no = total_time;
 					ship_packet.total_secs = total_secs;
 					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&it->second, sizeof(it->second));
 						if (bytes < 1)
@@ -1346,9 +1367,20 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						}
 						if (bytes > 0)
 						{
-							client_display.pop_front();
-						}
+							auto now = std::chrono::system_clock::now();
+							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
+							//cout << "\n sent data to client display unit==>" << ship_packet.packet_no << " at the time==> " <<
+							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+							if (ship_packet.packet_no - prev_packet_display > 5)
+							{
+								cout << "\n the difference between now and prev packet is==>" << ship_packet.packet_no - prev_packet_display;
+							}
+						}
+						prev_packet_display = ship_packet.packet_no;
 					//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
 				}
 			}
@@ -1397,7 +1429,22 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
-						cout << "\n data came from the client==>" << sid;
+						if (sid == 1)//for 1 only
+						{
+							auto now = std::chrono::system_clock::now();
+							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+							if (data2.shipdata_forServer.size_navigation > 0)
+							{
+								cout << "\n called for navigation at the frame==>" << total_secs;
+								
+							}
+							//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+							//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+						}
+
 					}
 					else if(bytes>0)
 					{

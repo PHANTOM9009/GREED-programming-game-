@@ -60,6 +60,7 @@ string username = "username";
 string password = "password";
 string game_token;
 int my_id;//id of the player in the game
+string ip_address;//ip to which the client will connect to..
 bool find(int id, int hit[100],int size)
 {
 	for (int i = 0; i < size; i++)
@@ -85,7 +86,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
 	
-	if (getaddrinfo("172.171.234.70",port_str, &hints, &peer_address)) {
+	if (getaddrinfo(ip_address.c_str(), port_str, &hints, &peer_address)) {
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
@@ -314,6 +315,14 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					}
 					previous_packet = data1.packet_id;
 					gameOver = data1.gameOver;
+					auto now = std::chrono::system_clock::now();
+					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+					cout << "\n recved data from the client terminal =>" <<data1.packet_id << " at the time==> " <<
+						hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 				}
 				else
 				{
@@ -329,7 +338,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			//std::time_t result = std::time(nullptr);
 		    //cout << "\n----------------------------------------------------------";
 			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
-			if (gameOver)       
+			if (gameOver||pl1[ship_id]->died==1)
 			{
 				cout << "\n breaking because the game is over(as told by the server, or the ship has died)";
 				break;
@@ -1058,8 +1067,19 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						if (bytes < 1)
 						{
 							cout << "\n breaking because not being able to the send the data";
-							CLOSESOCKET(peer_socket);
+							//CLOSESOCKET(peer_socket);
 							break;
+						}
+						else
+						{
+							auto now = std::chrono::system_clock::now();
+							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+							cout << "\n sent data to the server=>" << data1.packet_id << " at the time==> " <<
+								hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						}
 
 				}
@@ -1107,7 +1127,7 @@ int connect_to_lobby_server()
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo("172.171.234.70", "8080", &hints, &bind_address);
+	getaddrinfo(ip_address.c_str(), "8080", &hints, &bind_address);
 	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
@@ -1152,8 +1172,9 @@ int connect_to_lobby_server()
 int main(int argc,char* argv[])
 {
 	//extracting the data
-		
-#if defined(_WIN32)
+	cout << "\n enter the ip address of the server==>";
+	cin >> ip_address;
+#if defined(_WIN32) 
 	WSADATA d;
 	if (WSAStartup(MAKEWORD(2, 2), &d)) {
 		fprintf(stderr, "Failed to initialize.\n");
@@ -1165,7 +1186,7 @@ int main(int argc,char* argv[])
 	 port=connect_to_lobby_server();
 	socket_listen = connect_to_server(port);   
 	
-	
+	/*
 	//added the thing that when the game overs, the client will break the loop and close the connection.
 	char path_c[MAX_PATH];
 	string path;
@@ -1186,7 +1207,7 @@ int main(int argc,char* argv[])
 	string id = to_string(my_id);
 	char cwd[256];
 
-	string commandLine = path + port_str + " " + id + " " + username + " " + password+" "+game_token;
+	string commandLine = path + port_str + " " + id + " " + username + " " + password + " " + game_token + " " + ip_address;
 	cout << "\n command line is==>" << commandLine;
 	char str[100];
 	strcpy(str, commandLine.c_str());
@@ -1204,7 +1225,7 @@ int main(int argc,char* argv[])
 		//return 0;
 	}
 	
-	
+	*/
 	
 	//receiving the startupinfo data
 	Startup_info_client start_data;
@@ -1291,12 +1312,12 @@ int main(int argc,char* argv[])
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
 	
-	
+	/*
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
-	
+	*/
 	
 	
 

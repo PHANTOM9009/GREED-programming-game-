@@ -438,12 +438,6 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 		int si = free_lobby.size();
 		for(int i=0;i<free_lobby.size();i++)
 		{
-			
-			if (i == 0)
-			{
-				cout << "\n yes it was 0 once";
-			}
-		
 			if (player_queue.size()  <= max_player-free_lobby[i].second)//game server has more requirment
 			{
 				//transfer all the sockets to that particular process

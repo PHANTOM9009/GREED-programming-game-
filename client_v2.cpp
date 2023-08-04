@@ -45,6 +45,7 @@ int my_id;//id of the ship in the game
 string game_token;//token of the game
 string username;
 string password;
+string ip_address;
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 {
 	pl1[i]->ship_id = ob.ship_id;
@@ -97,7 +98,7 @@ SOCKET connect_to_server()//first connection to the server
 	struct addrinfo* server_add;
 	char buff[1000];
 
-	getaddrinfo("127.0.0.1", server_port, &hints, &server_add);
+	getaddrinfo(ip_address.c_str(), server_port, &hints, &server_add);
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
@@ -355,6 +356,8 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 	int previous_packet = -1;
 	bool started = false;//to check if the game has started or not;
+	int prev_x=0, prev_y = 0;
+	int prev_packet = 0;
 	while (window.isOpen())
 	{
 		temp_set = master;
@@ -476,7 +479,15 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				gone = 1;
 				bytes_received = recv(peer_socket, (char*)&ship_data, sizeof(ship_data), 0);
 
-
+				
+				if (abs(ship_data.ob[1].absolutePosition.x - prev_x) > 2 || abs(ship_data.ob[1].absolutePosition.y - prev_y) > 2)
+				{
+					cout << "\n discrepency in position of the ship at==>" << ship_data.packet_no << " packet difference is==>" << ship_data.packet_no - previous;
+			
+				}
+				//cout << "\n position of 0th ship==>" << ship_data.ob[0].absolutePosition.x << " " << ship_data.ob[0].absolutePosition.y;
+				prev_x = ship_data.ob[1].absolutePosition.x;
+				prev_y = ship_data.ob[1].absolutePosition.y;
 				if (bytes_received < 1)
 				{
 					cout << "\n server disconnected the connection";
@@ -492,6 +503,14 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				previous = ship_data.packet_no;
 				gameOver = ship_data.gameOver;
 				started = true;
+				auto now = std::chrono::system_clock::now();
+				auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+				auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+				auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+				auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+			//	cout << "\n recved data from the server==>" << ship_data.packet_no << " at the time==> " <<
+					//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 			}
 
 			/*code to update the timer*/
@@ -913,7 +932,7 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 	//extracting the data
 	
 	//setting the port number of the server that has to connected with
-	if (argc > 4)
+	if (argc > 5)
 	{
 		strcpy(server_port, argv[1]);
 			std::cout << "Received value from the parent process: " << server_port << std::endl;
@@ -922,7 +941,7 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 			username = argv[3];
 			password = argv[4];
 			game_token = argv[5];
-		
+			ip_address = argv[6];
 	}
 
 	
