@@ -65,8 +65,14 @@ vector<int> socket_display;//depracated we dont use it anymore, we are using an 
 unordered_map<int,sockaddr_storage> socket_id_display;
 unordered_map<int, user_credentials> user_cred;
 
-SOCKET socket_listen;//the only UDP socket that will be used to transmit the data
-SOCKET lobby_socket;
+deque<pair<int,recv_data>> terminal_data;//data queue to send data to the client terminal unit..pair of id and data
+deque<pair<int, top_layer>> display_data;//data for the display unit of the client: pair of id and top_layer data
+
+SOCKET socket_listen;//UDP socket to send data to the client terminal unit
+SOCKET socket_listen2;//UDP socket to send data to the client display unit
+SOCKET recver;//UDP socket to recv data from the client terminal unit
+
+SOCKET lobby_socket;//TCP  socket to talk to the lobby server
 
 bool gameOver = false;//making it public so that the running theads of chaseShip1 and nav_data_processor can check its status and closes themselves.
 std::string GetLastErrorAsString()
@@ -258,7 +264,7 @@ void connector(vector<int>& socks, unordered_map<int, int>& sockets_id, int n)//
 	SOCKET max_socket = socket_listen;
 	FD_SET master;
 	FD_ZERO(&master);
-	FD_SET(socket_listen, &master);
+	FD_SET(recver, &master);
 	while (count < n)
 	{
 		FD_SET reads;
@@ -312,8 +318,77 @@ void connector_show(vector<int>& socks, unordered_map<int,sockaddr_storage>& soc
 	 
 	
 }
-
-
+void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
+{
+	while (1)
+	{
+		unique_lock<mutex> lk1(m->gameOver_check);
+		if (gameOver)
+		{
+			cout << "\n breaking from the send_data_terminal..";
+			break;
+		}
+		lk1.unlock();
+		unique_lock<mutex> lk(m->send_terminal);
+		m->cond_terminal.wait(lk, [] {return !terminal_data.empty(); });
+		//terminal_data queue has data now make its copy and clear the queue
+		deque<pair<int,recv_data>> data;
+		for (int i = 0; i < terminal_data.size(); i++)
+		{
+			data.push_back(terminal_data[i]);
+			
+		}
+		terminal_data.clear();//clearing the queue
+		lk.unlock();
+		//now start sending the data over the network to each individual clients..
+		for (int i = 0; i < data.size(); i++)
+		{
+			//send the data to the client
+			int bytes = sendto(socket_listen, (char*)&data[i].second, sizeof(data[i].second), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
+			if (bytes < 0)
+			{
+				cout << "\n error in sending the data to the client==>"<<i<<" due to the reason==>"<<GetLastErrorAsString();
+			}
+		}	
+	}
+}
+void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
+{
+	while (1)
+	{
+		unique_lock<mutex> lk1(m->gameOver_check);
+		if (gameOver)
+		{
+			cout << "\n breaking from send_data_display";
+			break;
+		}
+		lk1.unlock();
+		unique_lock<mutex> lk(m->send_display);
+		m->cond_display.wait(lk, [] { return !display_data.empty(); });
+		//display_data queue has data now make its copy and clear the queue
+		deque<pair<int, top_layer>> data;
+		for (int i = 0; i < display_data.size(); i++)
+		{
+			data.push_back(display_data[i]);
+		}
+		display_data.clear();
+		lk.unlock();
+		
+		//now sending the data using socket_listen2
+		for (int i = 0; i < data.size(); i++)
+		{
+			int bytes = sendto(socket_listen2, (char*)&data[i].second, sizeof(data[i].second), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
+			if (bytes > 0)
+			{
+				//cout << "\n sent bytes to the client display unit==>" << bytes;
+			}
+			if (bytes < 0)
+			{
+				cout << "\n error in sending the data to the client display unit==>" << i << " due to the reason==>" << GetLastErrorAsString();
+			}
+		}
+	}
+}
 
 void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n,unordered_map<int,sockaddr_storage>& socket_id,vector<int> &socket_display)//taking the ship object so as to access the list of the player
 {
@@ -374,10 +449,17 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	FD_ZERO(&master);
 	FD_ZERO(&read);
 	FD_ZERO(&write);
-	FD_SET(socket_listen,&master);
+	FD_SET(recver,&master);
 	control1 control;
 	thread t(&control1::nav_data_processor, &con, ref(pl1), mutx);
 	t.detach();
+
+	thread t1(send_data_terminal, socket_id, mutx);
+	t1.detach();
+
+	thread t3(send_data_display, socket_id_display, mutx);
+	t3.detach();
+		
 	List<graphics::animator> animation_list;
 
 	vector<int> checker;
@@ -1063,7 +1145,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			for (int i = 0; i < pl1.size(); i++)
 			{
 				ship_packet.ob[i].ship_id = i;
-				ship_packet.ob[i].name = pl1[i]->name;
+				strcpy(ship_packet.ob[i].name,pl1[i]->name.c_str());
 				ship_packet.ob[i].seconds = pl1[i]->seconds;
 				ship_packet.ob[i].minutes = pl1[i]->minutes;
 				//initialize all the members of class pack_ship
@@ -1151,6 +1233,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			
 			
 			memset((void*)&data1, 0, sizeof(data1));
+			//preparing the packet for client terminal
 			strcpy(data1.token, my_token.c_str());
 			data1.packet_id = total_time;
 			data1.s1 = pl1.size();
@@ -1159,53 +1242,16 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
 			for(int sid=0;sid<max_player;sid++)
 			{
-				write = master;
-				select(socket_listen + 1, 0, &write, 0, &timeout);
-				if (FD_ISSET(socket_listen, &write))
-				{
 					shipData_forMe sdfm;
 					control.me_to_packet(sdfm, sid, pl1);
 					data1.shipdata_forMe = sdfm;
 					//sending the data
 					data1.packet_id = total_time;
-					int bytes = sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&socket_id[sid], sizeof(socket_id[sid]));
-					if (bytes < 1)
-					{
-						cout <<"\n could not send the bytes to the client terminal==>"<< GETSOCKETERRNO() << endl;
-
-					}
-					if (data1.gameOver)
-					{
-						//cout << "\n sent to the client terminal that the game is over at packet number==>" << data1.packet_id;
-					}
-					if (bytes > 0)
-					{
-						if (sid == 1)//for 1 only
-						{
-							auto now = std::chrono::system_clock::now();
-							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-
-							//cout << "\n sent data to client terminal=>" << data1.packet_id << " at the time==> " <<
-							//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-						
-							if (data1.packet_id - prev_packet_terminal > 5)
-							{
-								cout << "\n the packet difference between client terminal and server is==>" << data1.packet_id - prev_packet_terminal;
-							}
-							prev_packet_terminal = data1.packet_id;
-						}
-					}
-
-
-					//data is sent
-				//}
-
-				}
+					unique_lock<mutex> lk(mutx->send_terminal);
+					terminal_data.push_back(pair<int, recv_data>(sid, data1));
+					
 			}
-			
+			mutx->cond_terminal.notify_one();//notify that the data is ready to be read from the queue.			
 		
 			sf::Time time2 = sending.getElapsedTime();
 			avg_send1 += time2.asSeconds();
@@ -1350,43 +1396,18 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			{
 				auto it = socket_id_display.begin();
 				advance(it, i);
-				write = master;
-				select(socket_listen + 1, 0, &write, 0, &timeout);//
-				if (1)
-				{
-					ship_packet.packet_no = total_time;
-					ship_packet.total_secs = total_secs;
-					int bytes = sendto(socket_listen, (char*)&ship_packet, sizeof(ship_packet), 0, (sockaddr*)&it->second, sizeof(it->second));
-						if (bytes < 1)
-						{
-							cout << "\n couldn't sent bytes to the client display unit";
-						}
-						if (ship_packet.gameOver)
-						{
-							cout << "\n sent to the client display unit that the game is over at==>" << ship_packet.packet_no;
-						}
-						if (bytes > 0)
-						{
-							auto now = std::chrono::system_clock::now();
-							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-
-							//cout << "\n sent data to client display unit==>" << ship_packet.packet_no << " at the time==> " <<
-							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-							if (ship_packet.packet_no - prev_packet_display > 5)
-							{
-								cout << "\n the difference between now and prev packet is==>" << ship_packet.packet_no - prev_packet_display;
-							}
-						}
-						prev_packet_display = ship_packet.packet_no;
-					//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
-				}
+				ship_packet.packet_no = total_time;
+				ship_packet.total_secs = total_secs;
+				
+				prev_packet_display = ship_packet.packet_no;
+				unique_lock<mutex> lk(mutx->send_display);
+				display_data.push_back(pair<int, top_layer>(it->first, ship_packet));
+				//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
+				
 			}
-			avg_send2 += sending.getElapsedTime().asSeconds();
-			avg_send += sending.getElapsedTime().asSeconds();
-
+			//notifying the vairable
+			mutx->cond_display.notify_one();//notified...
+			
 
       		//recv the data here and update for the next frame
 			sf::Clock recv_data;
@@ -1396,19 +1417,20 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			{
 				if (pl1[j]->died == 1)
 				{
+					
 					continue;
 				}
-				read = master;
-				select(socket_listen+1, &read, 0, 0, &timeout);
+				
+				select(recver+1, &read, 0, 0, &timeout);
 			
-				if (FD_ISSET(socket_listen, &read))
+				if (FD_ISSET(recver, &read))
 				{
 					send_data data2;
 					memset((void*)&data2, 0, sizeof(data2));
 					struct sockaddr_storage client_address;
 					socklen_t client_len = sizeof(client_address);
-					int bytes = recvfrom(socket_listen, (char*)&data2, sizeof(data2), 0, (sockaddr*)&client_address, &client_len);
-					
+					int bytes = recvfrom(recver, (char*)&data2, sizeof(data2), 0, (sockaddr*)&client_address, &client_len);
+					//bytes will be recved by the recver socket
 					if (bytes < 1)
 					{
 					    cout << "\n could not recv the data from the client==>" <<j<<" "<< GetLastErrorAsString();
@@ -1487,7 +1509,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	}
 	CLOSESOCKET(socket_listen);
 	
-	
+	CLOSESOCKET(socket_listen2);
+	CLOSESOCKET(recver);
 	
 	//CLOSESOCKET(socket_display[0]);
 
@@ -1548,83 +1571,145 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	sprintf(port_str, "%d", port);
 	cout << "\n running on port=>" << port_str;
 	getaddrinfo(0, port_str, &hints, &bind_address);
-
+	struct addrinfo* bind_address1;
+	getaddrinfo(0, "8082", &hints, &bind_address1);
+	struct addrinfo* bind_address2;
+	getaddrinfo(0, "8083", &hints, &bind_address2);
+	
 
 	printf("Creating socket...\n");
 
 	socket_listen = socket(bind_address->ai_family,bind_address->ai_socktype, bind_address->ai_protocol);
+	socket_listen2 = socket(bind_address1->ai_family, bind_address1->ai_socktype, bind_address1->ai_protocol);
+	recver = socket(bind_address2->ai_family, bind_address2->ai_socktype, bind_address2->ai_protocol);
+	
 	if (!ISVALIDSOCKET(socket_listen))
 	{
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		
 	}
+	if (!ISVALIDSOCKET(socket_listen2))
+	{
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 
+	}
+	if (!ISVALIDSOCKET(recver))
+	{
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 
+	}
 	printf("Binding socket to local address...\n");
 	if (::bind(socket_listen,
 		bind_address->ai_addr, bind_address->ai_addrlen)) {
 		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
 	
 	}
+	if (::bind(socket_listen2,
+		bind_address1->ai_addr, bind_address1->ai_addrlen)) {
+		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+
+	}
+	if (::bind(recver,
+		bind_address2->ai_addr, bind_address2->ai_addrlen)) {
+		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+
+	}
 	freeaddrinfo(bind_address);
+	freeaddrinfo(bind_address1);
+	freeaddrinfo(bind_address2);
 	
 	fd_set master;
 	FD_ZERO(&master);
 	FD_SET(socket_listen, &master);
+	FD_SET(socket_listen2, &master);
+	
 	fd_set reads;
 	FD_ZERO(&reads);
 	int idc = 0;
 	int nn = 0;
+	SOCKET max_socket = max(socket_listen, socket_listen2);
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 10;
 	while (max_player+1> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
-		greet_client gc;
-		struct sockaddr_storage client_address;
-		socklen_t client_len = sizeof(client_address);
-		int read;
-		int bytes_received = recvfrom(socket_listen, (char*)&gc, sizeof(gc), 0, (struct sockaddr*)&client_address, &client_len);
-		if (bytes_received < 1)
+		reads = master;
+		select(max_socket + 1, &reads, 0, 0, &timeout);
+		if(FD_ISSET(socket_listen,&reads))
 		{
-			//cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
-		}
+				greet_client gc;
+				struct sockaddr_storage client_address;
+				socklen_t client_len = sizeof(client_address);
+				int read;
+				int bytes_received = recvfrom(socket_listen, (char*)&gc, sizeof(gc), 0, (struct sockaddr*)&client_address, &client_len);
+				if (bytes_received < 1)
+				{
+					//cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
+				}
 		
-		else if (bytes_received > 1)
-		{
-			//checking if the client is authentic or not, if authentic move forwrd and give the client an id, else reject the connection
-			int found = 0;
+				else if (bytes_received > 1)
+				{
+					//checking if the client is authentic or not, if authentic move forwrd and give the client an id, else reject the connection
+					int found = 0;
+
+
+					if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
+					{
+						read = gc.code;
+						string sread = to_string(read);
+						//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
+						cout << "\n code recved is=>" << read;
+						if (sread[0] == '0')
+						{
+							socket_id[idc] = client_address;
+							//sending the id of the client to the client
+							int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
+							user_cred[idc] = gc.user_cred;//setting the user credential
+							idc++;
+							nn++;
+						}
+						
+						
+					}
+					else
+					{
+						cout << "\n client who did not have the correct game token tried to contact the game server..";
+					}
+				}
 			
-				
+			
+		}
+		if (FD_ISSET(socket_listen2, &reads))
+		{
+			greet_client gc;
+			struct sockaddr_storage client_address;
+			socklen_t client_len = sizeof(client_address);
+			int read;
+			int bytes_received = recvfrom(socket_listen2, (char*)&gc, sizeof(gc), 0, (struct sockaddr*)&client_address, &client_len);
+			if (bytes_received < 1)
+			{
+				//cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
+			}
+			else if (bytes_received > 1)
+			{
 				if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
 				{
 					read = gc.code;
 					string sread = to_string(read);
 					//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
 					cout << "\n code recved is=>" << read;
-					if (sread[0] == '0')
-					{
-						socket_id[idc] = client_address;
-						//sending the id of the client to the client
-						int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
-						user_cred[idc] = gc.user_cred;//setting the user credential
-						idc++;
-					}
-					else if (sread[0] == '1')
+					if (sread[0] == '1')
 					{
 						//finding the id of the client through the code sent by the display unit
 						int id = stoi(sread.substr(1, sread.length() - 1));
 						cout << "\n id sent is==>" << id;
 						socket_id_display[id] = client_address;
 						//sending the max_player to the display unit
-						int bytes1 = sendto(socket_listen, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address, client_len);
-
+						int bytes1 = sendto(socket_listen2, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address, client_len);
+						nn++;
 					}
-					nn++;
 				}
-				else
-				{
-					cout << "\n client who did not have the correct game token tried to contact the game server..";
-				}
-			
-			
+			}
 		}
 
 
@@ -1841,12 +1926,14 @@ int main(int argc,char* argv[])
 		//resetting here some static variables
 		Control::ship_list.clear();
 		Control::cannon_list.erase();
+		terminal_data.clear();
+		display_data.clear();
 		gameOver = 0;
 		graphics::total_secs = 0;
 		user_cred.clear();
 		startup(max_player, socket_id, port);
 	
-		CLOSESOCKET(socket_listen);
+		//all the sockets are closed before restarting the game'
 		cout << "\n this round of game is over";
 	}
 

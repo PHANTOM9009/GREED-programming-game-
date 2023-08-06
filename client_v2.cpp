@@ -38,7 +38,9 @@
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 
-SOCKET peer_socket;//the main socket that is used for all the data transfer in the game.
+SOCKET peer_socket;//the main socket that is used for handshaking only
+SOCKET recver_socket;//socket for recving data from the server
+
 int max_players;
 char server_port[10];
 int my_id;//id of the ship in the game
@@ -55,15 +57,18 @@ void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 	pl1[i]->killer_cannon_id = ob.killer_cannon_id;
 	
 	pl1[i]->killed_ships.clear();
-	/*
+	if (ob.killed_ships_size > 0)
+	{
+		cout << "\n killed ships came";
+	}
 	for (int j = 0; j < ob.killed_ships_size; j++)
 	{
 		pl1[i]->killed_ships.push_back(ob.killed_ships[j]);
 	}
-	*/
+	
 	
 	pl1[i]->score = ob.score;
-	//pl1[i]->name = ob.name;
+	pl1[i]->name = ob.name;
 	pl1[i]->front_abs_pos = ob.front_abs_pos;
 	pl1[i]->rear_abs_pos = ob.rear_abs_pos;
 	pl1[i]->dir = ob.dir;
@@ -95,21 +100,34 @@ SOCKET connect_to_server()//first connection to the server
 	memset(&hints, 0, sizeof(hints));
 	int res = 0;
 	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* server_add;
 	char buff[1000];
-
+	struct addrinfo* server_add1;
 	getaddrinfo(ip_address.c_str(), server_port, &hints, &server_add);
+	
+	getaddrinfo(ip_address.c_str(),"8082", &hints, &server_add1);
+	
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;
 	cout << endl;
 	SOCKET peer_socket = socket(server_add->ai_family, server_add->ai_socktype, server_add->ai_protocol);
-	cout << "\n socket number of the user is==>" << peer_socket;
+
+	recver_socket = socket(server_add1->ai_family, server_add1->ai_socktype, server_add1->ai_protocol);
+	
+	
 	if (!ISVALIDSOCKET(peer_socket))
+	{
+		cout << "\n socket not created==>" << GETSOCKETERRNO();
+	}
+	if (!ISVALIDSOCKET(recver_socket))
 	{
 		cout << "\n socket not created==>" << GETSOCKETERRNO();
 	}
 	/**/
 	connect(peer_socket, server_add->ai_addr, server_add->ai_addrlen);
+	
+	connect(recver_socket, server_add1->ai_addr, server_add1->ai_addrlen);
 	//sending the bytes to the server
 	
 	string msg = "1";//1 means that  this is client_v2 process
@@ -120,18 +138,19 @@ SOCKET connect_to_server()//first connection to the server
 	ob.user_cred = user_credentials(username, password);
 	strcpy(ob.token, game_token.c_str());
 
-	int bytes = sendto(peer_socket, (char*)&ob, sizeof(ob), 0, server_add->ai_addr, server_add->ai_addrlen);
+	int bytes = sendto(recver_socket, (char*)&ob, sizeof(ob), 0, server_add1->ai_addr, server_add1->ai_addrlen);//using the 2nd socket for everything
 	if (bytes > 1)
 	{
 		cout << "\n data sent to the server..=>" << var;
 	}
 	//receiving from the server how many players will play
-	int bytes1 = recv(peer_socket, (char*)&max_players, sizeof(max_players), 0);
+	int bytes1 = recv(recver_socket, (char*)&max_players, sizeof(max_players), 0);
 	if (bytes1 < 1)
 	{
 		cout << "\n couldnt recv the max player from the server=>" << GETSOCKETERRNO();
 	}
 	freeaddrinfo(server_add);
+	freeaddrinfo(server_add1);
 
 	return peer_socket;
 }
@@ -341,7 +360,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 	fd_set master;
 	FD_ZERO(&master);
-	FD_SET(peer_socket, &master);
+	FD_SET(recver_socket, &master);
 	fd_set temp_set;
 	FD_ZERO(&temp_set);
 	
@@ -358,6 +377,9 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	bool started = false;//to check if the game has started or not;
 	int prev_x=0, prev_y = 0;
 	int prev_packet = 0;
+
+	//sending something from recver_socket to check the connection endpoint
+	
 	while (window.isOpen())
 	{
 		temp_set = master;
@@ -383,7 +405,6 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 		{
 			gui.handleEvent(event);
 			if (event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape))
-
 			{
 				window.close();
 
@@ -466,18 +487,18 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			timeout.tv_sec = 0;
 			timeout.tv_usec = 10;
 
-			if (select(peer_socket + 1, &temp_set, NULL, NULL, &timeout) < 0)
+			if (select(recver_socket + 1, &temp_set, NULL, NULL, &timeout) < 0)
 			{
 				cout << "\n error in select";
 			}
-
+			
 			int bytes_received = -1;
-			if (FD_ISSET(peer_socket, &temp_set))
+			if (FD_ISSET(recver_socket, &temp_set))
 			{
 				memset((void*)&ship_data, 0, sizeof(ship_data));
 				//receiving the data
 				gone = 1;
-				bytes_received = recv(peer_socket, (char*)&ship_data, sizeof(ship_data), 0);
+				bytes_received = recv(recver_socket, (char*)&ship_data, sizeof(ship_data), 0);
 
 				
 				if (abs(ship_data.ob[1].absolutePosition.x - prev_x) > 2 || abs(ship_data.ob[1].absolutePosition.y - prev_y) > 2)
@@ -917,6 +938,8 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 		
 
 	}
+	CLOSESOCKET(peer_socket);
+	CLOSESOCKET(recver_socket);
 	cout << "\n avg bullet is=>" << avg_bullet / total_time;
 }
 
@@ -944,7 +967,6 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 			ip_address = argv[6];
 	}
 
-	
 	
 	
 	//connecting with the server_v3 here

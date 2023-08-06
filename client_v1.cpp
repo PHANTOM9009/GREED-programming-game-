@@ -61,6 +61,9 @@ string password = "password";
 string game_token;
 int my_id;//id of the player in the game
 string ip_address;//ip to which the client will connect to..
+
+SOCKET sending_socket;//socket to send data to the server
+//peer_socket is for recving data from the server
 bool find(int id, int hit[100],int size)
 {
 	for (int i = 0; i < size; i++)
@@ -85,12 +88,18 @@ SOCKET connect_to_server(int port)//first connection to the server
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
+	struct addrinfo* peer_address1;
 	
-	if (getaddrinfo(ip_address.c_str(), port_str, &hints, &peer_address)) {
+	if (getaddrinfo(ip_address.c_str(), port_str, &hints, &peer_address)) 
+	{
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
-
+	if (getaddrinfo(ip_address.c_str(), "8083", &hints, &peer_address1))
+	{
+		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
+		return 1;
+	}
 
 	printf("Remote address is: ");
 	char address_buffer[100];
@@ -106,12 +115,23 @@ SOCKET connect_to_server(int port)//first connection to the server
 	SOCKET socket_peer;
 	socket_peer = socket(peer_address->ai_family,
 		peer_address->ai_socktype, peer_address->ai_protocol);
+
+	sending_socket= socket(peer_address1->ai_family,
+		peer_address1->ai_socktype, peer_address1->ai_protocol);
 	if (!ISVALIDSOCKET(socket_peer)) {
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
-
+	if (!ISVALIDSOCKET(sending_socket)) {
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		return 1;
+	}
 	if (connect(socket_peer, peer_address->ai_addr, peer_address->ai_addrlen))
+	{
+		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+		return 1;
+	}
+	if (connect(sending_socket, peer_address1->ai_addr, peer_address1->ai_addrlen))
 	{
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
@@ -165,9 +185,15 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	long double frame_number = -1;//this is for packet id that the client will send to the server
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	fd_set master;
-	FD_ZERO(&master);
-	FD_SET(peer_socket, &master);
+	fd_set master_read;
+	FD_ZERO(&master_read);
+	FD_SET(peer_socket, &master_read);
+	
+	fd_set master_write;
+	FD_ZERO(&master_write);
+	FD_SET(sending_socket, &master_write);
+
+	
 	fd_set reads;
 	fd_set writes;
 	FD_ZERO(&reads);
@@ -232,8 +258,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				check_time = 0;
 			}
 
-			reads = master;
-			writes = master;
+			reads = master_read;
+			writes = master_write;
+			
 			cur_frame = next_frame;
 			//for handling the ship
 			total_time++;
@@ -321,8 +348,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-					cout << "\n recved data from the client terminal =>" <<data1.packet_id << " at the time==> " <<
-						hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					//cout << "\n recved data from the client terminal =>" <<data1.packet_id << " at the time==> " <<
+						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 				}
 				else
 				{
@@ -1044,9 +1071,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				memset((void*)&shipdata, 0, sizeof(shipdata));
 				memset((void*)&data2, 0, sizeof(data2));
 				
-				select(peer_socket + 1, 0, &writes, 0, &timeout);
+				select(sending_socket + 1, 0, &writes, 0, &timeout);
 
-				if (FD_ISSET(peer_socket, &writes))
+				if (FD_ISSET(sending_socket, &writes))
 				{
 					
 						control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
@@ -1062,7 +1089,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 
 
-						int bytes = send(peer_socket, (char*)&data2, sizeof(data2), 0);
+						int bytes = send(sending_socket, (char*)&data2, sizeof(data2), 0);
 											
 						if (bytes < 1)
 						{
@@ -1078,8 +1105,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-							cout << "\n sent data to the server=>" << data1.packet_id << " at the time==> " <<
-								hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+						//	cout << "\n sent data to the server=>" << data2.packet_id << " at the time==> " <<
+							//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						}
 
 				}
@@ -1094,6 +1121,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	cout << "\n average sending time==>" << avg_send / cc;
 
 	CLOSESOCKET(peer_socket);
+	CLOSESOCKET(sending_socket);
 	WSACleanup();
 
 }

@@ -83,9 +83,9 @@ so now we will be working on it
  
  the new concept is as follows:
  every game server will have 3 ports:
- 1. for sending data to the client terminal
- 2. for sending data to the client display unit.
- 3. for recving data from the client terminal unit.
+ 1. for sending data to the client terminal. (socket listen will be used for this.port=8081)
+ 2. for sending data to the client display unit.( having the port=8082)
+ 3. for recving data from the client terminal unit.(having the port=8083)
 
  recving will run in the same thread as that of game loop, while sending will run in 2 threads one for each because sending is taking ample of time
  and we need to make sure no one is left in getting the new and updted data specially the client display unit which is frame intensive.
@@ -95,4 +95,20 @@ so now we will be working on it
  for the client display unit, i am not using select as to check whether the socket is ready to send the data or not. I am just sending it.
  beacuase the missing packet range was too high to be taken causually.
  ------------------------------------------------------------------------------------------------------------------------------------
- 
+ now going to make the first function which will send data to the client terminal
+ remeber to close the additionally added sockets...
+ -------------------------------------------------------------------------------------------------------
+ 7th august 23:
+ congratulations!
+ the new logic seems to be working fine. there is no lag in the game..
+ there is something to write in the blog:
+ the client in UDP cannot recv anything first, the server will always send something first. this seems to be the rule.
+ so the server is reproducible as well, we just have to work the port play, to assign the required the ports to each part of the game server
+ this can be done tomorrow.
+ start to work on the database and the website, we are launching it next week. make a library as well, start writing blogs about the game
+ make videos tutorials on how to play the game and organize a championship based on the game.
+ also think about making this game multilingual, which is very easy.
+ just convert the entire class to a string format and read that data in python. since the client is in python the server will always be in c++
+ so we can do this./
+ GOOD NIGHT!
+ -------------------------------------------------------------------------------------------------------------------------------

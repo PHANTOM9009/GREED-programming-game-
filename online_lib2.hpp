@@ -428,7 +428,8 @@ public:
 	friend class Greed::bullet;
 	friend class Greed::shipCannon;
 	friend void chaseShip1(int, ship&);
-	//friend void send_data_terminal(unordered_map<int, sockaddr_storage>,Mutex*);
+	friend void send_data_terminal(unordered_map<int, sockaddr_storage>,Mutex*);
+	friend void send_data_display(unordered_map<int, sockaddr_storage>, Mutex*);
 	friend class Event;
 	friend class control1;
 
@@ -2149,13 +2150,15 @@ class control1
 		//transfer each data member from ob to pl1
 		pl1[id]->seconds = ob.seconds;
 		pl1[id]->minutes = ob.minutes;
-		/*
+		
 		pl1[id]->killer_ship_id = ob.killer_ship_id;
+		pl1[id]->killed_ships.clear();//clearing the previous killed ship so that no duplicate entry is there
 		for (int i = 0; i < ob.killed_ships_size; i++)
+			
 		{
 			pl1[id]->killed_ships.push_back(ob.killed_ships[i]);
 		}
-		*/
+		
 		pl1[id]->score = ob.score;
 	
 	
@@ -2227,7 +2230,7 @@ class control1
 		{
 			ob.killed_ships[i] = pl1[id]->killed_ships[i];
 		}
-		pl1[id]->killed_ships.clear();
+		
 
 		ob.score = pl1[id]->score;
 
@@ -2507,7 +2510,7 @@ private:
 	int killed_ships_size;
 	int killed_ships[10];//the ships that you killed
 	int score;
-	string name;
+	char name[15];
 	Greed::abs_pos front_abs_pos;//topmost coordinates of the tip of the ship:: will be updated in update_tile_pos
 	Greed::abs_pos rear_abs_pos;//endmost coordinates of the ship ==> will be updated in update_tile_pos
 	//Map::abs_pos absolutePosition;//always stores the top left coordinate of the ship tile
@@ -2538,12 +2541,7 @@ public:
 	{
 		isthere = false;
 	}
-	pack_ship(int s_id, string name)
-	{
-		this->ship_id = s_id;
-		this->name = name;
-
-	}
+	
 	friend class graphics;
 	friend void update_frame(deque<ship*>&, pack_ship&, int);
 };
