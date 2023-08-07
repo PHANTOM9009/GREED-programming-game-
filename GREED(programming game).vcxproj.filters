@@ -174,5 +174,6 @@
   <ItemGroup>
     <Text Include="dependency.txt" />
     <Text Include="history.txt" />
+    <Text Include="Notes.txt" />
   </ItemGroup>
 </Project>

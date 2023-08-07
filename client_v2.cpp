@@ -105,8 +105,12 @@ SOCKET connect_to_server()//first connection to the server
 	char buff[1000];
 	struct addrinfo* server_add1;
 	getaddrinfo(ip_address.c_str(), server_port, &hints, &server_add);
-	
-	getaddrinfo(ip_address.c_str(),"8082", &hints, &server_add1);
+	//convert server_port to int
+	int port = atoi(server_port);
+	port += 1;
+	char server_port1[10];
+	sprintf(server_port1, "%d", port);
+	getaddrinfo(ip_address.c_str(), server_port1, &hints, &server_add1);
 	
 	getnameinfo(server_add->ai_addr, server_add->ai_addrlen, buff, sizeof(buff), 0, 0, NI_NUMERICHOST);
 	cout << "\n the server address is==>" << buff;

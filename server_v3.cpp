@@ -3,8 +3,8 @@
 start lobby_server
 start server_v3
 start client_v1
-start client_show
-*/
+starting client_v1 will automatically start the client_v2 unit so no need to start it manually
+
 
 //problem
 /*
@@ -12,6 +12,8 @@ start client_show
 * they dont know.
 * but the client can send the data to the server and server is able to receive it, 
 * problem must be the unordered_map, the client address is not getting stored properly.
+* so yeah now we are connected with the wire now, so lets see how this shit works properly or not if this does not work properly then we have no option
+* 
 */
 #pragma once
 #include<SFML/Graphics.hpp>
@@ -1569,12 +1571,16 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	char port_str[10];
 	// Convert port to string
 	sprintf(port_str, "%d", port);
+	char port_str1[10];
+	char port_str2[10];
+	sprintf(port_str1, "%d", (port + 1));
+	sprintf(port_str2, "%d", (port + 2));
 	cout << "\n running on port=>" << port_str;
 	getaddrinfo(0, port_str, &hints, &bind_address);
 	struct addrinfo* bind_address1;
-	getaddrinfo(0, "8082", &hints, &bind_address1);
+	getaddrinfo(0,port_str1, &hints, &bind_address1);
 	struct addrinfo* bind_address2;
-	getaddrinfo(0, "8083", &hints, &bind_address2);
+	getaddrinfo(0,port_str2, &hints, &bind_address2);
 	
 
 	printf("Creating socket...\n");

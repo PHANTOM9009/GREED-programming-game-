@@ -407,6 +407,7 @@
   <ItemGroup>
     <Text Include="dependency.txt" />
     <Text Include="history.txt" />
+    <Text Include="Notes.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -81,6 +81,8 @@ SOCKET connect_to_server(int port)//first connection to the server
 	char port_str[10];
 	// Convert port to string
 	sprintf(port_str, "%d", port);
+	char port_str1[10];
+	sprintf(port_str1, "%d", (port + 2));
 
 	printf("Configuring remote address...\n");
 	struct addrinfo hints;
@@ -95,7 +97,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
-	if (getaddrinfo(ip_address.c_str(), "8083", &hints, &peer_address1))
+	if (getaddrinfo(ip_address.c_str(),port_str1, &hints, &peer_address1))
 	{
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
@@ -1214,7 +1216,6 @@ int main(int argc,char* argv[])
 	 port=connect_to_lobby_server();
 	socket_listen = connect_to_server(port);   
 	
-	/*
 	//added the thing that when the game overs, the client will break the loop and close the connection.
 	char path_c[MAX_PATH];
 	string path;
@@ -1253,7 +1254,6 @@ int main(int argc,char* argv[])
 		//return 0;
 	}
 	
-	*/
 	
 	//receiving the startupinfo data
 	Startup_info_client start_data;
@@ -1340,12 +1340,12 @@ int main(int argc,char* argv[])
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
 	
-	/*
+	
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
-	*/
+	
 	
 	
 

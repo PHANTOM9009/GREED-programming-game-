@@ -1,0 +1,13 @@
+1. the new sending and recving mechanism works as follows:
+
+server_v3 has 3 sockets:
+socket_listen to send the data to all the client terminal units
+socket_listen2 to send the data to all the client terminal units
+recver is to recv data from the client terminal units
+
+sending data has two threads as follows:
+1. to send the data to the client terminal units.
+2. to send the data to the client display unit.
+3. to recv the data we are using the same thread as that of game loop
+
+this way we are ensuring that data reaches to all the clients at the appropriate time...
