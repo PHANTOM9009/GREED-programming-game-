@@ -38,6 +38,8 @@
 #include "online_lib2.cpp"
 #include "hawk.cpp"
 #include<ctime>
+#include<chrono>
+
 /*
 * what am i doing here?
 * the entire template is in lib2.hpp and its cpp counterpart
@@ -178,7 +180,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	bool gameOver = false;
 	//starting the game loop that will sync the algorithm execution with the gameplay
 	int cur_frame = -1;//variable to maintain the frame rate of the while loop
-	int next_frame = -1;
+	int next_frame = 0;
 	control1 control_ob;
 	//THIS code is for updating the fuel of the ship
 
@@ -238,14 +240,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		* the states will not be consistent in such a case
 		* 
 		*/
-		sf::Time curtime = clock.restart();
-		elapsed_time += curtime.asSeconds();
-		if (elapsed_time > 1)
-		{
-			elapsed_time = 0;
-		}
-		next_frame = elapsed_time * 60;
-	
+				
+		chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();//clocking the current time
+		
 		if (next_frame != cur_frame)//under this frame rate is stable
 		{
 			sf::Time tt = clock1.restart();
@@ -255,7 +252,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		
 			if (check_time > 1)
 			{
-				//cout << "\n frame rate is=>" << frame_rate;
+				cout << "\n frame rate is=>" << frame_rate;
 				frame_rate = 0;
 				check_time = 0;
 			}
@@ -1116,6 +1113,15 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			avg_send += sending.getElapsedTime().asSeconds();
 			
 		}
+		chrono::high_resolution_clock::time_point current_time = chrono::high_resolution_clock::now();
+		chrono::duration<double> total_elapsed = chrono::duration_cast<chrono::duration<double>>(current_time - start_time);
+		elapsed_time += total_elapsed.count();
+		
+		if (elapsed_time > 1)
+		{
+			elapsed_time = 0;
+		}
+		next_frame = elapsed_time * 60;
 			
 	}
 	cout << "\n average receiving time==>" << avg_recv / cc;
