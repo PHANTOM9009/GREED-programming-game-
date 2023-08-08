@@ -44,6 +44,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
+#include"sqlite3.h"
+#include<stdlib.h>
+
 //#include "online_lib2.hpp"
 //#include "online_lib2.cpp"
 
@@ -53,6 +56,24 @@
 
 #define GAME_SERVER_COUNT 1
 using namespace std;
+
+sqlite3* db;
+int rc = sqlite3_open("Greed.db", &db);
+bool user_found = false;
+static int callback(void* NotUsed, int argc, char** argv, char** azColName)
+{
+	/*
+	* this thing is running for every row, argc is the number of columns in the database,
+	* argv is the value at that column
+	* azColName is the name of the column
+	*/
+	if (argc > 0)
+	{
+		user_found = true;
+	}
+	return 0;
+}
+
 class user_credentials
 {
 public:
@@ -157,6 +178,20 @@ public:
 	WSAPROTOCOL_INFO  socket_listen[50];
 	
 };
+bool checkUser(user_credentials& cred)
+{
+	string username = cred.username;
+	string password = cred.password;
+	string query = "SELECT * FROM USER_DATA WHERE USERNAME=" + username + " AND PASSWORD=" + password + ";";
+	char* zErrMsg = 0;
+	int rc = sqlite3_exec(db, query.c_str(), callback, 0, &zErrMsg);
+	if (user_found == true)
+	{
+		user_found = false;
+		return true;
+	}
+	return false;
+}
 void listener()
 {
 	/*this function will listen to the incoming socket requests and only forwards them to the next section only if the requests are valid
@@ -240,7 +275,7 @@ void listener()
 					if (bytes > 0)
 					{
 						cout << "\n received credentials are==>" << cred.username << " " << cred.password;
-						if (strcmp("username",cred.username)==0 && strcmp("password",cred.password)==0)//put the condition if the current user is verified or not
+						if(checkUser(cred))//put the condition if the current user is verified or not
 						{
 							unique_lock<mutex> lk(m->m_valid);
 							valid_connections.push_back(i);
@@ -251,8 +286,8 @@ void listener()
 						}
 						else//if the user is not authenticated then tear down the socket connection and remove it from the set of master
 						{
-							CLOSESOCKET(i);
-							
+							cout << "\n invalid user came..";
+							CLOSESOCKET(i);				
 
 						}
 					}

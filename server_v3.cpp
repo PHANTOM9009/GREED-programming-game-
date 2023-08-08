@@ -5,15 +5,6 @@ start server_v3
 start client_v1
 starting client_v1 will automatically start the client_v2 unit so no need to start it manually
 
-
-//problem
-/*
-* server is not sending the data to the clients, clients dont know whats happening in the game, so they are dead or others are dead
-* they dont know.
-* but the client can send the data to the server and server is able to receive it, 
-* problem must be the unordered_map, the client address is not getting stored properly.
-* so yeah now we are connected with the wire now, so lets see how this shit works properly or not if this does not work properly then we have no option
-* 
 */
 #pragma once
 #include<SFML/Graphics.hpp>
@@ -54,6 +45,9 @@ starting client_v1 will automatically start the client_v2 unit so no need to sta
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 
+#include "sqlite3.h" 
+#include<stdlib.h>
+
 int max_player=0;
 string my_token;//token of the current game instance
 
@@ -77,6 +71,28 @@ SOCKET recver;//UDP socket to recv data from the client terminal unit
 SOCKET lobby_socket;//TCP  socket to talk to the lobby server
 
 bool gameOver = false;//making it public so that the running theads of chaseShip1 and nav_data_processor can check its status and closes themselves.
+
+sqlite3* db;
+char* zErrMsg = 0;
+int rc = sqlite3_open("Greed.db", &db);
+
+
+/* Open database */
+bool user_found = false;
+static int callback(void* NotUsed, int argc, char** argv, char** azColName)
+{
+	/*
+	* this thing is running for every row, argc is the number of columns in the database,
+	* argv is the value at that column
+	* azColName is the name of the column
+	*/
+	if (argc > 0)
+	{
+		user_found = true;
+	}
+	return 0;
+}
+
 std::string GetLastErrorAsString()
 {
 	//Get the error message ID, if any.
@@ -392,6 +408,21 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 	}
 }
 
+
+bool checkUser(user_credentials& cred)
+{
+	string username = cred.username;
+	string password = cred.password;
+	string query = "SELECT * FROM USER_DATA WHERE USERNAME=" + username + " AND PASSWORD=" + password + ";";
+	char* zErrMsg = 0;
+	int rc = sqlite3_exec(db, query.c_str(), callback, 0, &zErrMsg);
+	if (user_found == true)
+	{
+		user_found = false;
+		return true;
+	}
+	return false;
+}
 void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n,unordered_map<int,sockaddr_storage>& socket_id,vector<int> &socket_display)//taking the ship object so as to access the list of the player
 {
 
@@ -499,6 +530,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	
 	int prev_packet_terminal = 0;
 	int prev_packet_display = 0;
+	
 	
 	while (1)
 	{
@@ -1449,7 +1481,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						continue;
 					}
-					if (bytes > 0 && strcmp(user_cred[sid].username, data2.user_cred.username) == 0 && strcmp(user_cred[sid].password, data2.user_cred.password) == 0)
+					if (bytes > 0)
 					{
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
