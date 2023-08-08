@@ -245,18 +245,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		
 		if (next_frame != cur_frame)//under this frame rate is stable
 		{
-			sf::Time tt = clock1.restart();
-			check_time+=tt.asSeconds();
+			
 			frame_rate++;
 			cc++;
 		
-			if (check_time > 1)
-			{
-				cout << "\n frame rate is=>" << frame_rate;
-				frame_rate = 0;
-				check_time = 0;
-			}
-
 			reads = master_read;
 			writes = master_write;
 			
