@@ -30,12 +30,23 @@ namespace user1
 		if (index >= 0)
 		ob.Greed_chaseShip(index);
 		cout << "\n chasing the ship==>" << index;
+		int frame_rate = 0;
+		sf::Clock clock;
+		double elapsed_time = 0;
 		while (1)
 		{
 
 			if (ob.frame_rate_limiter())
 			{//this is anchit rana talking to the world and i want ot know the difference between
-
+				frame_rate++;
+				sf::Time time = clock.restart();
+				elapsed_time += time.asSeconds();
+				if (elapsed_time > 1)
+				{
+				
+					frame_rate = 0;
+					elapsed_time = 0;
+				}
 				//ob.chaseShip(2);
 				deque<shipInfo> shipList = ob.getShipList();
 				Event e;
@@ -47,9 +58,7 @@ namespace user1
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob,ob.getShipId());
 					if(index!=-1)
 					ob.Greed_chaseShip(index);
-					cout << "\n my target died and now chasing another ship==>" << index;
-					//cout << "\n called find_ship_to_kill";
-					//cout << "\n my id=>" << ob.getShipId() << " target id=>" << index;
+					
 				}
 			
 				
@@ -91,7 +100,7 @@ namespace user1
 					if (q[i].eventType == Event::EventType::ShipsInMyRadius)
 					{
 						
-						for (int j = 0; j < q[i].radiusShip.getShipId().size(); j++)
+						for (int j = 0; j < q[i].radiusShip.getShipId().size(); j++)                                                     
 						{
 							
 							if (q[i].radiusShip.getShipId()[j] == -1)

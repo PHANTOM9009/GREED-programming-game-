@@ -367,11 +367,13 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 			{
 				cout << "\n error in sending the data to the client==>"<<i<<" due to the reason==>"<<GetLastErrorAsString();
 			}
+			
 		}	
 	}
 }
 void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 {
+	
 	while (1)
 	{
 		unique_lock<mutex> lk1(m->gameOver_check);
@@ -398,7 +400,7 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 			int bytes = sendto(socket_listen2, (char*)&data[i].second, sizeof(data[i].second), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
 			if (bytes > 0)
 			{
-				//cout << "\n sent bytes to the client display unit==>" << bytes;
+				//cout << "\n sent bytes to the client display unit==>" << data[i].first;
 			}
 			if (bytes < 0)
 			{
@@ -530,7 +532,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	
 	int prev_packet_terminal = 0;
 	int prev_packet_display = 0;
-	
+	//sending the data to the client display to check the connectivity issue
+	char msg[100] = "hello client display";
+	int b = sendto(socket_listen2, msg, sizeof(msg), 0, (sockaddr*)&socket_id_display[1], sizeof(socket_id_display[1]));
+	if (b < 1)
+	{
+		cout << "\n could not send the bytes==>" << GetLastErrorAsString();
+	}
 	
 	while (1)
 	{
@@ -1492,13 +1500,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
 							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-							if (data2.shipdata_forServer.size_navigation > 0)
-							{
-								cout << "\n called for navigation at the frame==>" << total_secs;
-								
-							}
-							//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
-							//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+							
+							cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+							hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						}
 
 					}

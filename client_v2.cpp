@@ -153,6 +153,7 @@ SOCKET connect_to_server()//first connection to the server
 	{
 		cout << "\n couldnt recv the max player from the server=>" << GETSOCKETERRNO();
 	}
+	cout << "\n data recved from server max player playing are=>" << max_players;
 	freeaddrinfo(server_add);
 	freeaddrinfo(server_add1);
 
@@ -383,6 +384,13 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	int prev_packet = 0;
 
 	//sending something from recver_socket to check the connection endpoint
+	char msg[100];
+	int b = recv(recver_socket, msg, sizeof(msg), 0);
+	if (b < 1)
+	{
+		cout << "\n did not recv the bytes from the server=>" << GETSOCKETERRNO();
+	}
+	cout << "\n the message is==>" << msg;
 	
 	while (window.isOpen())
 	{
@@ -497,7 +505,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			}
 			
 			int bytes_received = -1;
-			if (FD_ISSET(recver_socket, &temp_set))
+			if (1)
 			{
 				memset((void*)&ship_data, 0, sizeof(ship_data));
 				//receiving the data

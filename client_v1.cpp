@@ -339,8 +339,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-					//cout << "\n recved data from the client terminal =>" <<data1.packet_id << " at the time==> " <<
-						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					cout << "\n recved data from the client terminal =>" <<data1.packet_id << " at the time==> " <<
+						hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 				}
 				else
 				{
@@ -1096,7 +1096,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-						//	cout << "\n sent data to the server=>" << data2.packet_id << " at the time==> " <<
+							//cout << "\n sent data to the server=>" << data2.packet_id << " at the time==> " <<
 							//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						}
 
@@ -1111,7 +1111,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		if (elapsed_time > 1)
 		{
 			elapsed_time = 0;
-			cout << "\n frame rate is==>" << frame_rate;
+			//cout << "\n frame rate is==>" << frame_rate;
 			frame_rate = 0;
 		}
 		

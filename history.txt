@@ -111,4 +111,10 @@ so now we will be working on it
  just convert the entire class to a string format and read that data in python. since the client is in python the server will always be in c++
  so we can do this./
  GOOD NIGHT!
+ ------------------------------------------------------------------------------------------------------------------------------
+ the issue:
+ client_v2_new is not accepting the frames from the server when inside the while loop. after the while loop it is accepting the message, so there
+ is no issue of connectivity issue.
+ to check if the VM can even take the load of sending frames, i am writing a pseudo program to check.
+ sad to see i have to go all through this again.
  -------------------------------------------------------------------------------------------------------------------------------

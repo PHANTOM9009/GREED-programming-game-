@@ -58,7 +58,9 @@
 
 #include <stdio.h>
 #include <string.h>
-
+#include<iostream>
+#include<chrono>
+using namespace std;
 
 int main() {
 
@@ -78,7 +80,10 @@ int main() {
     hints.ai_flags = AI_PASSIVE;
 
     struct addrinfo* bind_address;
-    getaddrinfo(0, "8080", &hints, &bind_address);
+    cout << "\n enter the ip address=>";
+    string ip;
+    cin >> ip;
+    getaddrinfo(ip.c_str(), "8080", &hints, &bind_address);
 
 
     printf("Creating socket...\n");
@@ -90,37 +95,45 @@ int main() {
         return 1;
     }
 
-
-    printf("Binding socket to local address...\n");
-    if (bind(socket_listen,
-        bind_address->ai_addr, bind_address->ai_addrlen)) {
-        fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
-        return 1;
-    }
-    freeaddrinfo(bind_address);
+    connect(socket_listen, bind_address->ai_addr, bind_address->ai_addrlen);
 
 
     struct sockaddr_storage client_address;
     socklen_t client_len = sizeof(client_address);
-    char read[1024];
-    int bytes_received = recvfrom(socket_listen,
-        read, 1024,
-        0,
-        (struct sockaddr*)&client_address, &client_len);
+    char read[100] = "hello";
+	int bytes = sendto(socket_listen, read, sizeof(read), 0, bind_address->ai_addr, bind_address->ai_addrlen);
+    if (bytes < 1)
+    {
+		cout << "\n client cannot send bytes to the server==>" << GETSOCKETERRNO();
+    }
+    else
+    {
+        cout << "\n sent hello to the server";
+    }
+    
+    while (1)
+    {
+        int num;
+        bytes = recv(socket_listen,(char*)&num, sizeof(num), 0);
+        if (bytes < 1)
+        {
+            cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
+        }
+        else
+        {
+            cout << "\n recved bytes from the server=>" << num;
+            auto now = std::chrono::system_clock::now();
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+            auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+            auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+            auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-    printf("Received (%d bytes): %.*s\n",
-        bytes_received, bytes_received, read);
+            	cout << "\n recved data from the server at the time==> " <<
+               	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+        }
+    }
 
-    printf("Remote address is: ");
-    char address_buffer[100];
-    char service_buffer[100];
-    getnameinfo(((struct sockaddr*)&client_address),
-        client_len,
-        address_buffer, sizeof(address_buffer),
-        service_buffer, sizeof(service_buffer),
-        NI_NUMERICHOST | NI_NUMERICSERV);
-    printf("%s %s\n", address_buffer, service_buffer);
-
+    
     CLOSESOCKET(socket_listen);
 
 #if defined(_WIN32)

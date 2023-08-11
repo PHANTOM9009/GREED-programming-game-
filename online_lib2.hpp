@@ -1343,6 +1343,7 @@ class shipData_exceptMe //updated data that the server will send for the client
 	friend class control1;
 
 };
+void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m);
 class recv_data//to be recv by the client and to be  sent by the server
 {
 	int packet_id; //for debugging purpose only
@@ -1354,6 +1355,7 @@ class recv_data//to be recv by the client and to be  sent by the server
 	int gameOver;//0 for game not over, 1 for over;
 
 	friend class graphics;
+	friend void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m);
 };
 class send_data// to be sent by the client and to be received by the server
 {
@@ -1401,6 +1403,8 @@ private:
 	void update_pos_collision();//function to update tile_pos and abs_pos of the ship after the collision occured
 	//for maintaining the frame rate of the user function
 	std::chrono::high_resolution_clock::time_point current_time;
+	chrono::steady_clock::time_point starting_time_limiter;//starting time when frame rate limiter started
+	bool hector;//to check if frame_rate_limiter is running for the first time or not
 	sf::Clock clock;
 	int current_frame_no;
 	double elapsed_time;

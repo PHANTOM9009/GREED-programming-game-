@@ -1020,9 +1020,15 @@ vector<Greed::coords> ship::getRadiusCoords_cannon(int c_id)
 }
 bool ship::frame_rate_limiter()
 {
-
-	sf::Time time = clock.restart();
-	elapsed_time += time.asSeconds();
+	if (!hector)
+	{
+		starting_time_limiter = chrono::steady_clock::now();
+		hector = true;
+	}
+	chrono::steady_clock::time_point ending_time_limiter = chrono::steady_clock::now();
+	chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(ending_time_limiter - starting_time_limiter);
+	
+	elapsed_time += time_span.count();
 	int frame = (int)(elapsed_time * frame_rate_limit) % frame_rate_limit;
 	if (elapsed_time > 1)
 	{
@@ -1034,15 +1040,12 @@ bool ship::frame_rate_limiter()
 		return true;
 	}
 	return false;
-
-
-
 }
 
 ship::ship()//default ctor for now
 {
 	gameOver = false;
-	
+	hector = false;
 	lock_ammo = 0;
 	lock_fuel = 0;
 	lock_health = 0;

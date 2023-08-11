@@ -1,26 +1,3 @@
-/*
- * MIT License
- *
- * Copyright (c) 2018 Lewis Van Winkle
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
 
 #if defined(_WIN32)
 #ifndef _WIN32_WINNT
@@ -57,9 +34,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#include<iostream>
+#include<chrono>
+using namespace std;
 
-int main() {
-
+int main() 
+{
 #if defined(_WIN32)
     WSADATA d;
     if (WSAStartup(MAKEWORD(2, 2), &d)) {
@@ -67,46 +47,67 @@ int main() {
         return 1;
     }
 #endif
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_PASSIVE;
 
-    printf("Configuring remote address...\n");
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_socktype = SOCK_DGRAM;
-    struct addrinfo* peer_address;
-    if (getaddrinfo(0, "8080", &hints, &peer_address)) {
-        fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
-        return 1;
+	struct addrinfo* bind_address;
+	//convert port to string
+	
+	getaddrinfo(0,"8080", &hints, &bind_address);
+	
+	printf("Creating socket...\n");
+
+	SOCKET socket_peer = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
+	
+	if (!ISVALIDSOCKET(socket_peer))
+	{
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+
+	}
+	if (::bind(socket_peer,
+		bind_address->ai_addr, bind_address->ai_addrlen)) {
+		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+
+	}
+    struct sockaddr_storage client_address;
+	socklen_t client_len = sizeof(client_address);
+	char read[1024];
+    int bytes = recvfrom(socket_peer, read, 1024, 0, (sockaddr*)&client_address, &client_len);
+    if (bytes < 1)
+    {
+        cout << "\n cannot recv the bytes from the client==>" << GETSOCKETERRNO();
     }
-
-
-    printf("Remote address is: ");
-    char address_buffer[100];
-    char service_buffer[100];
-    getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen,
-        address_buffer, sizeof(address_buffer),
-        service_buffer, sizeof(service_buffer),
-        NI_NUMERICHOST | NI_NUMERICSERV);
-    printf("%s %s\n", address_buffer, service_buffer);
-
-
-    printf("Creating socket...\n");
-    SOCKET socket_peer;
-    socket_peer = socket(peer_address->ai_family,
-        peer_address->ai_socktype, peer_address->ai_protocol);
-    if (!ISVALIDSOCKET(socket_peer)) {
-        fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
-        return 1;
+    else
+    {
+        cout << "\n the message recved is==>" << read;
     }
+    int n = 0;
+    while (1)
+    {
+        bytes = sendto(socket_peer, (char*)&n, sizeof(n), 0, (sockaddr*)&client_address, client_len);
+        if (bytes < 1)
+        {
+            cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+        }
+        else
+        {
+            cout << "\n sent=>" << n;
+            auto now = std::chrono::system_clock::now();
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+            auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+            auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+            auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-    const char* message = "Hello World";
-    printf("Sending: %s\n", message);
-    int bytes_sent = sendto(socket_peer,
-        message, strlen(message),
-        0,
-        peer_address->ai_addr, peer_address->ai_addrlen);
-    printf("Sent %d bytes.\n", bytes_sent);
+            cout << "\n sent data to the client at==> " <<
+                hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+        }
+        n++;
+    }
+    
 
-    freeaddrinfo(peer_address);
     CLOSESOCKET(socket_peer);
 
 #if defined(_WIN32)
