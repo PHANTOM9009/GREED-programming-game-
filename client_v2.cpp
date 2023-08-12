@@ -505,7 +505,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			}
 			
 			int bytes_received = -1;
-			if (FD_ISSET(recver_socket, &temp_set))
+			if (1)
 			{
 				memset((void*)&ship_data, 0, sizeof(ship_data));
 				//receiving the data

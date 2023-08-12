@@ -64,7 +64,6 @@ int my_id;//id of the player in the game
 string ip_address;//ip to which the client will connect to..
 
 SOCKET sending_socket;//socket to send data to the server
-SOCKET vm_recv;//this socket  is used to recv data from the vm for testing purpose only
 //peer_socket is for recving data from the server
 bool find(int id, int hit[100],int size)
 {
@@ -93,8 +92,8 @@ SOCKET connect_to_server(int port)//first connection to the server
 	hints.ai_flags = AI_PASSIVE;
 	struct addrinfo* peer_address;
 	struct addrinfo* peer_address1;
-	struct addrinfo* peer_address2;
-	if (getaddrinfo(ip_address.c_str(), port_str, &hints, &peer_address))
+	
+	if (getaddrinfo(ip_address.c_str(), port_str, &hints, &peer_address)) 
 	{
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
@@ -104,15 +103,24 @@ SOCKET connect_to_server(int port)//first connection to the server
 		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
-	getaddrinfo("20.120.25.31","8085",&hints,&peer_address2);
 
+	printf("Remote address is: ");
+	char address_buffer[100];
+	char service_buffer[100];
+	getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen,
+		address_buffer, sizeof(address_buffer),
+		service_buffer, sizeof(service_buffer),
+		NI_NUMERICHOST | NI_NUMERICSERV);
+	printf("%s %s\n", address_buffer, service_buffer);
+
+
+	printf("Creating socket...\n");
 	SOCKET socket_peer;
 	socket_peer = socket(peer_address->ai_family,
 		peer_address->ai_socktype, peer_address->ai_protocol);
 
 	sending_socket= socket(peer_address1->ai_family,
 		peer_address1->ai_socktype, peer_address1->ai_protocol);
-	vm_recv = socket(peer_address2->ai_family, peer_address2->ai_socktype, peer_address2->ai_protocol);
 	if (!ISVALIDSOCKET(socket_peer)) {
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
@@ -131,16 +139,8 @@ SOCKET connect_to_server(int port)//first connection to the server
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
-	connect(vm_recv, peer_address2->ai_addr, peer_address2->ai_addrlen);
 	//sending the greet_client object to the game server, with my code and credentials.
-	//sending message to the vm
-	char m[100] = "hi vm from client..";
-	int b = send(vm_recv,m,sizeof(m),0);
-	if (b < 1)
-	{
-		cout << "\n cannot send bytes to the vm..";
-			
-	}
+
 	int msg = 0;//0 means client_v1_process
 	greet_client gc;
 	gc.code = msg;
@@ -190,7 +190,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	fd_set master_read;
 	FD_ZERO(&master_read);
-	FD_SET(vm_recv, &master_read);
+	FD_SET(peer_socket, &master_read);
 	
 	fd_set master_write;
 	FD_ZERO(&master_write);
@@ -273,11 +273,11 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			}
 			sf::Clock recvt;
 			recvt.restart();
-			select(vm_recv + 1, &reads, 0, 0, &timeout);
-			if (FD_ISSET(vm_recv,&reads))//socket is ready to read from
+			select(peer_socket + 1, &reads, 0, 0, &timeout);
+			if (FD_ISSET(peer_socket,&reads))//socket is ready to read from
 			{
 				memset((void*)&data1, 0, sizeof(data1));
-				bytes_recv = recv(vm_recv, (char*)&data1, sizeof(data1), 0);
+				bytes_recv = recv(peer_socket, (char*)&data1, sizeof(data1), 0);
 				
 				
 				
@@ -1215,7 +1215,6 @@ int main(int argc,char* argv[])
 	SOCKET socket_listen = 0;
 	 port=connect_to_lobby_server();
 	socket_listen = connect_to_server(port);   
-	
 	
 	//added the thing that when the game overs, the client will break the loop and close the connection.
 	char path_c[MAX_PATH];

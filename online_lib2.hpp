@@ -1346,7 +1346,7 @@ class shipData_exceptMe //updated data that the server will send for the client
 void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m);
 class recv_data//to be recv by the client and to be  sent by the server
 {
-	
+	int packet_id; //for debugging purpose only
 	char token[20];//current token for the game
 	int s1;
 	shipData_exceptMe shipdata_exceptMe[20];
@@ -1354,8 +1354,6 @@ class recv_data//to be recv by the client and to be  sent by the server
 	shipData_forMe shipdata_forMe;
 	int gameOver;//0 for game not over, 1 for over;
 
-public:
-	int packet_id;
 	friend class graphics;
 	friend void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m);
 };

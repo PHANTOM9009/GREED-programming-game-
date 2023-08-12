@@ -69,7 +69,6 @@ SOCKET socket_listen2;//UDP socket to send data to the client display unit
 SOCKET recver;//UDP socket to recv data from the client terminal unit
 
 SOCKET lobby_socket;//TCP  socket to talk to the lobby server
-SOCKET vm;//to check if vm can be the postman
 
 bool gameOver = false;//making it public so that the running theads of chaseShip1 and nav_data_processor can check its status and closes themselves.
 
@@ -364,15 +363,9 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 		{
 			//send the data to the client
 			int bytes = sendto(socket_listen, (char*)&data[i].second, sizeof(data[i].second), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
-			
 			if (bytes < 0)
 			{
 				cout << "\n error in sending the data to the client==>"<<i<<" due to the reason==>"<<GetLastErrorAsString();
-			}
-			bytes = send(vm, (char*)&data[i].second, sizeof(data[i].second), 0);
-			if (bytes < 1)
-			{
-				cout << "\n cannot send bytes to the vm maching.." << GetLastErrorAsString();
 			}
 			
 		}	
@@ -1624,16 +1617,13 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	getaddrinfo(0,port_str1, &hints, &bind_address1);
 	struct addrinfo* bind_address2;
 	getaddrinfo(0,port_str2, &hints, &bind_address2);
-	struct addrinfo* bind_address3;//for vm
-	getaddrinfo("20.120.25.31", "8085", &hints, &bind_address3);
+	
 
 	printf("Creating socket...\n");
 
 	socket_listen = socket(bind_address->ai_family,bind_address->ai_socktype, bind_address->ai_protocol);
 	socket_listen2 = socket(bind_address1->ai_family, bind_address1->ai_socktype, bind_address1->ai_protocol);
 	recver = socket(bind_address2->ai_family, bind_address2->ai_socktype, bind_address2->ai_protocol);
-	
-	vm = socket(bind_address3->ai_family, bind_address3->ai_socktype, bind_address3->ai_protocol);
 	
 	if (!ISVALIDSOCKET(socket_listen))
 	{
@@ -1666,7 +1656,6 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
 
 	}
-	connect(vm, bind_address3->ai_addr, bind_address3->ai_addrlen);
 	freeaddrinfo(bind_address);
 	freeaddrinfo(bind_address1);
 	freeaddrinfo(bind_address2);
@@ -1684,11 +1673,6 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 10;
-	//sending to the vm
-	char msg[] = "hi vm";
-	int b = send(vm, msg, sizeof(msg), 0);
-	if(b>1)
-	cout << "\n msg sent to vm=>";
 	while (max_player+1> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		reads = master;

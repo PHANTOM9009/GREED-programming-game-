@@ -1,6 +1,3 @@
-#pragma once
-#include<SFML/Graphics.hpp>
-#include<conio.h>
 
 #if defined(_WIN32)
 #ifndef _WIN32_WINNT
@@ -21,11 +18,11 @@
 
 #endif
 
+
 #if defined(_WIN32)
 #define ISVALIDSOCKET(s) ((s) != INVALID_SOCKET)
 #define CLOSESOCKET(s) closesocket(s)
-#define GETSOCKETERRNO() WSAGetLastError()
-
+#define GETSOCKETERRNO() (WSAGetLastError())
 
 #else
 #define ISVALIDSOCKET(s) ((s) >= 0)
@@ -33,11 +30,15 @@
 #define SOCKET int
 #define GETSOCKETERRNO() (errno)
 #endif
-#include<ctime>
-#include "online_lib2.hpp"
-#include "online_lib2.cpp"
 
-int main(int argc,char *argv [])
+
+#include <stdio.h>
+#include <string.h>
+#include<iostream>
+#include<chrono>
+using namespace std;
+
+int main() 
 {
 #if defined(_WIN32)
     WSADATA d;
@@ -55,7 +56,7 @@ int main(int argc,char *argv [])
 	struct addrinfo* bind_address;
 	//convert port to string
 	
-	getaddrinfo(0,"8085", &hints, &bind_address);
+	getaddrinfo(0,"8080", &hints, &bind_address);
 	
 	printf("Creating socket...\n");
 
@@ -71,47 +72,39 @@ int main(int argc,char *argv [])
 		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
 
 	}
-    
-    int n = 0;
-	char msg[100];
-	struct sockaddr_storage client_address;
+    struct sockaddr_storage client_address;
 	socklen_t client_len = sizeof(client_address);
-	int b = recvfrom(socket_peer, (char*)&msg, sizeof(msg), 0, (sockaddr*)&client_address, &client_len);
-	cout << "\n message from client==>" << msg;
-	//recving message from the client terminal to whom the data has to be sent
-	/*
-	memset(msg, 0, sizeof(msg));
-	struct sockaddr_storage client_address1;
-	socklen_t client_len1 = sizeof(client_address1);
-	b = recvfrom(socket_peer, (char*)&msg, sizeof(msg), 0, (sockaddr*)&client_address1, &client_len1);
-	if (b < 1)
-	{
-		cout << "\n cannot recv bytes from the client terminal..";
-
-	}
-	cout << "\n message from client terminal=>" << msg;
-	*/
+	char read[1024];
+    int bytes = recvfrom(socket_peer, read, 1024, 0, (sockaddr*)&client_address, &client_len);
+    if (bytes < 1)
+    {
+        cout << "\n cannot recv the bytes from the client==>" << GETSOCKETERRNO();
+    }
+    else
+    {
+        cout << "\n the message recved is==>" << read;
+    }
+    int n = 0;
     while (1)
     {
-		recv_data data;
-		struct sockaddr_storage client_address;
-		socklen_t client_len = sizeof(client_address);
-		int bytes = recvfrom(socket_peer, (char*)&data, sizeof(data), 0, (sockaddr*)&client_address, &client_len);
-		if (bytes < 1)
-		{
-			cout << "\n cannot recv the bytes from the client..";
-		}
-		cout << "\n recved bytes from the client==>" << data.packet_id;
-		
-		//sending the data to the client terminal
-		/*
-		bytes = sendto(socket_peer, (char*)&data, sizeof(data), 0, (sockaddr*)&client_address1, client_len1);
-		if (bytes < 1)
-		{
-			cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
-				
-		}
-		*/
+        bytes = sendto(socket_peer, (char*)&n, sizeof(n), 0, (sockaddr*)&client_address, client_len);
+        if (bytes < 1)
+        {
+            cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+        }
+        else
+        {
+            cout << "\n sent=>" << n;
+            auto now = std::chrono::system_clock::now();
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+            auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+            auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+            auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+            cout << "\n sent data to the client at==> " <<
+                hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+        }
+        n++;
     }
     
 
