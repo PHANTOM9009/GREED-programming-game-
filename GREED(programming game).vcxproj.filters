@@ -150,6 +150,9 @@
     <ClCompile Include="sql_server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="clientA.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">
