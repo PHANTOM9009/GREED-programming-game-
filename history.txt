@@ -122,5 +122,15 @@ so now we will be working on it
  aws worked.
  now the issues are:
  previous frames must be discarded at once. if you can make some prediction algorithm.
- there is something wrong in sending startup data, so i will recommend to use tcp for that or keep a ack mechanism
+ there is something wrong in sending startup data, so i will recommend to use tcp for that or keep a ack mechanism:
+ 
+ creating a ack mechanism for important messages:
+ every message is important except what is sent in the game loop. we are not securing the game loop messages. only those messages which
+ are outside it.
+ ----------------------------------------------------
+ if ack does not come in 1second then resending the message is necessary.
+ don't move forward if no message comes up(for the client) for server you can move forward by discarding that client if it does not send message in 2 secs
+ 
+ lobby server is working over tcp so no problem over there the only problem will be in the server_v3..check that
+ -------------------------------------------------------------------------------------------------------------------------------
  

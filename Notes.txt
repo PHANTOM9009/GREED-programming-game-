@@ -11,3 +11,7 @@ sending data has two threads as follows:
 3. to recv the data we are using the same thread as that of game loop
 
 this way we are ensuring that data reaches to all the clients at the appropriate time...
+-----------------------------------------------------------------------------------------------------------------
+format of ack message will be 1 and -1; exculding the use of 0, because it can be sometimes misleading
+1: message received properly
+-1: did not receive the message so resend it/

@@ -48,6 +48,77 @@ string game_token;//token of the game
 string username;
 string password;
 string ip_address;
+
+
+
+bool SEND(SOCKET sock, char* buff, int length)
+{
+	/*overload of send function of UDP having the mechanism of resending and ack*/
+	fd_set master;
+	FD_ZERO(&master);
+	FD_SET(sock, &master);
+	fd_set read;
+	FD_ZERO(&read);
+	chrono::steady_clock::time_point now = chrono::steady_clock::now();
+
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
+	int b = send(sock, buff, length, 0);
+	if (b < 1)
+	{
+		cout << "\n cannot send the bytes.." << GETSOCKETERRNO();
+		return false;
+	}
+	while (1)
+	{
+		read = master;
+		select(sock + 1, &read, 0, 0, &timeout);
+		if (FD_ISSET(sock, &read))
+		{
+			int ack;
+			int bytes = recv(sock, (char*)&ack, sizeof(ack), 0);
+			if (ack == 1)
+			{
+				return true;
+			}
+		}
+		auto end = chrono::steady_clock::now();
+		chrono::duration<double> iteration_time = chrono::duration_cast<chrono::duration<double>>(end - now);
+		if (iteration_time.count() > 1)
+		{
+			//resend the packet
+			int bytes = send(sock, buff, length, 0);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the bytes again=>" << GETSOCKETERRNO();
+				return false;
+			}
+
+			now = chrono::steady_clock::now();//changing the time since the last message sent
+		}
+
+	}
+}
+bool RECV(SOCKET sock, char* buff, int length)
+{
+	/*overload for UDP recv, to recv the data carefully*/
+	while (1)
+	{
+		int b = recv(sock, buff, length, 0);
+		if (b > 1)
+		{
+			int ack = 1;
+			int bytes = send(sock, (char*)&ack, sizeof(ack), 0);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the bytes. . " << GETSOCKETERRNO();
+			}
+			return true;
+		}
+	}
+
+}
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 {
 	pl1[i]->ship_id = ob.ship_id;
@@ -142,17 +213,11 @@ SOCKET connect_to_server()//first connection to the server
 	ob.user_cred = user_credentials(username, password);
 	strcpy(ob.token, game_token.c_str());
 
-	int bytes = sendto(recver_socket, (char*)&ob, sizeof(ob), 0, server_add1->ai_addr, server_add1->ai_addrlen);//using the 2nd socket for everything
-	if (bytes > 1)
-	{
-		cout << "\n data sent to the server..=>" << var;
-	}
+	SEND(recver_socket, (char*)&ob, sizeof(ob));//using the 2nd socket for everything
+	
 	//receiving from the server how many players will play
-	int bytes1 = recv(recver_socket, (char*)&max_players, sizeof(max_players), 0);
-	if (bytes1 < 1)
-	{
-		cout << "\n couldnt recv the max player from the server=>" << GETSOCKETERRNO();
-	}
+	RECV(recver_socket, (char*)&max_players, sizeof(max_players));
+	
 	cout << "\n data recved from server max player playing are=>" << max_players;
 	freeaddrinfo(server_add);
 	freeaddrinfo(server_add1);

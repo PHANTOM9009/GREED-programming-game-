@@ -91,6 +91,7 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 		user_found = true;
 	}
 	return 0;
+
 }
 
 std::string GetLastErrorAsString()
@@ -115,6 +116,86 @@ std::string GetLastErrorAsString()
 	LocalFree(messageBuffer);
 
 	return message;
+}
+
+
+
+
+bool SENDTO(SOCKET sock, char* buff, int length,sockaddr* addr, int tolen)
+{
+	/*overload of send function of UDP having the mechanism of resending and ack*/
+	fd_set master;
+	FD_ZERO(&master);
+	FD_SET(sock, &master);
+	fd_set read;
+	FD_ZERO(&read);
+	chrono::steady_clock::time_point now = chrono::steady_clock::now();
+
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
+	int b = sendto(sock, buff, length, 0,addr,tolen);
+	if (b < 1)
+	{
+		cout << "\n cannot send the bytes.." << GETSOCKETERRNO();
+		return false;
+	}
+	while (1)
+	{
+		read = master;
+		select(sock + 1, &read, 0, 0, &timeout);
+		if (FD_ISSET(sock, &read))
+		{
+			int ack;
+			struct sockaddr_storage addr1;
+			socklen_t fromlen = sizeof(addr1);
+			int bytes = recvfrom(sock, (char*)&ack, sizeof(ack), 0, (sockaddr*)&addr1, &fromlen);
+			if (bytes < 1)
+			{
+				cout << "\n cannot recv the ack=>" << GetLastErrorAsString();
+				return false;
+			}
+			if (ack == 1)
+			{
+				return true;
+			}
+		}
+		auto end = chrono::steady_clock::now();
+		chrono::duration<double> iteration_time = chrono::duration_cast<chrono::duration<double>>(end - now);
+		if (iteration_time.count() > 1)
+		{
+			//resend the packet
+			int bytes = sendto(sock, buff, length, 0, addr, tolen);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the bytes again=>" << GETSOCKETERRNO();
+				return false;
+			}
+
+			now = chrono::steady_clock::now();//changing the time since the last message sent
+		}
+
+	}
+}
+bool RECVFROM(SOCKET sock, char* buff, int length,sockaddr* addr,int tolen)
+{
+	/*overload for UDP recv, to recv the data carefully*/
+	while (1)
+	{		
+		int b = recvfrom(sock, buff, length, 0,addr,&tolen);
+		if (b > 1)
+		{
+			int ack = 1;
+			int bytes = sendto(sock, (char*)&ack, sizeof(ack), 0,addr,tolen);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the bytes.. " << GETSOCKETERRNO();
+				return false;
+			}
+			return true;
+		}
+	}
+
 }
 class transfer_socket
 {
@@ -410,7 +491,6 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 	}
 }
 
-
 bool checkUser(user_credentials& cred)
 {
 	string username = cred.username;
@@ -425,6 +505,7 @@ bool checkUser(user_credentials& cred)
 	}
 	return false;
 }
+
 void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n,unordered_map<int,sockaddr_storage>& socket_id,vector<int> &socket_display)//taking the ship object so as to access the list of the player
 {
 
@@ -1495,8 +1576,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 							
-						//	cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
-							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+							cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+							hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						}
 
 					}
@@ -1677,41 +1758,33 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 				struct sockaddr_storage client_address;
 				socklen_t client_len = sizeof(client_address);
 				int read;
-				int bytes_received = recvfrom(socket_listen, (char*)&gc, sizeof(gc), 0, (struct sockaddr*)&client_address, &client_len);
-				if (bytes_received < 1)
-				{
-					//cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
-				}
-		
-				else if (bytes_received > 1)
-				{
-					//checking if the client is authentic or not, if authentic move forwrd and give the client an id, else reject the connection
-					int found = 0;
+				RECVFROM(socket_listen, (char*)&gc, sizeof(gc),(struct sockaddr*)&client_address, client_len);
+				int found = 0;
+				
 
-
-					if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
+				if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
+				{
+					read = gc.code;
+					string sread = to_string(read);
+					//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
+					cout << "\n code recved is=>" << read;
+					if (sread[0] == '0')
 					{
-						read = gc.code;
-						string sread = to_string(read);
-						//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-						cout << "\n code recved is=>" << read;
-						if (sread[0] == '0')
-						{
 							socket_id[idc] = client_address;
 							//sending the id of the client to the client
-							int bytes = sendto(socket_listen, (char*)&idc, sizeof(idc), 0, (struct sockaddr*)&client_address, client_len);
+							SENDTO(socket_listen, (char*)&idc, sizeof(idc),(struct sockaddr*)&client_address, client_len);
 							user_cred[idc] = gc.user_cred;//setting the user credential
 							idc++;
 							nn++;
 						}
 						
 						
-					}
+				}
 					else
 					{
 						cout << "\n client who did not have the correct game token tried to contact the game server..";
 					}
-				}
+				
 			
 			
 		}
@@ -1721,13 +1794,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 			struct sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
 			int read;
-			int bytes_received = recvfrom(socket_listen2, (char*)&gc, sizeof(gc), 0, (struct sockaddr*)&client_address, &client_len);
-			if (bytes_received < 1)
-			{
-				//cout << "\n did not rcved the fucking bytes=>" << GetLastErrorAsString();
-			}
-			else if (bytes_received > 1)
-			{
+			RECVFROM(socket_listen2, (char*)&gc, sizeof(gc),(struct sockaddr*)&client_address, client_len);
+			
 				if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
 				{
 					read = gc.code;
@@ -1741,11 +1809,11 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 						cout << "\n id sent is==>" << id;
 						socket_id_display[id] = client_address;
 						//sending the max_player to the display unit
-						int bytes1 = sendto(socket_listen2, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address, client_len);
+						SENDTO(socket_listen2, (char*)&max_player, sizeof(max_player),(sockaddr*)&client_address, client_len);
 						nn++;
 					}
 				}
-			}
+			
 		}
 
 
@@ -1864,17 +1932,13 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		advance(it, i);
 		Startup_info_client data1(60, no_of_players, it->first, spawn[it->first]);
 		cout << "\n the id is==>" << it->first;
-		int bytes = sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&it->second, sizeof(it->second));
-		if (bytes < 1)
-		{
-			cout << "\n could not send startup info to the client==>" << GetLastErrorAsString();
-		}
+		//sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&it->second, sizeof(it->second));
+		SENDTO(socket_listen, (char*)&data1, sizeof(data1),(sockaddr*)&it->second, sizeof(it->second));
+		
 	}
 	cout << "\n data is sent to all the clients";
 	control.setShipList(slist, 2369);
-	// player[1].localMap[10 * columns + 0].b.cost = 50;
-	//making the cannon lists:
-	//let there be 1 cannon only 
+
 	List<Greed::cannon> cannon_list;
 	for (int i = 1; i <= 3; i++)
 	{

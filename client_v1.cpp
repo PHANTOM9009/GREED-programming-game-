@@ -65,6 +65,79 @@ string ip_address;//ip to which the client will connect to..
 
 SOCKET sending_socket;//socket to send data to the server
 //peer_socket is for recving data from the server
+
+bool SEND(SOCKET sock, char* buff, int length)
+{
+	/*overload of send function of UDP having the mechanism of resending and ack*/
+	fd_set master;
+	FD_ZERO(&master);
+	FD_SET(sock, &master);
+	fd_set read;
+	FD_ZERO(&read);
+	chrono::steady_clock::time_point now = chrono::steady_clock::now();
+	
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
+	int b = send(sock, buff, length, 0);
+	if (b < 1)
+	{
+		cout << "\n cannot send the bytes.." << GETSOCKETERRNO();
+		return false;
+	}
+	while (1)
+	{
+		read = master;
+		select(sock + 1, &read, 0, 0, &timeout);
+		if (FD_ISSET(sock, &read))
+		{
+			int ack;
+			int bytes = recv(sock, (char*)&ack, sizeof(ack), 0);
+			if (ack == 1)
+			{
+				return true;
+			}
+		}
+		auto end = chrono::steady_clock::now();
+		chrono::duration<double> iteration_time = chrono::duration_cast<chrono::duration<double>>(end - now);
+		if (iteration_time.count() > 1)
+		{
+			//resend the packet
+			int bytes = send(sock, buff, length, 0);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the bytes again=>" << GETSOCKETERRNO();
+				return false;
+			}
+			
+			now = chrono::steady_clock::now();//changing the time since the last message sent
+		}
+		
+	}
+}
+bool RECV(SOCKET sock, char* buff, int length)
+{
+	/*overload for UDP recv, to recv the data carefully*/
+	while (1)
+	{
+		int b = recv(sock, buff, length, 0);
+		if (b > 1)
+		{
+			int ack = 1;
+			int bytes = send(sock, (char*)&ack, sizeof(ack), 0);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the bytes. . " << GETSOCKETERRNO();
+			}
+			else
+			{
+				cout << "\n sent the ack..";
+			}
+			return true;
+		}
+	}
+
+}
 bool find(int id, int hit[100],int size)
 {
 	for (int i = 0; i < size; i++)
@@ -75,6 +148,7 @@ bool find(int id, int hit[100],int size)
 		}
 	}
 	return false;
+	
 }
 
 SOCKET connect_to_server(int port)//first connection to the server
@@ -148,12 +222,13 @@ SOCKET connect_to_server(int port)//first connection to the server
 	strcpy(gc.token, game_token.c_str());
 	
 
-	int bytes_sent = send(socket_peer,(char*)&gc,sizeof(gc), 0);
-
-	printf("Sent %d bytes.\n", bytes_sent);
-
+	if (!SEND(socket_peer, (char*)&gc, sizeof(gc)))
+	{
+		cout << "\n cannot send the code to the server=>" << GETSOCKETERRNO();
+	}
+	
 	cout << "\n waiting for the server to send me the id=>";
-	int bytes = recv(socket_peer, (char*)&my_id, sizeof(my_id), 0);
+	RECV(socket_peer, (char*)&my_id, sizeof(my_id));
 	cout << "\n id sent by the client is=>" << my_id;
 	return socket_peer;
 
@@ -1257,25 +1332,22 @@ int main(int argc,char* argv[])
 	
 	
 	//receiving the startupinfo data
-	Startup_info_client start_data;
-	memset((void*)&start_data, 0, sizeof(start_data));
-	 
-	struct sockaddr_storage client_address;
-	int client_length = sizeof(client_address);
-	char buffer[1000];
-	int bytes = recv(socket_listen,(char*)&start_data, sizeof(start_data), 0);
-	if (bytes < 1)
-	{
-		cout << "\n cannot recv the bytes from the server due to==>" << GetLastErrorAsString();
-	}
-	cout << "\n buffer received is==>" << buffer;
 	
-	cout << "\n received bytes are==>" << bytes;
-	cout << "\n my ship id is==>" << start_data.ship_id;
-	cout << "\n my pos is=>" << start_data.starting_pos.r << " " << start_data.starting_pos.c;
-	const int no_of_players = start_data.no_of_players;
-	cout << "\n number of players==>" << no_of_players;
+		Startup_info_client start_data;
+		memset((void*)&start_data, 0, sizeof(start_data));
 
+		struct sockaddr_storage client_address;
+		int client_length = sizeof(client_address);
+		char buffer[1000];
+		RECV(socket_listen, (char*)&start_data, sizeof(start_data));
+					
+			cout << "\n my ship id is==>" << start_data.ship_id;
+			cout << "\n my pos is=>" << start_data.starting_pos.r << " " << start_data.starting_pos.c;
+			const int no_of_players = start_data.no_of_players;
+			cout << "\n number of players==>" << no_of_players;
+					
+		
+	
 	ship *player = new ship[no_of_players];
 
 	Control control;
