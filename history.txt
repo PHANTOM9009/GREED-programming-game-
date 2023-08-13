@@ -118,3 +118,9 @@ so now we will be working on it
  to check if the VM can even take the load of sending frames, i am writing a pseudo program to check.
  sad to see i have to go all through this again.
  -------------------------------------------------------------------------------------------------------------------------------
+ 8th august 23:
+ aws worked.
+ now the issues are:
+ previous frames must be discarded at once. if you can make some prediction algorithm.
+ there is something wrong in sending startup data, so i will recommend to use tcp for that or keep a ack mechanism
+ 

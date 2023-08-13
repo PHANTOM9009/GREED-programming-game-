@@ -533,13 +533,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	int prev_packet_terminal = 0;
 	int prev_packet_display = 0;
 	//sending the data to the client display to check the connectivity issue
-	char msg[100] = "hello client display";
-	int b = sendto(socket_listen2, msg, sizeof(msg), 0, (sockaddr*)&socket_id_display[1], sizeof(socket_id_display[1]));
-	if (b < 1)
-	{
-		cout << "\n could not send the bytes==>" << GetLastErrorAsString();
-	}
-	
+		
 	while (1)
 	{
 
@@ -1501,8 +1495,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 							
-							cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
-							hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+						//	cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						}
 
 					}
@@ -1871,11 +1865,10 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		Startup_info_client data1(60, no_of_players, it->first, spawn[it->first]);
 		cout << "\n the id is==>" << it->first;
 		int bytes = sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&it->second, sizeof(it->second));
-		while (bytes < sizeof(data1))
+		if (bytes < 1)
 		{
-			bytes += sendto(socket_listen, (char*)&data1 + bytes, sizeof(data1) - bytes, 0,(sockaddr*)&it->second,sizeof(it->second));//sending socket is wrong
+			cout << "\n could not send startup info to the client==>" << GetLastErrorAsString();
 		}
-
 	}
 	cout << "\n data is sent to all the clients";
 	control.setShipList(slist, 2369);

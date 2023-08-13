@@ -384,13 +384,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	int prev_packet = 0;
 
 	//sending something from recver_socket to check the connection endpoint
-	char msg[100];
-	int b = recv(recver_socket, msg, sizeof(msg), 0);
-	if (b < 1)
-	{
-		cout << "\n did not recv the bytes from the server=>" << GETSOCKETERRNO();
-	}
-	cout << "\n the message is==>" << msg;
+	
 	
 	while (window.isOpen())
 	{
@@ -505,45 +499,47 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			}
 			
 			int bytes_received = -1;
-			if (1)
+			if (FD_ISSET(recver_socket,&temp_set))
 			{
 				memset((void*)&ship_data, 0, sizeof(ship_data));
 				//receiving the data
 				gone = 1;
 				bytes_received = recv(recver_socket, (char*)&ship_data, sizeof(ship_data), 0);
-
-				
-				if (abs(ship_data.ob[1].absolutePosition.x - prev_x) > 2 || abs(ship_data.ob[1].absolutePosition.y - prev_y) > 2)
-				{
-					cout << "\n discrepency in position of the ship at==>" << ship_data.packet_no << " packet difference is==>" << ship_data.packet_no - previous;
-			
-				}
-				//cout << "\n position of 0th ship==>" << ship_data.ob[0].absolutePosition.x << " " << ship_data.ob[0].absolutePosition.y;
-				prev_x = ship_data.ob[1].absolutePosition.x;
-				prev_y = ship_data.ob[1].absolutePosition.y;
 				if (bytes_received < 1)
 				{
 					cout << "\n server disconnected the connection";
 					CLOSESOCKET(peer_socket);
 					continue;
 				}
-				double diff = ship_data.packet_no - previous;
-				if (diff > 1)
-				{
-					//cout << "\n difference is greater than 1=>" << diff << " " << previous;
-				}
+				
 
-				previous = ship_data.packet_no;
-				gameOver = ship_data.gameOver;
-				started = true;
-				auto now = std::chrono::system_clock::now();
-				auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-				auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-				auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-				auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+					if (abs(ship_data.ob[1].absolutePosition.x - prev_x) > 2 || abs(ship_data.ob[1].absolutePosition.y - prev_y) > 2)
+					{
+						cout << "\n discrepency in position of the ship at==>" << ship_data.packet_no << " packet difference is==>" << ship_data.packet_no - previous;
 
-			//	cout << "\n recved data from the server==>" << ship_data.packet_no << " at the time==> " <<
-					//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					}
+					//cout << "\n position of 0th ship==>" << ship_data.ob[0].absolutePosition.x << " " << ship_data.ob[0].absolutePosition.y;
+					prev_x = ship_data.ob[1].absolutePosition.x;
+					prev_y = ship_data.ob[1].absolutePosition.y;
+
+					double diff = ship_data.packet_no - previous;
+					if (diff > 1)
+					{
+						//cout << "\n difference is greater than 1=>" << diff << " " << previous;
+					}
+
+					previous = ship_data.packet_no;
+					gameOver = ship_data.gameOver;
+					started = true;
+					auto now = std::chrono::system_clock::now();
+					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+					//	cout << "\n recved data from the server==>" << ship_data.packet_no << " at the time==> " <<
+							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+				
 			}
 
 			/*code to update the timer*/

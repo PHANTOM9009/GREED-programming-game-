@@ -339,8 +339,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-					cout << "\n recved data from the client terminal =>" <<data1.packet_id << " at the time==> " <<
-						hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+				//	cout << "\n recved data from the client terminal =>" <<data1.packet_id << " at the time==> " <<
+					//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 				}
 				else
 				{
@@ -1216,6 +1216,7 @@ int main(int argc,char* argv[])
 	 port=connect_to_lobby_server();
 	socket_listen = connect_to_server(port);   
 	
+	
 	//added the thing that when the game overs, the client will break the loop and close the connection.
 	char path_c[MAX_PATH];
 	string path;
@@ -1261,7 +1262,13 @@ int main(int argc,char* argv[])
 	 
 	struct sockaddr_storage client_address;
 	int client_length = sizeof(client_address);
-	int bytes = recv(socket_listen, (char*)&start_data, sizeof(start_data), 0);
+	char buffer[1000];
+	int bytes = recv(socket_listen,(char*)&start_data, sizeof(start_data), 0);
+	if (bytes < 1)
+	{
+		cout << "\n cannot recv the bytes from the server due to==>" << GetLastErrorAsString();
+	}
+	cout << "\n buffer received is==>" << buffer;
 	
 	cout << "\n received bytes are==>" << bytes;
 	cout << "\n my ship id is==>" << start_data.ship_id;
@@ -1348,7 +1355,6 @@ int main(int argc,char* argv[])
 	
 	
 	
-
 }
 
 
