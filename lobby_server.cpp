@@ -395,7 +395,7 @@ void transferSocket(deque<SOCKET>& player_queue, deque<user_credentials> &player
 	}
 		
 	//now sendint the recvr server the credentials of the incoming user
-
+	/*
 	//preparing the packet
 	int length = end - st + 1;
 	user_credentials_array ob;
@@ -411,7 +411,7 @@ void transferSocket(deque<SOCKET>& player_queue, deque<user_credentials> &player
 	{
 		cout << "\n couldnt send bytes to the game server(i was sending credentials)==>" << GetLastErrorAsString();
 	}
-	
+	*/
 	
 	/*
 	//transfering the sockets

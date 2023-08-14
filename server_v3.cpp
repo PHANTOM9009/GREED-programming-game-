@@ -140,6 +140,10 @@ bool SENDTO(SOCKET sock, char* buff, int length,sockaddr* addr, int tolen)
 		cout << "\n cannot send the bytes.." << GETSOCKETERRNO();
 		return false;
 	}
+	else if (b > 0)
+	{
+		cout << "\n from SENDTO: sent the bytes to the destination successfully..";
+	}
 	while (1)
 	{
 		read = master;
@@ -157,6 +161,7 @@ bool SENDTO(SOCKET sock, char* buff, int length,sockaddr* addr, int tolen)
 			}
 			if (ack == 1)
 			{
+				cout << "\n from SENDTO: recveived the ack..";
 				return true;
 			}
 		}
@@ -171,7 +176,10 @@ bool SENDTO(SOCKET sock, char* buff, int length,sockaddr* addr, int tolen)
 				cout << "\n cannot send the bytes again=>" << GETSOCKETERRNO();
 				return false;
 			}
-
+			else
+			{
+				cout << "\n from SENDTO: sent the bytes again to the destination..apparently the ack did not come.";
+			}
 			now = chrono::steady_clock::now();//changing the time since the last message sent
 		}
 
@@ -1621,7 +1629,6 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		}  
 	}
 	CLOSESOCKET(socket_listen);
-	
 	CLOSESOCKET(socket_listen2);
 	CLOSESOCKET(recver);
 	
@@ -1748,7 +1755,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 10;
-	while (max_player+1> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
+	while (max_player+2> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, &timeout);
@@ -1776,7 +1783,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 							user_cred[idc] = gc.user_cred;//setting the user credential
 							idc++;
 							nn++;
-						}
+					}
 						
 						
 				}

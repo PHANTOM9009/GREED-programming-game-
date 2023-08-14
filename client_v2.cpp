@@ -128,10 +128,7 @@ void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 	pl1[i]->killer_cannon_id = ob.killer_cannon_id;
 	
 	pl1[i]->killed_ships.clear();
-	if (ob.killed_ships_size > 0)
-	{
-		cout << "\n killed ships came";
-	}
+
 	for (int j = 0; j < ob.killed_ships_size; j++)
 	{
 		pl1[i]->killed_ships.push_back(ob.killed_ships[j]);

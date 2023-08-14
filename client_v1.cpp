@@ -117,10 +117,12 @@ bool SEND(SOCKET sock, char* buff, int length)
 }
 bool RECV(SOCKET sock, char* buff, int length)
 {
+	cout << "\n from RECV: just entered into the function..";
 	/*overload for UDP recv, to recv the data carefully*/
 	while (1)
 	{
 		int b = recv(sock, buff, length, 0);
+		cout << "\n from RECV: received some bytes;";
 		if (b > 1)
 		{
 			int ack = 1;
@@ -191,10 +193,11 @@ SOCKET connect_to_server(int port)//first connection to the server
 	printf("Creating socket...\n");
 	SOCKET socket_peer;
 	socket_peer = socket(peer_address->ai_family,
-		peer_address->ai_socktype, peer_address->ai_protocol);
+		peer_address->ai_socktype, peer_address->ai_protocol);//for receiving data from the game server
 
 	sending_socket= socket(peer_address1->ai_family,
-		peer_address1->ai_socktype, peer_address1->ai_protocol);
+		peer_address1->ai_socktype, peer_address1->ai_protocol);//for sending data to the game server
+	
 	if (!ISVALIDSOCKET(socket_peer)) {
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
@@ -1329,7 +1332,6 @@ int main(int argc,char* argv[])
 		cout << "Process created";
 		//return 0;
 	}
-	
 	
 	//receiving the startupinfo data
 	
