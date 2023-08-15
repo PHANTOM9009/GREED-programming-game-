@@ -1333,8 +1333,11 @@ int main(int argc,char* argv[])
 		//return 0;
 	}
 	
-	//receiving the startupinfo data
 	
+
+	
+	//receiving the startupinfo data
+	/*
 		Startup_info_client start_data;
 		memset((void*)&start_data, 0, sizeof(start_data));
 
@@ -1347,8 +1350,45 @@ int main(int argc,char* argv[])
 			cout << "\n my pos is=>" << start_data.starting_pos.r << " " << start_data.starting_pos.c;
 			const int no_of_players = start_data.no_of_players;
 			cout << "\n number of players==>" << no_of_players;
-					
-		
+		*/		
+
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	struct addrinfo* bind_address;
+	getaddrinfo(ip_address.c_str(), "8085", &hints, &bind_address);
+	SOCKET tcp_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
+	if (!ISVALIDSOCKET(tcp_socket))
+	{
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		//return 1;
+	}
+	cout << "\n connecting with the game server using tcp.....";
+	while (connect(tcp_socket, bind_address->ai_addr, bind_address->ai_addrlen))
+	{
+		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+		cout << GetLastErrorAsString();
+		//return 1;
+	}
+	freeaddrinfo(bind_address);
+	cout << "\n connected with the game server using tcp. ";
+	int bytes = send(tcp_socket, (char*)&my_id, sizeof(my_id), 0);
+	if (bytes < 1)
+	{
+		cout << "\n error in sending my id to the game server=>" << GetLastErrorAsString();
+		cout << GETSOCKETERRNO();
+	}
+	Startup_info_client start_data;
+	memset((void*)&start_data, 0, sizeof(start_data));
+	bytes = recv(tcp_socket, (char*)&start_data, sizeof(start_data), 0);
+	if (bytes < 1)
+	{
+		cout << "\n error in receiving startup info from the game server=>" << GetLastErrorAsString();
+		cout << GETSOCKETERRNO();
+	}
+	const int no_of_players = start_data.no_of_players;
+	cout << "\n number of players==>" << no_of_players;
 	
 	ship *player = new ship[no_of_players];
 
@@ -1416,11 +1456,20 @@ int main(int argc,char* argv[])
 	control.cannon_list = cannon_list;
 	ship::cannon_list = cannon_list;
 
-	
+	//waiting for the game server for the green signal to start the game;
+	int start = 0;
+	bytes = recv(tcp_socket, (char*)&start, sizeof(start), 0);
+	if (bytes < 1)
+	{
+		cout << "\n error in receiving startup info from the game server=>" << GetLastErrorAsString();
+		cout << GETSOCKETERRNO();
+	}
+	cout << "\n starting the game==>" << start;
+
+	CLOSESOCKET(tcp_socket);
 	graphics cg;
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
-	
 	
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";

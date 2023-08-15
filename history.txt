@@ -133,4 +133,11 @@ so now we will be working on it
  
  lobby server is working over tcp so no problem over there the only problem will be in the server_v3..check that
  -------------------------------------------------------------------------------------------------------------------------------
- 
+15th august 2023
+so today the game is 90% perfectly running, 
+check for:
+1. with multiple game servers, manage to send the correct port;
+2. don't use previous packets ever in the client, server and display unit change it.
+3. create a library for the user. check for security if you can.
+
+and now to take it to production some preventions have to be done as well.

@@ -1755,7 +1755,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 10;
-	while (max_player+2> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
+	while (max_player+1> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, &timeout);
@@ -1933,6 +1933,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	//connector_show(socket_display,socket_id_display, 1);//connecting with display unit of the client
 
 	cout << "\n sending the data to the clients=>";
+/*
 	for (int i = 0; i < no_of_players; i++)
 	{
 		auto it = socket_id.begin();
@@ -1943,6 +1944,121 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		SENDTO(socket_listen, (char*)&data1, sizeof(data1),(sockaddr*)&it->second, sizeof(it->second));
 		
 	}
+	*/
+	//starting the tcp connection with the clients for the connection
+
+	struct addrinfo hints1;
+	memset(&hints1, 0, sizeof(hints1));
+	hints1.ai_family = AF_INET;
+	hints1.ai_socktype = SOCK_STREAM;
+	hints1.ai_flags = AI_PASSIVE;
+	struct addrinfo* bind_addres;
+	getaddrinfo(0, "8085", &hints1, &bind_addres);//this server is running on port 8080
+
+	SOCKET tcp_socket = socket(bind_addres->ai_family, bind_addres->ai_socktype, bind_addres->ai_protocol);
+	if (!ISVALIDSOCKET(tcp_socket))
+	{
+		cout << "\n socket not created=>" << GETSOCKETERRNO();
+	}
+	/*
+	int option = 0;
+	if (setsockopt(socket_listen, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&option, sizeof(option)))//for accepting ipv6 as well
+	{
+		cout << "\n problem in setting the flag==>";
+	}
+	*/
+	cout << "\n binding the socket==>";
+	if (bind(tcp_socket, (const sockaddr*)bind_addres->ai_addr, (int)bind_addres->ai_addrlen))
+	{
+		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO();
+	}
+	if (listen(tcp_socket, 20) < 0)
+	{
+		cout << "\n socket failed";
+	}
+	freeaddrinfo(bind_addres);
+	fd_set all;
+	FD_ZERO(&all);
+	FD_SET(tcp_socket, &all);
+	fd_set read;
+	FD_ZERO(&read);
+	int count = 0;
+	max_socket = tcp_socket;
+	while (count != max_player)
+	{
+		read = all;
+		struct timeval timeout;
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 0;
+		select(max_socket + 1, &read, 0, 0, &timeout);
+		for (int i = 1; i <= max_socket; i++)
+		{
+
+			if (FD_ISSET(i, &read))
+			{
+				if (i == tcp_socket)
+				{
+					//connect with the client
+					struct sockaddr_storage client_address;
+					socklen_t client_len = sizeof(client_address);
+					SOCKET client = accept(tcp_socket, (sockaddr*)&client_address, &client_len);
+					cout << "\n connection accepted=>" << client;
+					FD_SET(client, &all);
+					if (client > max_socket)
+					{
+						max_socket = client;
+					}
+
+				}
+				else
+				{
+					int id;
+					int bytes = recv(i, (char*)&id, sizeof(id), 0);
+					if (bytes < 1)
+					{
+						cout << "\n cannot recv tcp id from the client terminal" << GetLastErrorAsString() << GETSOCKETERRNO();
+						cout << "\n socket that got ready is==>" << i;
+					}
+					//sending the respected data to the client terminal
+					else if (bytes > 1)
+					{
+						Startup_info_client data1(60, no_of_players, id, spawn[id]);
+						bytes = send(i, (char*)&data1, sizeof(data1), 0);
+						if (bytes < 1)
+						{
+							cout << "\n cannot send the data to the client" << GetLastErrorAsString();
+						}
+						count++;
+					}
+				}
+
+
+			}
+		}
+	}
+	
+	//send to all the clients terminal to start the game now
+	int start = 1;
+	for (int i = 1; i <= max_socket; i++)
+	{
+		if (FD_ISSET(i, &all))
+		{
+			int bytes = send(i, (char*)&start, sizeof(start), 0);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the data to the client" << GetLastErrorAsString();
+			}
+		}
+	}
+	//closing the sockets now
+	for (int i = 1; i <= max_socket; i++)
+	{
+		if (FD_ISSET(i, &all))
+		{
+			CLOSESOCKET(i);
+		}
+	}
+	
 	cout << "\n data is sent to all the clients";
 	control.setShipList(slist, 2369);
 

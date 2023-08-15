@@ -435,7 +435,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	Greed::abs_pos prev1 = pl1[0]->getAbsolutePosition();
 	
 	window.setFramerateLimit(60);
-	double previous = 0;
+	double previous = -1;
 	double previous_angle = 0;
 	double avg_bullet = 0;
 	top_layer ship_data;
@@ -574,7 +574,8 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 					continue;
 				}
 				
-
+				if (1)
+				{
 					if (abs(ship_data.ob[1].absolutePosition.x - prev_x) > 2 || abs(ship_data.ob[1].absolutePosition.y - prev_y) > 2)
 					{
 						cout << "\n discrepency in position of the ship at==>" << ship_data.packet_no << " packet difference is==>" << ship_data.packet_no - previous;
@@ -601,6 +602,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 					//	cout << "\n recved data from the server==>" << ship_data.packet_no << " at the time==> " <<
 							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+				}
 				
 			}
 
