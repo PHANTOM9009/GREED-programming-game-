@@ -141,3 +141,6 @@ check for:
 3. create a library for the user. check for security if you can.
 
 and now to take it to production some preventions have to be done as well.
+-----------------------------------------------------------------------------------------
+there is another problem and now a big one, the client is not able to connect on the current wifi, i don't fukcing know why.
+i dont know now what to do/

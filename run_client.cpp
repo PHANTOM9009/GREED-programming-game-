@@ -114,21 +114,20 @@ int main() {
     while (1)
     {
         int num;
-        bytes = recv(socket_listen,(char*)&num, sizeof(num), 0);
+        bytes = send(socket_listen,(char*)&num, sizeof(num), 0);
         if (bytes < 1)
         {
             cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
         }
         else
         {
-            cout << "\n recved bytes from the server=>" << num;
             auto now = std::chrono::system_clock::now();
             auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
             auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
             auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
             auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-            	cout << "\n recved data from the server at the time==> " <<
+            	cout << "\n sent data from the client at the time==> " <<
                	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
         }
     }

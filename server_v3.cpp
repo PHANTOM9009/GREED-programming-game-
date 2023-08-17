@@ -429,6 +429,7 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 {
 	while (1)
 	{
+		Sleep(500);
 		unique_lock<mutex> lk1(m->gameOver_check);
 		if (gameOver)
 		{
@@ -465,6 +466,7 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 	
 	while (1)
 	{
+		Sleep(500);
 		unique_lock<mutex> lk1(m->gameOver_check);
 		if (gameOver)
 		{
@@ -622,7 +624,17 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	int prev_packet_terminal = 0;
 	int prev_packet_display = 0;
 	//sending the data to the client display to check the connectivity issue
-		
+	char buffp[100] = "bona premed";
+	int bi = sendto(socket_listen, buffp, sizeof(buffp), 0, (sockaddr*)&socket_id[1], sizeof(socket_id[1]));
+	if (bi > 1)
+	{
+		cout << "\n sent bytes to the client terminal";
+	}
+	bi = sendto(socket_listen2, buffp, sizeof(buffp), 0, (sockaddr*)&socket_id_display[1], sizeof(socket_id_display[1]));
+	if (bi > 1)
+	{
+		cout << "\n sent bytes to the client display unit";
+	}
 	while (1)
 	{
 
@@ -1550,6 +1562,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			
 				if (FD_ISSET(recver, &read))
 				{
+					cout << "\n data is ready to be read from..";
 					send_data data2;
 					memset((void*)&data2, 0, sizeof(data2));
 					struct sockaddr_storage client_address;
@@ -1576,8 +1589,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
-						if (sid == 1)//for 1 only
-						{
+					
 							auto now = std::chrono::system_clock::now();
 							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
@@ -1586,14 +1598,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							
 							cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
 							hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-						}
+						
 
 					}
 					else if(bytes>0)
 					{
 						cout << "\n non verified user sending data..";
 						cout << "\n the authenticated data sent is==>" << data2.user_cred.username << " " << data2.user_cred.password;
-
 					}
 
 					std::time_t result = std::time(nullptr);

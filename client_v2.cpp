@@ -446,13 +446,16 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	int prev_packet = 0;
 
 	//sending something from recver_socket to check the connection endpoint
-	
+	char buff[100];
+	int bio = recv(recver_socket, buff, sizeof(buff), 0);
+	if (bio > 1)
+	{
+		cout << "\n recved message from the game server is==>" << buff;
+	}
 	
 	while (window.isOpen())
 	{
 		temp_set = master;
-		
-
 		c++;
 		frames++;
 		sf::Event event;

@@ -87,21 +87,20 @@ int main()
     int n = 0;
     while (1)
     {
-        bytes = sendto(socket_peer, (char*)&n, sizeof(n), 0, (sockaddr*)&client_address, client_len);
+        bytes = recvfrom(socket_peer, (char*)&n, sizeof(n), 0, (sockaddr*)&client_address, &client_len);
         if (bytes < 1)
         {
-            cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+            cout << "\n cannot recv bytes to the client==>" << GETSOCKETERRNO();
         }
         else
         {
-            cout << "\n sent=>" << n;
             auto now = std::chrono::system_clock::now();
             auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
             auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
             auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
             auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-            cout << "\n sent data to the client at==> " <<
+            cout << "\n recved data to the client at==> " <<
                 hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
         }
         n++;

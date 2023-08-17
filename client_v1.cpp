@@ -299,8 +299,81 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 	int previous_packet = -1;
 	//accepting the testing message from the servser
+	
+	//receving hi from the server
+	char buffp[100];
+	int bi = recv(peer_socket, (char*)&buffp, sizeof(buffp), 0);
+	cout << "\n message from the server=>" << buffp;
+	while (1)
+	{
+		recv_data data1;
+		memset(&data1, 0, sizeof(data1));
+		int bytes_recv = recv(peer_socket, (char*)&data1, sizeof(data1), 0);
 
 
+
+		if (bytes_recv < 1)//connection is broken
+		{
+			//try to reconnect to the server
+			cout << "\n average bullets are==>" << avg_bullet / no_of_times;
+			cout << "\n jab aaye toh itne aaye=>" << avg_nav_req / total_frames;
+			cout << "\n avg_nav_req over total frames=>" << avg_nav_req / tot;
+			cout << "\n connection disconnected to the server..retrying to connect";
+			//peer_socket = connect_to_server();
+			cout << "\n connection is back.";
+			cout << "\n server disconnected or the data is not able to be received==>" << GETSOCKETERRNO();
+			CLOSESOCKET(peer_socket);
+			cout << "\n breaking due to not being able to recv the data";
+			break;
+		}
+		//we have received the data.. now parse the data in original class structure.
+		if (bytes_recv > 0 && strcmp(data1.token, game_token.c_str()) == 0)
+		{
+			//cout << "\n for frame=>" << total_time;w
+			/*
+			cout << "\n the data received by the server is==>";
+			//print all the members of data1
+			cout << "\n the frame number is=>" << data1.packet_id;
+			cout << "\n the ship id is=>" << data1.s1;
+			cout << "\n ship_data for me=>";
+			cout << "\n ship id=>" << data1.shipdata_forMe.ship_id;
+			cout << "\n seconds=>" << data1.shipdata_forMe.seconds;
+			cout << "\n minutes=>" << data1.shipdata_forMe.minutes;
+			cout << "\n health=>" << data1.shipdata_forMe.health;
+			cout << "\n gold=>" << data1.shipdata_forMe.gold;
+			cout << "\n died=>" << data1.shipdata_forMe.died;
+			cout << "\n ammo=>" << data1.shipdata_forMe.ammo;
+			cout << "\n fuel=>" << data1.shipdata_forMe.fuel;
+			cout << "\n front tile=>" << data1.shipdata_forMe.front_tile.r << " " << data1.shipdata_forMe.front_tile.c;
+			cout << "\n position is=>" << data1.shipdata_forMe.absolute_position.x << " " << data1.shipdata_forMe.absolute_position.y;
+			*/
+			//cout << "\n packet id=>" << data1.packet_id;
+			if (data1.packet_id - prev_pack > 1)
+			{
+				//	cout<<"\n packet loss=>"<<data1.packet_id - prev_pack;
+			}
+			prev_pack = data1.packet_id;
+			//cout << "\n packet id==>" << data1.packet_id;
+			control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);
+			control_ob.packet_to_me(data1.shipdata_forMe, ship_id, pl1);
+
+
+			if (data1.shipdata_forMe.died == 1)
+			{
+				cout << "\n sent that i have died";
+			}
+			previous_packet = data1.packet_id;
+			gameOver = data1.gameOver;
+			auto now = std::chrono::system_clock::now();
+			auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+			auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+			auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+			auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+			cout << "\n recved data from the server =>" << data1.packet_id << " at the time==> " <<
+				hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+		}
+	}
 	while (1)
 	{
 		/*NOTES:
@@ -352,7 +425,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			sf::Clock recvt;
 			recvt.restart();
 			select(peer_socket + 1, &reads, 0, 0, &timeout);
-			if (FD_ISSET(peer_socket,&reads))//socket is ready to read from
+			if (1)//socket is ready to read from
 			{
 				memset((void*)&data1, 0, sizeof(data1));
 				bytes_recv = recv(peer_socket, (char*)&data1, sizeof(data1), 0);
@@ -417,8 +490,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-				//	cout << "\n recved data from the client terminal =>" <<data1.packet_id << " at the time==> " <<
-					//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					cout << "\n recved data from the server =>" <<data1.packet_id << " at the time==> " <<
+					hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 				}
 				else
 				{
@@ -1335,23 +1408,6 @@ int main(int argc,char* argv[])
 	
 	
 
-	
-	//receiving the startupinfo data
-	/*
-		Startup_info_client start_data;
-		memset((void*)&start_data, 0, sizeof(start_data));
-
-		struct sockaddr_storage client_address;
-		int client_length = sizeof(client_address);
-		char buffer[1000];
-		RECV(socket_listen, (char*)&start_data, sizeof(start_data));
-					
-			cout << "\n my ship id is==>" << start_data.ship_id;
-			cout << "\n my pos is=>" << start_data.starting_pos.r << " " << start_data.starting_pos.c;
-			const int no_of_players = start_data.no_of_players;
-			cout << "\n number of players==>" << no_of_players;
-		*/		
-
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -1471,6 +1527,7 @@ int main(int argc,char* argv[])
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
 	
+
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	cout << "\n child completed";
 	CloseHandle(pi.hProcess);
