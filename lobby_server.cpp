@@ -54,7 +54,7 @@
 
 //runs on the port 8080
 
-#define GAME_SERVER_COUNT 1
+#define GAME_SERVER_COUNT 2
 using namespace std;
 
 sqlite3* db;
@@ -598,7 +598,7 @@ int main()
 			{
 				cout << "\n did not send the port to the server=>" << GetLastErrorAsString();
 			}
-			start_port++;
+			start_port+=4;//8081 to  8084 will be used by one game server.
 			
 			/*
 			//receiving the process id for the process

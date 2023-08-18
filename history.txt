@@ -141,3 +141,9 @@ check for:
 3. create a library for the user. check for security if you can.
 
 and now to take it to production some preventions have to be done as well.
+---------------------------------------------------------------------------------------------------------------------------------
+so yes. the problem is in college wifi and my hotspot, which is filtering packets that we are sending.
+because i am sending the packets, from the server, the wireshark is not showing that any packets are received. that means the problem is in the network
+the network is shit..
+the last check will be at my home wifi, which we will be using.
+---------------------------------------------------------------------------------------------------------------------------------

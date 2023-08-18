@@ -728,6 +728,14 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					unique_lock<mutex> lk(mutx->m[k]);
 					pl1[k]->gameOver = true;
 				}
+				//adding +200 to the score of the winning ship
+				for (int i = 0; i < pl1.size(); i++)
+				{
+					if (pl1[i]->minutes == INT_MAX && pl1[i]->seconds == INT_MAX)
+					{
+						pl1[i]->score += 200;
+					}
+				}
 				unique_lock<mutex> lk(mutx->gameOver_check);
 				gameOver = true;
 				lk.unlock();
@@ -1953,7 +1961,10 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	hints1.ai_socktype = SOCK_STREAM;
 	hints1.ai_flags = AI_PASSIVE;
 	struct addrinfo* bind_addres;
-	getaddrinfo(0, "8085", &hints1, &bind_addres);//this server is running on port 8080
+	int port2 = port + 3;
+	char port2_str[10];
+	sprintf(port2_str, "%d", port2);
+	getaddrinfo(0,port2_str, &hints1, &bind_addres);//this server is running on port 8080
 
 	SOCKET tcp_socket = socket(bind_addres->ai_family, bind_addres->ai_socktype, bind_addres->ai_protocol);
 	if (!ISVALIDSOCKET(tcp_socket))

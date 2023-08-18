@@ -1334,7 +1334,7 @@ int main(int argc,char* argv[])
 	}
 	
 	
-
+	
 	
 	//receiving the startupinfo data
 	/*
@@ -1357,7 +1357,12 @@ int main(int argc,char* argv[])
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	getaddrinfo(ip_address.c_str(), "8085", &hints, &bind_address);
+	int port2 = port + 3;
+	char port2_str[10];
+	sprintf(port2_str, "%d", port2);
+	cout << "\n port of the server2 is==>" << port2_str;
+	getaddrinfo(ip_address.c_str(),port2_str, &hints, &bind_address);
+	
 	SOCKET tcp_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(tcp_socket))
 	{
