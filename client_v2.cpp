@@ -446,7 +446,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	int prev_packet = 0;
 
 	//sending something from recver_socket to check the connection endpoint
-	
+
 	
 	while (window.isOpen())
 	{

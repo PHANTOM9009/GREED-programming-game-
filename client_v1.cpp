@@ -62,7 +62,7 @@ string password = "password";
 string game_token;
 int my_id;//id of the player in the game
 string ip_address;//ip to which the client will connect to..
-
+int mode;
 SOCKET sending_socket;//socket to send data to the server
 //peer_socket is for recving data from the server
 
@@ -217,8 +217,13 @@ SOCKET connect_to_server(int port)//first connection to the server
 		return 1;
 	}
 	//sending the greet_client object to the game server, with my code and credentials.
-
-	int msg = 0;//0 means client_v1_process
+	int msg;
+	if(mode==1)
+	 msg = 0;//0 means client_v1_process
+	else if (mode == 2)
+	{
+		msg = 2;
+	}
 	greet_client gc;
 	gc.code = msg;
 	gc.user_cred = user_credentials(username, password);
@@ -1282,6 +1287,8 @@ int main(int argc,char* argv[])
 	//extracting the data
 	cout << "\n enter the ip address of the server==>";
 	cin >> ip_address;
+	cout << "\n enter the mode in which you want to run this client.. press 1. for client with display unit, otherwise press 2..";
+	cin >> mode;
 #if defined(_WIN32) 
 	WSADATA d;
 	if (WSAStartup(MAKEWORD(2, 2), &d)) {
@@ -1293,46 +1300,47 @@ int main(int argc,char* argv[])
 	SOCKET socket_listen = 0;
 	 port=connect_to_lobby_server();
 	socket_listen = connect_to_server(port);   
-	
-	
-	//added the thing that when the game overs, the client will break the loop and close the connection.
-	char path_c[MAX_PATH];
-	string path;
-	if (GetCurrentDirectoryA(MAX_PATH, path_c) != 0)
-	{
-		path = path_c;
-	}
-	path += "\\client_v2_new.exe ";
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
-	//LPTSTR* arg = { "hello.exe" };
-	//convert port to string and append in commandLine
-	
-	string port_str = to_string(port);
-	string id = to_string(my_id);
-	char cwd[256];
-
-	string commandLine = path + port_str + " " + id + " " + username + " " + password + " " + game_token + " " + ip_address;
-	cout << "\n command line is==>" << commandLine;
-	char str[100];
-	strcpy(str, commandLine.c_str());
-
-	//char commandLine[] = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" 8080";
-	if (!CreateProcessA(NULL, str, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
+	if (mode == 1)
 	{
-		cout << "Error creating process" << GetLastErrorAsString();
+		//added the thing that when the game overs, the client will break the loop and close the connection.
+		char path_c[MAX_PATH];
+		string path;
+		if (GetCurrentDirectoryA(MAX_PATH, path_c) != 0)
+		{
+			path = path_c;
+		}
+		path += "\\client_v2_new.exe ";
+		
+		ZeroMemory(&si, sizeof(si));
+		si.cb = sizeof(si);
+		ZeroMemory(&pi, sizeof(pi));
+		//LPTSTR* arg = { "hello.exe" };
+		//convert port to string and append in commandLine
 
-		return 1;
+		string port_str = to_string(port);
+		string id = to_string(my_id);
+		char cwd[256];
+
+		string commandLine = path + port_str + " " + id + " " + username + " " + password + " " + game_token + " " + ip_address;
+		cout << "\n command line is==>" << commandLine;
+		char str[100];
+		strcpy(str, commandLine.c_str());
+
+		//char commandLine[] = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" 8080";
+		if (!CreateProcessA(NULL, str, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
+		{
+			cout << "Error creating process" << GetLastErrorAsString();
+
+			return 1;
+		}
+		else
+		{
+			cout << "Process created";
+			//return 0;
+		}
 	}
-	else
-	{
-		cout << "Process created";
-		//return 0;
-	}
-	
 	
 	
 	
@@ -1475,12 +1483,13 @@ int main(int argc,char* argv[])
 	graphics cg;
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
-	
-	WaitForSingleObject(pi.hProcess, INFINITE);
-	cout << "\n child completed";
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-	
+	if (mode == 1)
+	{
+		WaitForSingleObject(pi.hProcess, INFINITE);
+		cout << "\n child completed";
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
+	}
 	
 	
 }

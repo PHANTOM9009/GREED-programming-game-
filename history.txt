@@ -147,3 +147,10 @@ because i am sending the packets, from the server, the wireshark is not showing 
 the network is shit..
 the last check will be at my home wifi, which we will be using.
 ---------------------------------------------------------------------------------------------------------------------------------
+i have checked the game at my home, it was working fine so the condition for the game to work is that the wifi should be unrestricted, and the uploading
+speed should be atleast 10 mbps, then only the game will fucking work. thats all from my side.
+ i have made client connection with game server more agile, now the client gets to choose if he wants to open the unit or not.
+ now lets add the game result in the database, this we can also do later when the game is ready to be thrown in the wild.
+ one last change that i would like to check if tcp is blocking udp data, cause if this is the reason then something is wrong. this is i am going to check
+ now
+ 

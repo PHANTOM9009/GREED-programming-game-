@@ -623,10 +623,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	int prev_packet_display = 0;
 	//sending the data to the client display to check the connectivity issue
 		
+	
 	while (1)
 	{
 
-		
 		sf::Time tt = clock1.restart();
 		ep += tt.asSeconds();
 		if (ep > 1)
@@ -1763,7 +1763,10 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 10;
-	while (max_player+1> nn)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
+	int max_display = 0;
+	int curdisp = 0;
+	/*also add if..10 minutes are up, then no more waiting and we will start with whatever we have*/
+	while (max_player > nn || max_display > curdisp)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, &timeout);
@@ -1774,8 +1777,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 				socklen_t client_len = sizeof(client_address);
 				int read;
 				RECVFROM(socket_listen, (char*)&gc, sizeof(gc),(struct sockaddr*)&client_address, client_len);
-				int found = 0;
-				
+				int found = 0;				
 
 				if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
 				{
@@ -1783,7 +1785,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 					string sread = to_string(read);
 					//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
 					cout << "\n code recved is=>" << read;
-					if (sread[0] == '0')
+					if (sread[0] == '0' || sread[0]=='2')
 					{
 							socket_id[idc] = client_address;
 							//sending the id of the client to the client
@@ -1791,16 +1793,18 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 							user_cred[idc] = gc.user_cred;//setting the user credential
 							idc++;
 							nn++;
+							
 					}
-						
+					if (sread[0] == '0')//2 is for when the client does not want its display unit to open
+					{
+						max_display++;
+					}
 						
 				}
-					else
-					{
-						cout << "\n client who did not have the correct game token tried to contact the game server..";
-					}
-				
-			
+				else
+				{
+					cout << "\n client who did not have the correct game token tried to contact the game server..";
+				}	
 			
 		}
 		if (FD_ISSET(socket_listen2, &reads))
@@ -1825,7 +1829,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 						socket_id_display[id] = client_address;
 						//sending the max_player to the display unit
 						SENDTO(socket_listen2, (char*)&max_player, sizeof(max_player),(sockaddr*)&client_address, client_len);
-						nn++;
+						curdisp++;
 					}
 				}
 			
