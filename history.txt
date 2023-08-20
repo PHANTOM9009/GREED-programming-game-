@@ -153,4 +153,19 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  now lets add the game result in the database, this we can also do later when the game is ready to be thrown in the wild.
  one last change that i would like to check if tcp is blocking udp data, cause if this is the reason then something is wrong. this is i am going to check
  now
+ -----------------------------------------------------------------------------------------------------
+ 
+ so now i will start making the LAN version of the game for people to play:
+ the following things will be required to add in the following process:
+ 1. client_v1: add the client library version, and make the terminal user friendly and better;
+ 2. client_v2: add the music in the client, display the username of people
+ for LAN version since there is no database... we need to ask for the name from the people, so for that we don't need the database section.
+ but now we are closer to this version..or no? some things have to be changed in the offline version of the game. 
+ this we will make later on, we will now first make the online version:
+ so to make the online version following things have to be done:
+ 1. for client_v1 add the version of the library, prepare a library for the user, that does not have SFML. and only the required stuff;
+ 2. for client_v2 add the version of the exe, and remove some things. and fix some, add the music and then we are done.
+ for server just add the metrics that can be used by you.
+ also make a display unit that can be connected in case anyone just wants to see the game..
+ over and out.
  

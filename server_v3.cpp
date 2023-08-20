@@ -61,6 +61,7 @@ vector<int> socket_display;//depracated we dont use it anymore, we are using an 
 unordered_map<int,sockaddr_storage> socket_id_display;
 unordered_map<int, user_credentials> user_cred;
 
+
 deque<pair<int,recv_data>> terminal_data;//data queue to send data to the client terminal unit..pair of id and data
 deque<pair<int, top_layer>> display_data;//data for the display unit of the client: pair of id and top_layer data
 
@@ -554,6 +555,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	for (int i = 0; i < pl1.size(); i++)//setting the previous position
 	{
 		prev[i] = pl1[i]->tile_pos_front;
+		pl1[i]->name = user_cred[i].username;//setting the name of the player
 	}
 	total_time = 0;
 	
@@ -1814,7 +1816,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 			socklen_t client_len = sizeof(client_address);
 			int read;
 			RECVFROM(socket_listen2, (char*)&gc, sizeof(gc),(struct sockaddr*)&client_address, client_len);
-			
+			cout << "\n recved data=>" << gc.token;
 				if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
 				{
 					read = gc.code;
@@ -1830,6 +1832,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 						//sending the max_player to the display unit
 						SENDTO(socket_listen2, (char*)&max_player, sizeof(max_player),(sockaddr*)&client_address, client_len);
 						curdisp++;
+						nn++;//to be removed;
 					}
 				}
 			

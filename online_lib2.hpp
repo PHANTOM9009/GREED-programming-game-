@@ -2692,8 +2692,10 @@ public:
 		tgui::ListView::Ptr list1;
 		sf::Text wait;//text to tell the user to wait for others to join'.
 
-
+		tgui::Button::Ptr sound_button;
+		
 	public:
+		void sound_button_function(graphics::GuiRenderer& gui_renderer, sf::Texture& sound_on, sf::Texture& sound_off);
 		GuiRenderer()
 		{
 			//offset coordinate for the name of the player in the small panel
@@ -2713,6 +2715,7 @@ public:
 
 
 		}
+		void sound_button_renderer(sf::Texture& tex);
 		void list1_renderer();
 		void final_window_renderer(tgui::Gui& gui);
 		void health_of_cannon_renderer(tgui::Gui& gui, tgui::Font& font);
@@ -2854,6 +2857,7 @@ public:
 		}
 		int frame(double elapsed_time, sf::Sprite& sp);
 		friend graphics;
+		
 	};
 
 	bool checkCollision(int sid, const Greed::bullet& ob);

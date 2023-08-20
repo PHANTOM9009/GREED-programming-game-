@@ -1,6 +1,6 @@
 #pragma once
 #include<SFML/Graphics.hpp>
-
+#include<SFML/Audio.hpp>
 #include<future>
 #include<thread>
 
@@ -48,7 +48,7 @@ string game_token;//token of the game
 string username;
 string password;
 string ip_address;
-
+bool sound = true;//intiially the sound is on
 
 
 bool SEND(SOCKET sock, char* buff, int length)
@@ -151,7 +151,7 @@ void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 	pl1[i]->ammo = ob.ammo;
 	//pl1[i]->bullet_pointer = ob.bullet_pointer;
 	pl1[i]->tile_pos_front = ob.tile_pos_front;
-	pl1[i]->tile_pos_front = ob.tile_pos_front;
+	pl1[i]->tile_pos_rear = ob.tile_pos_rear;
 	pl1[i]->absolutePosition = ob.absolutePosition;
 
 	if (ob.isthere == true)
@@ -222,7 +222,19 @@ SOCKET connect_to_server()//first connection to the server
 	return peer_socket;
 }
 sf::RenderWindow window(sf::VideoMode(::cx(1970), ::cy(1190)), "GREED");
-
+void graphics::GuiRenderer::sound_button_function(graphics::GuiRenderer& gui_renderer, sf::Texture& sound_on, sf::Texture& sound_off)
+{
+	if (sound)//sound is on
+	{
+		sound = false;
+		gui_renderer.sound_button->getRenderer()->setTexture(sound_off);
+	}
+	else
+	{
+		sound = true;
+		gui_renderer.sound_button->getRenderer()->setTexture(sound_on);
+	}
+}
 void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& map_ob)//taking the ship object so as to access the list of the player
 {
 	deque<int> dying_ships;
@@ -353,6 +365,10 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	resizeTexture(close_button);
 	GuiRenderer gui_renderer(pl1.size(), &window);
 	tgui::Theme::setDefault("TransparentGrey.txt");
+	sf::Texture sound_on_tex;
+	sound_on_tex.loadFromFile("map_1 attributes/sound-on.png");
+	sf::Texture sound_off_tex;
+	sound_off_tex.loadFromFile("map_1 attributes/sound-off.png");
 	auto group1 = tgui::Group::create();//group for the top stats view 
 	auto group2 = tgui::Group::create();//group for the panel view of the stats
 
@@ -392,6 +408,20 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 	gui_renderer.health_of_cannon_renderer(gui, font_bold);
 	gui_renderer.final_window_renderer(gui);
+	
+	gui_renderer.sound_button_renderer(sound_on_tex);
+	//gui_renderer.sound_button->onPress(&graphics::GuiRenderer::sound_button_function,this, gui_renderer, sound_on_tex, sound_off_tex);
+	gui_renderer.sound_button->onPress([&gui_renderer, &sound_on_tex, &sound_off_tex]() {
+		if (sound == true) {
+			sound = false;
+			gui_renderer.sound_button->getRenderer()->setTexture(sound_off_tex);
+		}
+		else if (sound == false)
+		{
+			sound = true;
+			gui_renderer.sound_button->getRenderer()->setTexture(sound_on_tex);
+		}
+		});
 
 	//gui_renderer.childWindowRenderer(gui);
 	//gui function calls ends
@@ -446,10 +476,23 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	int prev_packet = 0;
 
 	//sending something from recver_socket to check the connection endpoint
-
-	
+	sf::Music music;
+	if (!music.openFromFile("solo_by_river.wav"))
+	{
+		cout << "\n error in loading the music file..";
+	}
+	music.setLoop(true);
+	music.play();
 	while (window.isOpen())
 	{
+		if (!sound)
+		{
+			music.pause();
+		}
+		if (sound && music.getStatus() == sf::Music::Paused)
+		{
+			music.play();
+		}
 		temp_set = master;
 		
 
@@ -465,10 +508,11 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 		if (t2 >= 1)
 		{
 			cout << "\n frame rate is==>" << c;
+					
 			c = 0;
 			t2 = 0;
 		}
-		//
+		
 		while (window.pollEvent(event))
 		{
 			gui.handleEvent(event);
@@ -507,6 +551,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 		* 2. time left(time will work according to the server
 		*
 		*/
+	
 		int gone = 0;
 		int found = 0;
 		for (int i = 0; i < cannon_list.howMany(); i++)
@@ -681,6 +726,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				gui_renderer.fire_value[i]->setText(to_string((int)pl1[i]->getCurrentAmmo()));
 				gui_renderer.gold_value[i]->setText(to_string((int)pl1[i]->getCurrentGold()));
 				gui_renderer.fuel_value[i]->setText(to_string((int)pl1[i]->getCurrentFuel()));
+				gui_renderer.player_name[i]->setText(pl1[i]->name + "-" + std::to_string(pl1[i]->ship_id));
 				if (pl1[i]->died == 1)
 				{
 					gui_renderer.player_panels[i]->getRenderer()->setBackgroundColor(sf::Color::Red);
@@ -1027,6 +1073,7 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 	//extracting the data
 	
 	//setting the port number of the server that has to connected with
+	
 	if (argc > 5)
 	{
 		strcpy(server_port, argv[1]);
@@ -1038,9 +1085,16 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 			game_token = argv[5];
 			ip_address = argv[6];
 	}
-
-	
-	
+	/*
+	* to run this file manually
+	strcpy(server_port, "8081");
+	my_id = 1;
+	username = "username";
+	password = "password";
+	cout << "\n enter the game token=>";
+	cin >> game_token;
+	ip_address = "127.0.0.1";
+	*/
 	//connecting with the server_v3 here
 	peer_socket = connect_to_server();
 

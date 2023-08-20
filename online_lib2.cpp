@@ -1131,8 +1131,7 @@ vector<Greed::coords> ship::getRadiusCoords_ship(int s_id)
 	Greed::coords position;
 
 	position = l1[s_id]->getCurrentTile();//first doing with the front position of the ship
-
-
+	
 	int c1 = position.c - radius;
 	if (c1 < 0)
 	{
@@ -1177,9 +1176,9 @@ vector<Greed::coords> ship::getRadiusCoords_ship(int s_id)
 		}
 	}
 	//now doing the same stuff with rear coordinates
-
+	
 	position = l1[s_id]->getCurrentRearTile();
-
+	
 	c1 = position.c - radius;
 	if (c1 < 0)
 	{
@@ -1227,6 +1226,7 @@ vector<Greed::coords> ship::getRadiusCoords_ship(int s_id)
 	for (auto c : arr)
 	{
 		l.push_back(c.first);
+		
 	}
 	return l;
 }
@@ -3496,6 +3496,7 @@ void graphics::GuiRenderer::frameRateSlider_renderer()
 	frameRateSlider->setVerticalScroll(false);
 	frameRateSlider->setPosition(::cx(99), ::cy(40));
 	frameRateSlider->onValueChange(&graphics::GuiRenderer::sliderValueChange, this);
+	frameRateSlider->setVisible(false);
 	sp2->add(frameRateSlider);
 }
 void graphics::GuiRenderer::setting_button_callback(tgui::Gui& gui)
@@ -3513,6 +3514,7 @@ void graphics::GuiRenderer::frame_rate_slider_renderer()
 	//frameRateSliderText->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
 	frameRateSliderText->setTextSize((::cx(18) + ::cy(18)) / 2);
 	frameRateSliderText->setHorizontalAlignment(tgui::Label::HorizontalAlignment::Center);
+	frameRateSliderText->setVisible(false);
 	sp2->add(frameRateSliderText);
 
 }
@@ -3526,6 +3528,7 @@ void graphics::GuiRenderer::sp2_renderer()
 	sp2->setHorizontalScrollbarPolicy(tgui::Scrollbar::Policy::Never);
 	frameRateSlider_renderer();
 	frame_rate_slider_renderer();
+	sp2->add(sound_button);
 	line1_renderer();
 	tb1_renderer();
 	tb2_renderer();
@@ -3620,6 +3623,18 @@ void graphics::GuiRenderer::closeButton_renderer(sf::Texture& tex)
 	closeButton->getRenderer()->setBorders(tgui::Borders::Outline(0, 0, 0, 0));
 	closeButton->getRenderer()->setBorderColorFocused(sf::Color::Black);
 	closeButton->onPress(&graphics::GuiRenderer::closeButton_callback, this);
+}
+void graphics::GuiRenderer::sound_button_renderer(sf::Texture& tex)
+{
+	sound_button = tgui::Button::create();
+	sound_button->setSize(::cx(tex.getSize().x), ::cy(tex.getSize().y));
+	sound_button->getRenderer()->setTexture(tex);
+	sound_button->setPosition(::cx(5), ::cy(5));
+	sound_button->getRenderer()->setBorderColor(sf::Color::Black);
+	sound_button->getRenderer()->setBorderColorHover(sf::Color::Black);
+	sound_button->getRenderer()->setBorders(tgui::Borders::Outline(0, 0, 0, 0));
+	sound_button->getRenderer()->setBorderColorFocused(sf::Color::Black);
+	//sp2->add(sound_button);
 }
 void graphics::GuiRenderer::time_line_renderer(tgui::Gui& gui)
 {
@@ -4034,6 +4049,7 @@ void graphics::tileMap::setScene(int w, int h, int xx, int yy, sf::Texture& tex,
 			temp[3].texCoords = sf::Vector2f(tex.getSize().x / 2 * code[i][j], tex.getSize().y);
 			if (showPatterns)
 			{
+				temp[0].color = sf::Color::Blue;
 				temp[2].color = sf::Color::Blue;
 			}
 			else
