@@ -117,12 +117,12 @@ bool SEND(SOCKET sock, char* buff, int length)
 }
 bool RECV(SOCKET sock, char* buff, int length)
 {
-	cout << "\n from RECV: just entered into the function..";
+	//cout << "\n from RECV: just entered into the function..";
 	/*overload for UDP recv, to recv the data carefully*/
 	while (1)
 	{
 		int b = recv(sock, buff, length, 0);
-		cout << "\n from RECV: received some bytes;";
+		//cout << "\n from RECV: received some bytes;";
 		if (b > 1)
 		{
 			int ack = 1;
@@ -131,10 +131,7 @@ bool RECV(SOCKET sock, char* buff, int length)
 			{
 				cout << "\n cannot send the bytes. . " << GETSOCKETERRNO();
 			}
-			else
-			{
-				cout << "\n sent the ack..";
-			}
+			
 			return true;
 		}
 	}
@@ -161,7 +158,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 	char port_str1[10];
 	sprintf(port_str1, "%d", (port + 2));
 
-	printf("Configuring remote address...\n");
+	//printf("Configuring remote address...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_DGRAM;
@@ -180,17 +177,6 @@ SOCKET connect_to_server(int port)//first connection to the server
 		return 1;
 	}
 
-	printf("Remote address is: ");
-	char address_buffer[100];
-	char service_buffer[100];
-	getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen,
-		address_buffer, sizeof(address_buffer),
-		service_buffer, sizeof(service_buffer),
-		NI_NUMERICHOST | NI_NUMERICSERV);
-	printf("%s %s\n", address_buffer, service_buffer);
-
-
-	printf("Creating socket...\n");
 	SOCKET socket_peer;
 	socket_peer = socket(peer_address->ai_family,
 		peer_address->ai_socktype, peer_address->ai_protocol);//for receiving data from the game server
@@ -235,7 +221,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 		cout << "\n cannot send the code to the server=>" << GETSOCKETERRNO();
 	}
 	
-	cout << "\n waiting for the server to send me the id=>";
+	cout << "\n waiting for the game server to send me the id..";
 	RECV(socket_peer, (char*)&my_id, sizeof(my_id));
 	cout << "\n id sent by the client is=>" << my_id;
 	return socket_peer;
@@ -286,7 +272,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	FD_ZERO(&writes);
 
 	vector<Greed::bullet> newBullets;
-	
+	cout << "\n from now on the statements will be printed of your algorithm..\n";
 	thread t(user1::GreedMain, ref(player));
 	t.detach();
 	int frame_no = 0;
@@ -408,12 +394,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					//cout << "\n packet id==>" << data1.packet_id;
 					control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);
 					control_ob.packet_to_me(data1.shipdata_forMe, ship_id, pl1);
+						
 					
-					
-					if (data1.shipdata_forMe.died == 1)
-					{
-						cout << "\n sent that i have died";
-					}
 					previous_packet = data1.packet_id;
 					gameOver = data1.gameOver;
 					auto now = std::chrono::system_clock::now();
@@ -441,7 +423,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
 			if (gameOver||pl1[ship_id]->died==1)
 			{
-				cout << "\n breaking because the game is over(as told by the server, or the ship has died)";
+				//cout << "\n breaking because the game is over(as told by the server, or the ship has died)";
 				break;
 			}
 			if (!gameOver)
@@ -1155,14 +1137,6 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						data2.shipdata_forServer = shipdata;
 						data2.user_cred = user_credentials(username, password);
 						//sending the data
-						if (shipdata.size_navigation > 0)
-						{
-							cout << "\n navigation called at frame number==>" << frame_number;
-							
-						}
-
-
-
 						int bytes = send(sending_socket, (char*)&data2, sizeof(data2), 0);
 											
 						if (bytes < 1)
@@ -1201,9 +1175,6 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		next_frame = elapsed_time * 60;
 			
 	}
-	cout << "\n average receiving time==>" << avg_recv / cc;
-	cout << "\n average processing time==>" << avg_processing /cc;
-	cout << "\n average sending time==>" << avg_send / cc;
 
 	CLOSESOCKET(peer_socket);
 	CLOSESOCKET(sending_socket);
@@ -1278,7 +1249,7 @@ int connect_to_lobby_server()
 	}
 	port = start.port;
 	game_token = start.token;
-	cout << "\n received port and token from the lobby server=>" << port<<" "<<start.token;
+	cout << "\n received port and token from the lobby server..";
 	return port;
 }
 
@@ -1287,12 +1258,13 @@ int main(int argc,char* argv[])
 	//extracting the data
 	cout << "\n enter the ip address of the server==>";
 	cin >> ip_address;
-	cout << "\n enter the mode in which you want to run this client.. press 1. for client with display unit, otherwise press 2..";
+	cout << "\n enter the mode in which you want to run this client.. press 1. for client with display unit.\n otherwise press 2==>";
 	cin >> mode;
 #if defined(_WIN32) 
 	WSADATA d;
 	if (WSAStartup(MAKEWORD(2, 2), &d)) {
 		fprintf(stderr, "Failed to initialize.\n");
+		cout << "\n winsock not found.";
 		return 1;
 	}
 #endif
@@ -1324,7 +1296,7 @@ int main(int argc,char* argv[])
 		char cwd[256];
 
 		string commandLine = path + port_str + " " + id + " " + username + " " + password + " " + game_token + " " + ip_address;
-		cout << "\n command line is==>" << commandLine;
+		//cout << "\n command line is==>" << commandLine;
 		char str[100];
 		strcpy(str, commandLine.c_str());
 
@@ -1368,7 +1340,7 @@ int main(int argc,char* argv[])
 	int port2 = port + 3;
 	char port2_str[10];
 	sprintf(port2_str, "%d", port2);
-	cout << "\n port of the server2 is==>" << port2_str;
+	//cout << "\n port of the server2 is==>" << port2_str;
 	getaddrinfo(ip_address.c_str(),port2_str, &hints, &bind_address);
 	
 	SOCKET tcp_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
@@ -1377,7 +1349,7 @@ int main(int argc,char* argv[])
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		//return 1;
 	}
-	cout << "\n connecting with the game server using tcp.....";
+	//cout << "\n connecting with the game server using tcp.....";
 	while (connect(tcp_socket, bind_address->ai_addr, bind_address->ai_addrlen))
 	{
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
@@ -1385,7 +1357,7 @@ int main(int argc,char* argv[])
 		//return 1;
 	}
 	freeaddrinfo(bind_address);
-	cout << "\n connected with the game server using tcp. ";
+	//cout << "\n connected with the game server using tcp. ";
 	int bytes = send(tcp_socket, (char*)&my_id, sizeof(my_id), 0);
 	if (bytes < 1)
 	{
