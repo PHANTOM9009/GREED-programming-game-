@@ -1,6 +1,7 @@
 #pragma once
 #include<SFML/Graphics.hpp>
 
+
 #if defined(_WIN32)
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
@@ -1259,8 +1260,6 @@ int main(int argc,char* argv[])
 	cin >> ip_address;
 	cout << "\n enter the mode in which you want to run this client.. press 1. for client with display unit.\n otherwise press 2==>";
 	cin >> mode;
-	cout << "\n enter your username ( you will be representated by this name in the game)=>";
-	cin >> username;
 #if defined(_WIN32) 
 	WSADATA d;
 	if (WSAStartup(MAKEWORD(2, 2), &d)) {

@@ -1832,7 +1832,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 						//sending the max_player to the display unit
 						SENDTO(socket_listen2, (char*)&max_player, sizeof(max_player),(sockaddr*)&client_address, client_len);
 						curdisp++;
-						
+						nn++;//to be removed;
 					}
 				}
 			
