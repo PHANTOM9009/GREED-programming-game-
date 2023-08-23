@@ -1260,6 +1260,8 @@ int main(int argc,char* argv[])
 	cin >> ip_address;
 	cout << "\n enter the mode in which you want to run this client.. press 1. for client with display unit.\n otherwise press 2==>";
 	cin >> mode;
+	cout << "\n enter the username of the player==>";
+	cin >> username;//inputting the username
 #if defined(_WIN32) 
 	WSADATA d;
 	if (WSAStartup(MAKEWORD(2, 2), &d)) {
