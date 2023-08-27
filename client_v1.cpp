@@ -1,5 +1,5 @@
 #pragma once
-#include<SFML/Graphics.hpp>
+//#include<SFML/Graphics.hpp>
 
 
 #if defined(_WIN32)
@@ -33,9 +33,11 @@
 #define SOCKET int
 #define GETSOCKETERRNO() (errno)
 #endif
-
-#include "online_lib2.hpp"
-#include "online_lib2.cpp"
+#pragma once
+//#include "online_lib2.hpp"
+//#include "online_lib2.cpp"
+#include "greed_offline.hpp"
+#include "greed_offline.cpp"
 #include "hawk.cpp"
 #include<ctime>
 #include<chrono>
@@ -228,7 +230,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 
 }
 
-void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns], Map& map_ob,int peer_s,ship &player)
+void Control::callable_client(int ship_id,Mutex* mutx, int code[rows][columns], Map& map_ob,int peer_s,ship &player)
 {
 
 	SOCKET peer_socket = peer_s;
@@ -240,7 +242,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 	List<Greed::cannon>& cannon_list = nm.getCannonList(2369);
 	//leaving the opaque coordinates list, if needed later it will be imported
-	sf::Clock clock;
+	
 	double elapsed_time = 0;
 	int c = 0;
 	double t2 = 0;
@@ -281,7 +283,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int tot = 0;
 	int frame_rate = 0;
 	double check_time = 0;
-	sf::Clock clock1;
+	
 	int cc = 0;
 	double avg_recv = 0;
 	double avg_send = 0;
@@ -340,8 +342,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				cout << "\n breaking because the ship is dead.";
 				break;
 			}
-			sf::Clock recvt;
-			recvt.restart();
+			
 			select(peer_socket + 1, &reads, 0, 0, &timeout);
 			if (FD_ISSET(peer_socket,&reads))//socket is ready to read from
 			{
@@ -416,7 +417,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				
 
 			}
-			avg_recv += recvt.getElapsedTime().asSeconds();
+			
 			
 			//std::time_t result = std::time(nullptr);
 		    //cout << "\n----------------------------------------------------------";
@@ -429,8 +430,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			if (!gameOver)
 			{
 				//using nav_data
-				sf::Clock process;
-				process.restart();
+				
 				if (pl1[ship_id]->nav_data.size() > 0 && frame_no % 120 == 0)//once every two frame
 				{
 					total_frames++;
@@ -1113,12 +1113,11 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				
 				/*event handling is over here*/
 
-					avg_processing += process.getElapsedTime().asSeconds();
+					
 			}
 			
 			//send the data over here
-			sf::Clock sending;
-			sending.restart();
+		
 			
 			if (pl1[ship_id]->died == 0)//send the data only if the ship is alive
 			{
@@ -1159,7 +1158,6 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 				}
 			}
-			avg_send += sending.getElapsedTime().asSeconds();
 			
 		}
 		chrono::steady_clock::time_point end = chrono::steady_clock::now();
@@ -1454,8 +1452,8 @@ int main(int argc,char* argv[])
 	cout << "\n starting the game==>" << start;
 
 	CLOSESOCKET(tcp_socket);
-	graphics cg;
-	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
+	
+	control.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish
 	if (mode == 1)
 	{

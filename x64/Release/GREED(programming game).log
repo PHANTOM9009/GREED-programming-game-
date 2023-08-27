@@ -386,9 +386,9 @@ F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3498,32): message : see the first reference to 'tgui::SignalTyped<float>::operator ()' in 'graphics::GuiRenderer::frameRateSlider_renderer'
   Generating code
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1608): warning C4715: 'ship::getPointPath': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1638): warning C4715: 'ship::getPathList': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1518): warning C4715: 'ship::getAbsolutePosition1': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1593): warning C4715: 'ship::getGlobalMapref': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1518): warning C4715: 'ship::getAbsolutePosition1': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1638): warning C4715: 'ship::getPathList': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2458): warning C4715: 'Control::getShipList': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2468): warning C4715: 'Control::getCannonList': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::point>::operator[]': not all control paths return a value
@@ -397,12 +397,12 @@ F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254):
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::coords>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::vertex>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<int>::operator[]': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<graphics::animator>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::A>::operator[]': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<graphics::animator>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2435): warning C4715: 'ship::isShipInMyRadius_forFire': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::cannon>::operator[]': not all control paths return a value
-  2812 of 2812 functions (100.0%) were compiled.
-    2603 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+  2809 of 2812 functions (99.9%) were compiled, the rest were copied from previous compilation.
+    878 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   GREED(programming game).vcxproj -> F:\current projects\GREED(programming game)\x64\Release\GREED(programming game).exe

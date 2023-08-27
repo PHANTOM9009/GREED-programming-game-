@@ -1,4 +1,5 @@
-#include "online_lib2.hpp"
+//#include "online_lib2.hpp"
+#include "greed_offline.hpp"
 namespace user1
 {
 
@@ -31,28 +32,21 @@ namespace user1
 		ob.Greed_chaseShip(index);
 		cout << "\n chasing the ship==>" << index;
 		int frame_rate = 0;
-		sf::Clock clock;
+		
 		double elapsed_time = 0;
 		while (1)
 		{
 
 			if (ob.frame_rate_limiter())
 			{//this is anchit rana talking to the world and i want ot know the difference between
-				frame_rate++;
-				sf::Time time = clock.restart();
-				elapsed_time += time.asSeconds();
-				if (elapsed_time > 1)
-				{
-				
-					frame_rate = 0;
-					elapsed_time = 0;
-				}
+			
 				//ob.chaseShip(2);
 				deque<shipInfo> shipList = ob.getShipList();
 				Event e;
 				//cout << "\n position of alternate ship==>" << shipList[0].getCurrentTile().r << " " << shipList[0].getCurrentTile().c;
 				//cout << "\n position of my ship==>" <<ob.getCurrentTile().r<<" "<<ob.getCurrentTile().c;//anchit rana is the greatest man in the whole wold and we all know that cheers
 				ob.getNextCurrentEvent(e);
+				
 				if (index >= 0 && shipList[index].getDiedStatus() == 1)
 				{
 					index = find_ship_to_kill(shipList, ob.getShipId(), ob,ob.getShipId());
