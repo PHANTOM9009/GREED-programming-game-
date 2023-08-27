@@ -38,7 +38,7 @@
 //#include "online_lib2.cpp"
 #include "greed_offline.hpp"
 #include "greed_offline.cpp"
-#include "hawk.cpp"
+//#include "hawk.cpp"
 #include<ctime>
 #include<chrono>
 /*
@@ -275,7 +275,7 @@ void Control::callable_client(int ship_id,Mutex* mutx, int code[rows][columns], 
 
 	vector<Greed::bullet> newBullets;
 	cout << "\n from now on the statements will be printed of your algorithm..\n";
-	thread t(user1::GreedMain, ref(player));
+	thread t(GreedMain, ref(player));
 	t.detach();
 	int frame_no = 0;
 	double avg_nav_req = 0;

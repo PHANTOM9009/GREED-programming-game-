@@ -1,7 +1,8 @@
-//#include "online_lib2.hpp"
+
+
+
 #include "greed_offline.hpp"
-namespace user1
-{
+#include "greed_offline.cpp"
 
 	int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob,int hate_id)
 	{
@@ -131,5 +132,5 @@ namespace user1
 
 
 	}
-}
+
 

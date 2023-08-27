@@ -1,4 +1,38 @@
 #pragma once
+
+#if defined(_WIN32)
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <errno.h>
+
+#endif
+
+#if defined(_WIN32)
+#define ISVALIDSOCKET(s) ((s) != INVALID_SOCKET)
+#define CLOSESOCKET(s) closesocket(s)
+#define GETSOCKETERRNO() WSAGetLastError()
+
+
+#else
+#define ISVALIDSOCKET(s) ((s) >= 0)
+#define CLOSESOCKET(s) close(s)
+#define SOCKET int
+#define GETSOCKETERRNO() (errno)
+#endif
+
+
 #include<iostream>
 #include "List.h"
 #include<thread>
@@ -19,9 +53,8 @@
 #include<condition_variable>
 
 
-
-
 #pragma once
+
 #define columns 24
 #define rows 12
 #define WATER_COST 1
@@ -41,7 +74,6 @@
 #define INITIAL_GOLD 1000//initial gold that everyone is having
 #define GOLD_OFF_A_BULLET 2//money that is gone at hit of a bullet..
 //these are the total shifts in the origin
-
 
 
 
@@ -2594,3 +2626,5 @@ int aux1(List<Greed::cannon>& cannon, Greed::coords ob);
 void filter(List<Greed::coords>& ob, List<Greed::coords> opaque_coords, ship sob);//function for removing the coords which are out of range
 void chaseShip1(int s_id, ship& ob);//the famous chasing  a ship function
 bool get(ship* a, ship* b);
+
+void GreedMain(ship& ob);//the function of the client that will have the algorithm
