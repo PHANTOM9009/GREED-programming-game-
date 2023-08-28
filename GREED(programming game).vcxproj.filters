@@ -173,9 +173,6 @@
     <ClInclude Include="sqlite3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="greed_offline.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="dependency.txt" />

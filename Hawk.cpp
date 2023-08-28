@@ -2,7 +2,7 @@
 
 
 #include "greed_offline.hpp"
-#include "greed_offline.cpp"
+//#include "greed_offline.cpp"
 
 	int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob,int hate_id)
 	{
@@ -134,3 +134,4 @@
 	}
 
 
+	

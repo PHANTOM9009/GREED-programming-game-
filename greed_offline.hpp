@@ -39,7 +39,7 @@
 #include<mutex>
 #include<math.h>
 #include<string>
-#include<Windows.h>
+#include<Windows.h>//must be due to the collision of windows.h
 #include<fstream>
 #include<list>
 #include<vector>
@@ -113,7 +113,7 @@ template<typename Y>
 int getIndex(List<Y>& l, Y val);
 
 class ship;
-class graphics;class Control;
+class graphics; class Control;
 class control1;
 void chaseShip1(int s_id, ship& ob);
 enum class map
@@ -537,7 +537,7 @@ private:
 public:
 	//vector<sf::VideoMode> modes = sf::VideoMode::getFullscreenModes();
 
-	
+
 	bullet()
 	{
 		ttl = 0;
@@ -548,7 +548,7 @@ public:
 		isActive = false;//a bullet will become active soon after its initialized
 		slope = -1;
 		isSuccess = -1;
-		
+
 		//bullet_entity.setFillColor(sf::Color::Black);
 		hit_ship = -1;
 		target_cannon = -1;
@@ -620,7 +620,7 @@ public:
 	}
 
 private:
-	
+
 	int cannon_id;
 	double health;
 	Greed::coords tile;
@@ -1390,8 +1390,7 @@ public:
 	friend class graphics;
 };
 
-double avg_chase_ship = 0;
-int no_of_chase = 0;
+
 bool get(ship* a, ship* b);
 class pack_ship;
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
@@ -1595,7 +1594,7 @@ private:
 		cannon_ob.initialize(mutx, power);
 
 	}
-	
+
 	static List<Greed::vertex>& getGlobalMapref(int key)//to be used only once in main only
 	{
 		if (key == 2369)
@@ -2069,8 +2068,8 @@ public:
 	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
 	friend int main(int argc, char* argv[]);
 };
-double avg_bullet = 0;
-int no_of_times = 0;
+
+
 class control1
 {
 	void bullet_to_data(Greed::bullet& ob, bullet_data_client& ob1)
@@ -2359,8 +2358,8 @@ class control1
 		}
 		if (ob.size_bulletData > 0)
 		{
-			avg_bullet += ob.size_bulletData;
-			no_of_times++;
+			
+			
 		}
 		for (int i = 0; i < ob.size_bulletData && i < 100; i++)
 		{
@@ -2409,8 +2408,8 @@ class control1
 
 		if (ob.size_bulletData > 0 && ship_id == 0)
 		{
-			avg_bullet += ob.size_bulletData;
-			no_of_times++;
+			
+			
 		}
 
 		for (int i = 0; i < ob.size_bulletData; i++)
