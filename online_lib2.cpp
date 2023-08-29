@@ -2220,7 +2220,14 @@ bool ship::updateCost(Greed::coords ob, double new_cost)//update the cost of the
 	}
 	return false;
 }
-
+void ship::Greed_updateCost(Greed::coords ob, double new_cost)
+{
+	if (new_cost > 0 && map_ob.isValidCoords(ob))
+	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		map_cost_data.push_back(map_cost(new_cost, ob));
+	}
+}
 bool ship::updateCost(Entity e, double new_cost, Bonus  b = Bonus::NA)
 {
 

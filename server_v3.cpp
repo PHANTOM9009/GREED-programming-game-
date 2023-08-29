@@ -807,6 +807,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						}
 					}
 					pl1[i]->bullet_info.clear();
+					//updating the cost of the local map of the player
+					for (int j = 0; j < pl1[i]->map_cost_data.size(); j++)
+					{
+						cout << "\n request to udpate the cost came from==>" << i;//just a check statement
+						pl1[i]->updateCost(pl1[i]->map_cost_data[j].ob, pl1[i]->map_cost_data[j].new_cost);
+					}
+					pl1[i]->map_cost_data.clear();
 				}
 				//till upgrade and fire
 				fire_upgrade += processing1.getElapsedTime().asSeconds();
@@ -1594,8 +1601,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 							
-							cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
-							hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+							//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						}
 
 					}
