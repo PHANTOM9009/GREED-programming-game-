@@ -1239,6 +1239,21 @@ public:
 	friend class graphics;
 	friend class control1;
 };
+class map_cost//class to send updateCost of the map tile data to the server over the network
+{
+public:
+	double new_cost;
+	Greed::coords ob;
+	map_cost()
+	{
+
+	}
+	map_cost(double n, Greed::coords o)
+	{
+		new_cost = n;
+		ob = o;
+	}
+};
 class old_bullet_data//bullet data for old bullets that are clinging in the field
 {
 	//for such bullets we only want to send only the position of the bullets
@@ -1279,6 +1294,9 @@ class shipData_forServer
 
 	int size_upgrade_data;
 	upgrade_data udata[10];
+
+	int size_update_cost;//to update the cost of the local map of the user
+	map_cost cdata[10];//to update the data
 
 public:
 	shipData_forServer()
@@ -1414,7 +1432,7 @@ private:
 	vector<int> collided_ships;
 
 	deque<upgrade_data> udata;
-
+	vector<map_cost> map_cost_data;//only to be used at the client side;
 
 	vector<int> unlock;
 	void update_pos_collision();//function to update tile_pos and abs_pos of the ship after the collision occured
@@ -1676,9 +1694,10 @@ private:
 	void update_tile_pos(double x, double y);//this function has to be called after updating the pixel coordinates of the player
 	//void chaseShip1(int s_id);//funtion to chase a ship of the given ship_id:: autopilot mode will be on here
 	bool updateCost(Entity e, double new_cost, Bonus b);
-public:
 	bool updateCost(Greed::coords ob, double new_cost);
+public:
 
+	void Greed_updateCost(Greed::coords ob, double new_cost);//new function to update the stuff
 
 private:
 	class boundingEntity
@@ -2072,360 +2091,26 @@ public:
 
 class control1
 {
-	void bullet_to_data(Greed::bullet& ob, bullet_data_client& ob1)
-	{
-		ob1.id = ob.id;
-		ob1.power = ob.id;//power of the bullet
-		ob1.damage = ob.damage;
-		ob1.launch_ship = ob.launch_ship;//if bullet is fired by ship then id of ship is stored else -1
-		ob1.launch_cannon = ob.launch_cannon;//if bullet is fired by cannon then id of the cannon is stored else -1
-		ob1.target_ship = ob.target_ship;//id of the ship that launched the bullet this is the id of the ship provided by the launch ship but the bullet might not strike at that ship since everything is in motion
-		ob1.hit_ship = ob.hit_ship;//id of the ship that really hit the bullet
-		ob1.target_cannon = ob.target_cannon;//if the target is cannon then id of cannon is stored else -1
-		ob1.hit_cannon = ob.hit_cannon;
-		ob1.isActive = ob.isActive;//is the bullet active
-		ob1.isSuccess = ob.isSuccess;//if the bullet hit the target
-		ob1.can = ob.can;//side of the firing ship
-		ob1.s = ob.s;//side of the enemy ship
-	}
-	void data_to_bullet(Greed::bullet& ob1, bullet_data_client& ob)
-	{
-		ob1.id = ob.id;
-		ob1.power = ob.id;//power of the bullet
-		ob1.damage = ob.damage;
-		ob1.launch_ship = ob.launch_ship;//if bullet is fired by ship then id of ship is stored else -1
-		ob1.launch_cannon = ob.launch_cannon;//if bullet is fired by cannon then id of the cannon is stored else -1
-		ob1.target_ship = ob.target_ship;//id of the ship that launched the bullet this is the id of the ship provided by the launch ship but the bullet might not strike at that ship since everything is in motion
-		ob1.hit_ship = ob.hit_ship;//id of the ship that really hit the bullet
-		ob1.target_cannon = ob.target_cannon;//if the target is cannon then id of cannon is stored else -1
-		ob1.hit_cannon = ob.hit_cannon;
-		ob1.isActive = ob.isActive;//is the bullet active
-		ob1.isSuccess = ob.isSuccess;//if the bullet hit the target
-		ob1.can = ob.can;//side of the firing ship
-		ob1.s = ob.s;//side of the enemy ship
-	}
+	void bullet_to_data(Greed::bullet& ob, bullet_data_client& ob1);
+	
+	void data_to_bullet(Greed::bullet& ob1, bullet_data_client& ob);
+	
 	void nav_data_processor(deque<ship*>& pl1, Mutex* mutx);
-	void packet_to_pl(shipData_exceptMe ob[20], int s, int ship_id, deque<ship*>& pl1)//from network structure to game structure
-	{
-		for (int i = 0; i < s; i++)
-		{
-			if (i != ship_id)
-			{
-				unique_lock<mutex> lk(pl1[i]->mutx->m[i]);
-				pl1[i]->ammo = ob[i].ammo;
-				pl1[i]->died = ob[i].died;
-				pl1[i]->dir = ob[i].dir;
+	void packet_to_pl(shipData_exceptMe ob[20], int s, int ship_id, deque<ship*>& pl1);//from network structure to game structure
+	
+	void pl_to_packet(shipData_exceptMe ob[20], deque<ship*>& pl1);//for the server
+	
 
-				pl1[i]->isFiring = ob[i].isFiring;
-				pl1[i]->score = ob[i].score;
-				pl1[i]->health = ob[i].health;
-				pl1[i]->gold = ob[i].gold;
-				pl1[i]->motion = ob[i].motion;
-				pl1[i]->fuel = ob[i].fuel;
-				pl1[i]->invisible = ob[i].invisible;
-				pl1[i]->tile_pos_front = ob[i].tile_pos_front;
-				pl1[i]->tile_pos_rear = ob[i].tile_pos_rear;
-				pl1[i]->front_abs_pos = ob[i].front_abs_pos;
-				pl1[i]->rear_abs_pos = ob[i].rear_abs_pos;
-				pl1[i]->absolutePosition = ob[i].absolutePosition;
+	void packet_to_me(shipData_forMe& ob, int id, deque<ship*>& pl1);
+	
+	void me_to_packet(shipData_forMe& ob, int id, deque<ship*>& pl1);
 
-				//cout << "\n position of the other ship==>" << ob[i].tile_pos_front.r << " " << ob[i].tile_pos_front.c;
+	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx);
+	
 
+	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id, Mutex* mutx);
+	
 
-			}
-		}
-
-	}
-	void pl_to_packet(shipData_exceptMe ob[20], deque<ship*>& pl1)//for the server
-	{
-		for (int i = 0; i < pl1.size(); i++)
-		{
-			//unique_lock<mutex> lk(pl1[i]->mutx->m[i]);
-			ob[i].ammo = pl1[i]->ammo;
-			ob[i].died = pl1[i]->died;
-			ob[i].dir = pl1[i]->dir;
-			ob[i].ship_id = pl1[i]->ship_id;
-			ob[i].isFiring = pl1[i]->isFiring;
-			ob[i].score = pl1[i]->score;
-			ob[i].health = pl1[i]->health;
-			ob[i].gold = pl1[i]->gold;
-			ob[i].motion = pl1[i]->motion;
-			ob[i].fuel = pl1[i]->fuel;
-			ob[i].invisible = pl1[i]->invisible;
-			ob[i].tile_pos_front = pl1[i]->tile_pos_front;
-			ob[i].tile_pos_rear = pl1[i]->tile_pos_rear;
-			ob[i].front_abs_pos = pl1[i]->front_abs_pos;
-			ob[i].rear_abs_pos = pl1[i]->rear_abs_pos;
-			ob[i].absolutePosition = pl1[i]->absolutePosition;
-		}
-	}
-
-	void packet_to_me(shipData_forMe& ob, int id, deque<ship*>& pl1)
-	{
-		unique_lock<mutex> lk(pl1[id]->mutx->m[id]);
-		//transfer each data member from ob to pl1
-		pl1[id]->seconds = ob.seconds;
-		pl1[id]->minutes = ob.minutes;
-
-		pl1[id]->killer_ship_id = ob.killer_ship_id;
-		pl1[id]->killed_ships.clear();//clearing the previous killed ship so that no duplicate entry is there
-		for (int i = 0; i < ob.killed_ships_size; i++)
-
-		{
-			pl1[id]->killed_ships.push_back(ob.killed_ships[i]);
-		}
-
-		pl1[id]->score = ob.score;
-
-
-		pl1[id]->radius = ob.radius;
-		pl1[id]->health = ob.health;
-		pl1[id]->gold = ob.gold;
-		pl1[id]->died = ob.died;
-		pl1[id]->ammo = ob.ammo;
-		pl1[id]->fuel = ob.fuel;
-		pl1[id]->invisible = ob.invisible;
-
-		pl1[id]->tile_pos_front = ob.front_tile;
-		pl1[id]->tile_pos_rear = ob.rear_tile;
-		pl1[id]->front_abs_pos = ob.front_abs_pos;
-		pl1[id]->rear_abs_pos = ob.rear_abs_pos;
-		pl1[id]->dir = ob.dir;
-		pl1[id]->motion = ob.motion;
-		pl1[id]->absolutePosition = ob.absolute_position;
-
-		pl1[id]->collided_ships.clear();
-		//	cout << "\n my ship position is==>" << ob.front_tile.r << " " << ob.front_tile.c;
-		for (int i = 0; i < ob.size_collided_ships; i++)
-		{
-			pl1[id]->collided_ships.push_back(ob.collided_ships[i]);
-		}
-
-		for (int i = 0; i < ob.size_hit_bullet; i++)
-		{
-			Greed::bullet b;
-			data_to_bullet(b, ob.hit_bullet[i]);
-			pl1[id]->bullet_hit_tempo.push_back(b);
-		}
-		if (ob.size_unlock > 3)
-		{
-			cout << "\n received more than 3 unlock requests";
-		}
-		for (int i = 0; i < ob.size_unlock; i++)
-		{
-			if (ob.unlock[i] == 0)
-			{
-				pl1[id]->lock_ammo = 0;
-			}
-			else if (ob.unlock[i] == 1)
-			{
-				pl1[id]->lock_health = 0;
-			}
-			else if (ob.unlock[i] == 2)
-			{
-				pl1[id]->lock_fuel = 0;
-			}
-		}
-
-
-	}
-	void me_to_packet(shipData_forMe& ob, int id, deque<ship*>& pl1)
-	{
-		ob.seconds = pl1[id]->seconds;
-		ob.minutes = pl1[id]->minutes;
-		ob.killer_ship_id = pl1[id]->killer_ship_id;
-		if (pl1[id]->killed_ships.size() <= 20)
-		{
-			ob.killed_ships_size = pl1[id]->killed_ships.size();
-		}
-		else
-		{
-			ob.killed_ships_size = 20;
-		}
-		for (int i = 0; i < ob.killed_ships_size; i++)
-		{
-			ob.killed_ships[i] = pl1[id]->killed_ships[i];
-		}
-
-
-		ob.score = pl1[id]->score;
-
-		ob.radius = pl1[id]->radius;
-		ob.health = pl1[id]->health;
-		ob.gold = pl1[id]->gold;
-		ob.died = pl1[id]->died;
-		ob.ammo = pl1[id]->ammo;
-		ob.fuel = pl1[id]->fuel;
-		ob.invisible = pl1[id]->invisible;
-
-		ob.front_tile = pl1[id]->tile_pos_front;
-		ob.rear_tile = pl1[id]->tile_pos_rear;
-		ob.front_abs_pos = pl1[id]->front_abs_pos;
-		ob.rear_abs_pos = pl1[id]->rear_abs_pos;
-		ob.dir = pl1[id]->dir;
-		ob.motion = pl1[id]->motion;
-		ob.absolute_position = pl1[id]->absolutePosition;
-
-		if (pl1[id]->collided_ships.size() <= 10)
-		{
-			ob.size_collided_ships = pl1[id]->collided_ships.size();
-		}
-		else
-		{
-			ob.size_collided_ships = 10;
-		}
-		for (int i = 0; i < ob.size_collided_ships; i++)
-		{
-			ob.collided_ships[i] = pl1[id]->collided_ships[i];
-		}
-		pl1[id]->collided_ships.clear();
-		if (pl1[id]->bullet_hit_tempo.size() <= 100)
-		{
-			ob.size_hit_bullet = pl1[id]->bullet_hit_tempo.size();
-		}
-		else
-		{
-			ob.size_hit_bullet = 100;
-		}
-		for (int i = 0; i < ob.size_hit_bullet; i++)
-		{
-			bullet_data_client b;
-			bullet_to_data(pl1[id]->bullet_hit_tempo[i], b);
-			ob.hit_bullet[i] = b;
-		}
-		pl1[id]->bullet_hit_tempo.clear();
-
-		if (pl1[id]->unlock.size() <= 5)
-		{
-			ob.size_unlock = pl1[id]->unlock.size();
-		}
-		else
-		{
-			ob.size_unlock = 5;
-		}
-		for (int i = 0; i < ob.size_unlock; i++)
-		{
-			ob.unlock[i] = pl1[id]->unlock[i];
-		}
-
-		pl1[id]->unlock.clear();
-	}
-	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx)
-	{
-		//transfer data members from pl1 to shipData_forServer
-		ob.ship_id = pl1[ship_id]->ship_id;
-
-
-		ob.threshold_health = pl1[ship_id]->threshold_health;
-		ob.threshold_ammo = pl1[ship_id]->threshold_ammo;
-		ob.threshold_fuel = pl1[ship_id]->threshold_fuel;
-
-
-
-		ob.radius = pl1[ship_id]->radius;
-
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (pl1[ship_id]->nav_data_final.size() > 0)
-		{
-			int a;
-		}
-		if (pl1[ship_id]->nav_data_final.size() <= 10)
-		{
-			ob.size_navigation = pl1[ship_id]->nav_data_final.size();
-		}
-		else
-		{
-			ob.size_navigation = 10;
-		}
-
-		for (int i = 0; i < ob.size_navigation && i < 10; i++)
-		{
-			ob.nav_data[i] = pl1[ship_id]->nav_data_final[i];
-			//cout << "\n type is=>" << pl1[ship_id]->nav_data[i].type;
-
-		}
-
-		pl1[ship_id]->nav_data_final.clear();
-
-		//ob.size_bulletData = pl1[ship_id]->bullet_info.size();
-		if (pl1[ship_id]->bullet_info.size() <= 100)
-		{
-			ob.size_bulletData = pl1[ship_id]->bullet_info.size();
-		}
-		else
-		{
-			ob.size_bulletData = 100;
-		}
-		if (ob.size_bulletData > 0)
-		{
-			
-			
-		}
-		for (int i = 0; i < ob.size_bulletData && i < 100; i++)
-		{
-			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
-		}
-		pl1[ship_id]->bullet_info.clear();
-
-		if (pl1[ship_id]->udata.size() <= 10)
-		{
-			ob.size_upgrade_data = pl1[ship_id]->udata.size();
-		}
-		else
-		{
-			ob.size_upgrade_data = 10;
-		}
-		if (pl1[ship_id]->udata.size() > 3)
-		{
-			cout << "\n sending more than 3 locks to update the stuff";
-		}
-		for (int i = 0; i < ob.size_upgrade_data; i++)
-		{
-			ob.udata[i] = pl1[ship_id]->udata[i];
-		}
-		pl1[ship_id]->udata.clear();
-
-	}
-
-	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id, Mutex* mutx)
-	{
-		unique_lock<mutex> lk(mutx->updating_data);
-		for (int i = 0; i < ob.size_navigation; i++)
-		{
-			pl1[ship_id]->nav_data.push_back(ob.nav_data[i]);
-			if (pl1[ship_id]->nav_data[i].type == 0)
-			{
-				cout << "\n 0 is received by =>" << ship_id;
-			}
-		}
-
-		pl1[ship_id]->ship_id = ob.ship_id;
-		pl1[ship_id]->threshold_health = ob.threshold_health;
-		pl1[ship_id]->threshold_ammo = ob.threshold_ammo;
-		pl1[ship_id]->threshold_fuel = ob.threshold_fuel;
-		pl1[ship_id]->radius = ob.radius;
-		pl1[ship_id]->bullet_info.clear();
-
-		if (ob.size_bulletData > 0 && ship_id == 0)
-		{
-			
-			
-		}
-
-		for (int i = 0; i < ob.size_bulletData; i++)
-		{
-			pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
-			//cout << "\n firing";
-		}
-		int found = 0;
-		for (int i = 0; i < ob.size_upgrade_data; i++)
-		{
-			pl1[ship_id]->udata.push_back(ob.udata[i]);
-			found = 1;
-		}
-
-
-	}
 	friend class graphics;
 	friend class Control;
 };
