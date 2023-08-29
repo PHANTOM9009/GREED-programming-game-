@@ -1223,6 +1223,21 @@ public:
 	friend class graphics;
 	friend class control1;
 };
+class map_cost//class to send updateCost of the map tile data to the server over the network
+{
+public:
+	double new_cost;
+	Greed::coords ob;
+	map_cost()
+	{
+
+	}
+	map_cost(double n, Greed::coords o)
+	{
+		new_cost = n;
+		ob = o;
+	}
+};
 class old_bullet_data//bullet data for old bullets that are clinging in the field
 {
 	//for such bullets we only want to send only the position of the bullets
@@ -1263,6 +1278,9 @@ class shipData_forServer
 
 	int size_upgrade_data;
 	upgrade_data udata[10];
+
+	int size_update_cost;//to update the cost of the local map of the user
+	map_cost cdata[10];//to update the data
 
 public:
 	shipData_forServer()
@@ -1378,6 +1396,8 @@ bool get(ship* a, ship* b);
 class pack_ship;
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
 //some networking classes*/
+
+
 class ship//this class will be used to initialize the incoming player and give it a ship. and then keep tracking of that ship
 {
 
@@ -1397,7 +1417,7 @@ private:
 	vector<int> collided_ships;
 
 	deque<upgrade_data> udata;
-	
+	vector<map_cost> map_cost_data;//only to be used at the client side;
 
 	vector<int> unlock;
 	void update_pos_collision();//function to update tile_pos and abs_pos of the ship after the collision occured
@@ -1664,8 +1684,9 @@ private:
 	void update_tile_pos(double x, double y);//this function has to be called after updating the pixel coordinates of the player
 	//void chaseShip1(int s_id);//funtion to chase a ship of the given ship_id:: autopilot mode will be on here
 	bool updateCost(Entity e, double new_cost, Bonus b);
+	bool updateCost(Greed::coords ob, double new_cost);//making the function private
 public:
-	bool updateCost(Greed::coords ob, double new_cost);
+	void Greed_updateCost(Greed::coords ob, double new_cost);//new function to update the stuff
 
 
 private:
@@ -2373,6 +2394,19 @@ class control1
 		}
 		pl1[ship_id]->udata.clear();
 
+		if (pl1[ship_id]->map_cost_data.size() <= 10)
+		{
+			ob.size_update_cost = pl1[ship_id]->map_cost_data.size();
+		}
+		else
+		{
+			ob.size_update_cost = 10;
+		}
+		for (int i = 0; i < ob.size_update_cost; i++)
+		{
+			ob.cdata[i] = pl1[ship_id]->map_cost_data[i];
+		}
+		pl1[ship_id]->map_cost_data.clear();
 	}
 
 	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
@@ -2411,7 +2445,10 @@ class control1
 			pl1[ship_id]->udata.push_back(ob.udata[i]);
 			found = 1;
 		}
-	
+		for (int i = 0; i < ob.size_update_cost; i++)
+		{
+			pl1[ship_id]->map_cost_data.push_back(ob.cdata[i]);
+		}
 
 	}
 	friend class graphics;

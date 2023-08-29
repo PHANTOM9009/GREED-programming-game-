@@ -25,6 +25,18 @@ namespace user1
 	void GreedMain(ship& ob)
 	{
 		//setting the aim
+
+		vector <Greed::cannon> cannonList = ob.getCannonList();
+		for (int j = 0; j < cannonList.size(); j++)
+		{
+
+
+			vector<Greed::coords> arr = ob.getRadiusCoords_cannon(j);
+			for (int i = 0; i < arr.size(); i++)
+			{
+				ob.Greed_updateCost(arr[i], 50);
+			}
+		}
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
 		if (index >= 0)
