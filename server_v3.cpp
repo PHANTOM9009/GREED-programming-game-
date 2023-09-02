@@ -47,10 +47,10 @@ starting client_v1 will automatically start the client_v2 unit so no need to sta
 
 #include "sqlite3.h" 
 #include<stdlib.h>
-
+#define ALLOWED_MAX_PLAYER 4
 int max_player=0;
 string my_token;//token of the current game instance
-
+string version = "v0.0.1";
 /*
 * 1. a function which connects the server with the clients and assign each client's ship an id
 * 2. after all required clients are connected properly or the time of connection is up, send all the connected clients initial configuration of the game
@@ -1710,7 +1710,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	char port_str2[10];
 	sprintf(port_str1, "%d", (port + 1));
 	sprintf(port_str2, "%d", (port + 2));
-	cout << "\n running on port=>" << port_str;
+	//cout << "\n running on port=>" << port_str;
 	getaddrinfo(0, port_str, &hints, &bind_address);
 	struct addrinfo* bind_address1;
 	getaddrinfo(0,port_str1, &hints, &bind_address1);
@@ -1718,7 +1718,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	getaddrinfo(0,port_str2, &hints, &bind_address2);
 	
 
-	printf("Creating socket...\n");
+	//printf("Creating socket...\n");
 
 	socket_listen = socket(bind_address->ai_family,bind_address->ai_socktype, bind_address->ai_protocol);
 	socket_listen2 = socket(bind_address1->ai_family, bind_address1->ai_socktype, bind_address1->ai_protocol);
@@ -1739,7 +1739,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 
 	}
-	printf("Binding socket to local address...\n");
+	//printf("Binding socket to local address...\n");
 	if (::bind(socket_listen,
 		bind_address->ai_addr, bind_address->ai_addrlen)) {
 		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
@@ -1793,7 +1793,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 					read = gc.code;
 					string sread = to_string(read);
 					//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-					cout << "\n code recved is=>" << read;
+					//cout << "\n code recved is=>" << read;
 					if (sread[0] == '0' || sread[0]=='2')
 					{
 							socket_id[idc] = client_address;
@@ -1802,6 +1802,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 							user_cred[idc] = gc.user_cred;//setting the user credential
 							idc++;
 							nn++;
+							cout << "\n connected with a player..";
 							
 					}
 					if (sread[0] == '0')//2 is for when the client does not want its display unit to open
@@ -1823,23 +1824,23 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 			socklen_t client_len = sizeof(client_address);
 			int read;
 			RECVFROM(socket_listen2, (char*)&gc, sizeof(gc),(struct sockaddr*)&client_address, client_len);
-			cout << "\n recved data=>" << gc.token;
+			//cout << "\n recved data=>" << gc.token;
 				if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
 				{
 					read = gc.code;
 					string sread = to_string(read);
 					//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-					cout << "\n code recved is=>" << read;
+				//	cout << "\n code recved is=>" << read;
 					if (sread[0] == '1')
 					{
 						//finding the id of the client through the code sent by the display unit
 						int id = stoi(sread.substr(1, sread.length() - 1));
-						cout << "\n id sent is==>" << id;
+					//	cout << "\n id sent is==>" << id;
 						socket_id_display[id] = client_address;
 						//sending the max_player to the display unit
 						SENDTO(socket_listen2, (char*)&max_player, sizeof(max_player),(sockaddr*)&client_address, client_len);
 						curdisp++;
-						
+						cout << "\n connected with a client display unit...";
 					}
 				}
 			
@@ -1992,7 +1993,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		cout << "\n problem in setting the flag==>";
 	}
 	*/
-	cout << "\n binding the socket==>";
+	//cout << "\n binding the socket==>";
 	if (bind(tcp_socket, (const sockaddr*)bind_addres->ai_addr, (int)bind_addres->ai_addrlen))
 	{
 		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO();
@@ -2112,6 +2113,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	{
 		cout << "\n could not send bytes=>" << GetLastErrorAsString();
 	}
+	cout << "\n starting the game, now you will see the frame rate of the game...ideally it should be arount 60 fps..";
 
 }
 
@@ -2143,14 +2145,16 @@ int connect_with_lobby()
 	{
 		cout << "\n couldnt recv the port==>" << GetLastErrorAsString();
 	}
-	cout << "\n received port number=>" << ob.port;
-	cout << "\n received game token=>" << ob.token;
+	cout << "\n connected with the lobby server...";
+	//cout << "\n received port number=>" << ob.port;
+	//cout << "\n received game token=>" << ob.token;
 	my_token = ob.token;
 	return ob.port;
 	
 }
-int main(int argc,char* argv[])
+int main(int argc, char* argv[])
 {
+	cout << "\n the current version of the game server  is=>" << version;
 #if defined(_WIN32)
 	WSADATA d;
 	if (WSAStartup(MAKEWORD(2, 2), &d)) {
@@ -2163,6 +2167,9 @@ int main(int argc,char* argv[])
 
 	cout << "\n enter the number of players=>";
 	cin >> max_player;
+	max_player = min(max_player, ALLOWED_MAX_PLAYER);
+	cout << "\n number of players playing are==>" << max_player;
+	
 	int port = connect_with_lobby();//to connect with the lobby
 	while (1)
 	{

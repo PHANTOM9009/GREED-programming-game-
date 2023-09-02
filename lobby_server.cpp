@@ -53,10 +53,10 @@
 //#define max_player 3 //number of maximum players that can play simultaneously in a lobby
 
 //runs on the port 8080
-
+#define ALLOWED_PLAYERS 4
 #define GAME_SERVER_COUNT 1
 using namespace std;
-
+string version = "v0.0.1";//version of the current lobby server
 class user_credentials
 {
 public:
@@ -183,7 +183,7 @@ void listener()
 	{
 		cout << "\n problem in setting the flag==>";
 	}
-	cout << "\n binding the socket==>";
+	//cout << "\n binding the socket==>";
 	if (bind(socket_listen, (const sockaddr*)bind_address->ai_addr, (int)bind_address->ai_addrlen))
 	{
 		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO()<<"\n"<<GetLastErrorAsString();
@@ -202,6 +202,7 @@ void listener()
 	int count = 0;
 	fd_set reads;
 	FD_ZERO(&reads);
+	cout << "\n listening for the other players..";
 	while (1)
 	{
 		count++;
@@ -244,14 +245,14 @@ void listener()
 					}
 					if (bytes > 0)
 					{
-						cout << "\n received credentials are==>" << cred.username << " " << cred.password;
+						
 						if(strcmp(cred.password,"password")==0)//put the condition if the current user is verified or not
 						{
 							unique_lock<mutex> lk(m->m_valid);
 							valid_connections.push_back(i);
 							user_cred.push_back(user_credentials(cred.username, cred.password));
 							m->is_data.notify_one();
-							cout << "\n connected with a valid user";
+							cout << "\n connected with a valid player...";
 							FD_CLR(i, &master);
 						}
 						else//if the user is not authenticated then tear down the socket connection and remove it from the set of master
@@ -488,6 +489,9 @@ void assign_lobby()//to assign the lobby to the incoming authenticated connectio
 }
 int main()
 {
+	cout << "\n WELCOME TO GREED!\n This is the community version of OFFLINE GREED. \n allowed number of game servers=>1\n maxiumum number of players in a single game server=>4";
+	cout << "\n if you want to host bigger offline competitions over GREED visit the website ai_playgrounds.in to know more!";
+	cout << "\n lobby server is currently at the version-->" << version;
 #if defined(_WIN32)
 	WSADATA d;
 	if (WSAStartup(MAKEWORD(2, 2), &d))
@@ -501,6 +505,8 @@ int main()
 	
 	cout << "\n input the number of players=>";
 	cin >> max_player;
+	max_player = min(ALLOWED_PLAYERS,max_player);
+	cout << "\n number of players playing in this game are==>" << max_player;
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -521,7 +527,7 @@ int main()
 		cout << "\n problem in setting the flag==>";
 	}
 	*/
-	cout << "\n binding the socket==>";
+	//cout << "\n binding the socket==>";
 	if (bind(socket_listen, (const sockaddr*)bind_address->ai_addr, (int)bind_address->ai_addrlen))
 	{
 		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO();
@@ -540,6 +546,7 @@ int main()
 	SOCKET max_socket = socket_listen;
 	
 	int start_port = 8081;
+	cout << "\n start your game server at the local ip address..";
 	while (lobby.size() < GAME_SERVER_COUNT)
 	{ 
 		fd_set reads;
@@ -554,7 +561,7 @@ int main()
 			SOCKET socket_ = accept(socket_listen, (sockaddr*)&client_address, &client_len);
 			lobby[socket_] = 0;
 			server_port[socket_] = start_port;
-			cout << "\n connected";
+			cout << "\n connected to a game server";
 			//sending the port number to the server:(at which port will the server listen for the clients)
 			
 			

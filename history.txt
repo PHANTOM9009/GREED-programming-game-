@@ -168,4 +168,6 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  for server just add the metrics that can be used by you.
  also make a display unit that can be connected in case anyone just wants to see the game..
  over and out.
+ ----------------------------------------------------------------------------------------------------------------------
+ I have modified the lobby_server version, now server_v3 and client is left the libraries have to be given a version
  

@@ -2900,7 +2900,7 @@ public:
 	bool checkCollision(int sid, const Greed::bullet& ob);
 	static long double getTotalTime();
 	bool check_game_over(deque<ship*>& pl1);
-	deque<ship*> findWinner(deque<ship*> l);
+	deque<ship*> findWinner(deque<ship*> &l);
 	void callable(Mutex* mutx, int code[rows][columns], Map& map_ob,int n,unordered_map<int,sockaddr_storage> &socker_id,vector<int> &socket_display);//taking the ship object so as to access the list of the player
 	void callable_client(int ship_id, Mutex* mutx, int code[rows][columns], Map& map_ob, int,ship&);
 	void callable_server(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<SOCKET>& sockets, unordered_map<SOCKET, int>& socket_id,vector<SOCKET> &socket_display);//taking the ship object so as to access the list of the player

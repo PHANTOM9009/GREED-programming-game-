@@ -3326,19 +3326,7 @@ bool ship::anchorShip()
 
 bool get(ship* a, ship* b)
 {
-	if (a->minutes > b->minutes)
-	{
-		return true;
-	}
-	else if (a->minutes == b->minutes && a->seconds != b->seconds)
-	{
-		return a->seconds > b->seconds;
-	}
-	else if (a->minutes == b->minutes && a->seconds == b->seconds)
-	{
-		return a->score > b->score;
-	}
-
+	return a->score > b->score;
 }
 void graphics::GuiRenderer::list1_renderer()
 {
@@ -4167,7 +4155,7 @@ bool graphics::check_game_over(deque<ship*>& pl1)
 	return false;
 
 }
-deque<ship*> graphics::findWinner(deque<ship*> l)
+deque<ship*> graphics::findWinner(deque<ship*> &l)
 {
 	//finding the winner on the following bases
 	 /*
