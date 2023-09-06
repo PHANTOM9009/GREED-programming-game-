@@ -168,4 +168,8 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  for server just add the metrics that can be used by you.
  also make a display unit that can be connected in case anyone just wants to see the game..
  over and out.
- 
+ -------------------------------------------------------------------------------------
+ the problem with slow upload speed is that the packets are being sent, but the server is unable to receive them, and the server is 
+ also sending the packets but the client display unit is not able to receive it. this is the problem.
+ atleast 40 mbps upload must be there to work with the game.....
+ -----------------------------------------------------------------------------------------------------

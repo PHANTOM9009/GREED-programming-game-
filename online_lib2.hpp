@@ -1262,8 +1262,7 @@ class shipData_forServer
 	*/
 
 	int ship_id;//id of the ship
-	
-	
+		
 	double threshold_health;
 	double threshold_ammo;
 	double threshold_fuel;
@@ -2332,8 +2331,13 @@ class control1
 		
 
 		ob.radius = pl1[ship_id]->radius;
+
 			
 		unique_lock<mutex> lk(mutx->m[ship_id]);
+		if (pl1[ship_id]->nav_data_final.size() == 0 && pl1[ship_id]->bullet_info.size() == 0 && pl1[ship_id]->udata.size() == 0 && pl1[ship_id]->map_cost_data.size() == 0)
+		{
+			cout << "\n packet is going empty..";
+		}
 		if (pl1[ship_id]->nav_data_final.size() > 0)
 		{
 			int a;

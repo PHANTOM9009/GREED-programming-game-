@@ -291,7 +291,14 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int previous_packet = -1;
 	//accepting the testing message from the servser
 
+	int send_count = 0;
+	double avg_send_count = 0;
+	int total_frames1 = 0;
 
+	int threshold_health = -1;
+	int threshold_ammo = -1;
+	int threshold_fuel = -1;
+	//to check if the values of these things have changed or not
 	while (1)
 	{
 		/*NOTES:
@@ -309,7 +316,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		* 
 		*/
 		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
-		
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+		{
+			break;
+		}
 	
 		if (next_frame != cur_frame)//under this frame rate is stable
 		{
@@ -404,8 +414,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-				//	cout << "\n recved data from the client terminal =>" <<data1.packet_id << " at the time==> " <<
-					//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					//cout << "\n recved data from the server terminal =>" <<data1.packet_id << " at the time==> " <<
+						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 				}
 				else
 				{
@@ -1128,17 +1138,25 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				memset((void*)&data2, 0, sizeof(data2));
 				
 				select(sending_socket + 1, 0, &writes, 0, &timeout);
-
-				if (FD_ISSET(sending_socket, &writes))
+				if (threshold_health==pl1[ship_id]->threshold_health&&threshold_ammo==pl1[ship_id]->threshold_ammo&&threshold_fuel==pl1[ship_id]->threshold_fuel&& pl1[ship_id]->nav_data_final.size() == 0 && pl1[ship_id]->bullet_info.size() == 0 && pl1[ship_id]->udata.size() == 0 && pl1[ship_id]->map_cost_data.size() == 0)
 				{
-					
+					cout << "\n stopped the packet from going empty";
+				}//sending the data only when there is any update from the client..
+				else
+				{
+					threshold_ammo = pl1[ship_id]->threshold_ammo;
+					threshold_fuel = pl1[ship_id]->threshold_fuel;
+					threshold_health = pl1[ship_id]->threshold_health;
+					if (FD_ISSET(sending_socket, &writes))
+					{
+
 						control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
 						data2.packet_id = frame_number;
 						data2.shipdata_forServer = shipdata;
 						data2.user_cred = user_credentials(username, password);
 						//sending the data
 						int bytes = send(sending_socket, (char*)&data2, sizeof(data2), 0);
-											
+
 						if (bytes < 1)
 						{
 							cout << "\n breaking because not being able to the send the data";
@@ -1147,6 +1165,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						}
 						else
 						{
+							send_count++;
 							auto now = std::chrono::system_clock::now();
 							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
@@ -1157,6 +1176,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						}
 
+					}
 				}
 			}
 			avg_send += sending.getElapsedTime().asSeconds();
@@ -1170,12 +1190,13 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			elapsed_time = 0;
 			//cout << "\n frame rate is==>" << frame_rate;
 			frame_rate = 0;
+			total_frames1++;
 		}
 		
 		next_frame = elapsed_time * 60;
 			
 	}
-
+	cout << "\n avg send is==>" << (double)send_count / total_frames1;
 	CLOSESOCKET(peer_socket);
 	CLOSESOCKET(sending_socket);
 	WSACleanup();
