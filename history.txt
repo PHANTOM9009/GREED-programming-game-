@@ -173,3 +173,6 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  also sending the packets but the client display unit is not able to receive it. this is the problem.
  atleast 40 mbps upload must be there to work with the game.....
  -----------------------------------------------------------------------------------------------------
+ making it work for lower speed networks:
+ reducing the size of the packet which is going and then trying to reduce the rate at which data is being sent
+ reducing the size of the packet which is sent by the client to the server.

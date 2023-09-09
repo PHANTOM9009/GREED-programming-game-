@@ -299,6 +299,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int threshold_ammo = -1;
 	int threshold_fuel = -1;
 	//to check if the values of these things have changed or not
+	cout << "\n size of data sent by the client==>" << sizeof(send_data);
+	cout << "\n size of the data sent by the server==>" << sizeof(recv_data);
 	while (1)
 	{
 		/*NOTES:
@@ -1155,6 +1157,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						data2.shipdata_forServer = shipdata;
 						data2.user_cred = user_credentials(username, password);
 						//sending the data
+						
 						int bytes = send(sending_socket, (char*)&data2, sizeof(data2), 0);
 
 						if (bytes < 1)
