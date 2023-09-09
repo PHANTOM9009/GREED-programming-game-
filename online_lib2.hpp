@@ -1270,16 +1270,16 @@ class shipData_forServer
 	int radius;//square radius
 
 	int size_navigation;
-	navigation nav_data;
+	navigation nav_data[10];
 
 	int size_bulletData;
-	bullet_data b_data;
+	bullet_data b_data[100];
 
 	int size_upgrade_data;
-	upgrade_data udata;
+	upgrade_data udata[10];
 
 	int size_update_cost;//to update the cost of the local map of the user
-	map_cost cdata;//to update the data
+	map_cost cdata[10];//to update the data
 
 public:
 	shipData_forServer()
@@ -1416,9 +1416,9 @@ private:
 	vector<int> collided_ships;
 
 	deque<upgrade_data> udata;
-	deque<map_cost> map_cost_data;//only to be used at the client side;
+	vector<map_cost> map_cost_data;//only to be used at the client side;
 
-	deque<int> unlock;
+	vector<int> unlock;
 	void update_pos_collision();//function to update tile_pos and abs_pos of the ship after the collision occured
 	//for maintaining the frame rate of the user function
 	std::chrono::high_resolution_clock::time_point current_time;
@@ -2338,65 +2338,92 @@ class control1
 		{
 			cout << "\n packet is going empty..";
 		}
-	
-		
 		if (pl1[ship_id]->nav_data_final.size() > 0)
 		{
-			ob.size_navigation = 1;
-			ob.nav_data = pl1[ship_id]->nav_data_final[0];
+			int a;
+		}
+		if (pl1[ship_id]->nav_data_final.size() <= 10)
+		{
+			ob.size_navigation = pl1[ship_id]->nav_data_final.size();
+		}
+		else 
+		{
+			ob.size_navigation = 10;
+		}
+		
+		for (int i = 0; i < ob.size_navigation && i<10; i++)
+		{
+			ob.nav_data[i] = pl1[ship_id]->nav_data_final[i];
 			//cout << "\n type is=>" << pl1[ship_id]->nav_data[i].type;
-
-			pl1[ship_id]->nav_data_final.pop_front();
-
+			
 		}
-		else
-		{
-			ob.size_navigation = 0;
-		}
+
+		pl1[ship_id]->nav_data_final.clear();
 		
-
 		//ob.size_bulletData = pl1[ship_id]->bullet_info.size();
-	
-		if (pl1[ship_id]->bullet_info.size() > 0)
+		if (pl1[ship_id]->bullet_info.size() <= 100)
 		{
-			ob.size_bulletData = 1;
-			ob.b_data = pl1[ship_id]->bullet_info[0];
+			ob.size_bulletData = pl1[ship_id]->bullet_info.size();
+		}
+		else
+		{
+			ob.size_bulletData = 100;
+		}
+		if (ob.size_bulletData > 0)
+		{
+			avg_bullet += ob.size_bulletData;
+			no_of_times++;
+		}
+		for (int i = 0; i < ob.size_bulletData && i<100; i++)
+		{
+			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
+		}
+		pl1[ship_id]->bullet_info.clear(); 
 
-			pl1[ship_id]->bullet_info.pop_front();
+		if (pl1[ship_id]->udata.size() <= 10)
+		{
+			ob.size_upgrade_data = pl1[ship_id]->udata.size();
 		}
 		else
 		{
-			ob.size_bulletData = 0;
+			ob.size_upgrade_data = 10;
 		}
-		
-		if (pl1[ship_id]->udata.size() > 0)
+		if (pl1[ship_id]->udata.size() > 3)
 		{
-			ob.size_upgrade_data = 1;
-			ob.udata = pl1[ship_id]->udata[0];
-			pl1[ship_id]->udata.pop_front();
+			cout << "\n sending more than 3 locks to update the stuff";
+		}
+		for (int i = 0; i < ob.size_upgrade_data; i++)
+		{
+			ob.udata[i] = pl1[ship_id]->udata[i];
+		}
+		pl1[ship_id]->udata.clear();
+
+		if (pl1[ship_id]->map_cost_data.size() <= 10)
+		{
+			ob.size_update_cost = pl1[ship_id]->map_cost_data.size();
 		}
 		else
 		{
-			ob.size_upgrade_data = 0;
+			ob.size_update_cost = 10;
 		}
-		if (pl1[ship_id]->map_cost_data.size() > 0)
+		for (int i = 0; i < ob.size_update_cost; i++)
 		{
-			ob.cdata = pl1[ship_id]->map_cost_data[0];
-			ob.size_update_cost = 1;
-			pl1[ship_id]->map_cost_data.pop_front();
+			ob.cdata[i] = pl1[ship_id]->map_cost_data[i];
 		}
-		else
-		{
-			ob.size_update_cost = 0;
-		}
+		pl1[ship_id]->map_cost_data.clear();
 	}
 
 	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
 	{
 		unique_lock<mutex> lk(mutx->updating_data);
-		if(ob.size_navigation==1)
-		pl1[ship_id]->nav_data.push_back(ob.nav_data);
-			
+		for (int i = 0; i < ob.size_navigation; i++)
+		{
+			pl1[ship_id]->nav_data.push_back(ob.nav_data[i]);
+			if (pl1[ship_id]->nav_data[i].type == 0)
+			{
+				cout << "\n 0 is received by =>" << ship_id;
+			}
+		}
 	
 		pl1[ship_id]->ship_id = ob.ship_id;
 		pl1[ship_id]->threshold_health = ob.threshold_health;
@@ -2405,16 +2432,27 @@ class control1
 		pl1[ship_id]->radius = ob.radius;
 		pl1[ship_id]->bullet_info.clear();
 
-		if (ob.size_bulletData == 1)
-		pl1[ship_id]->bullet_info.push_back(ob.b_data);
+		if (ob.size_bulletData > 0 && ship_id==0) 
+		{
+			avg_bullet += ob.size_bulletData;
+			no_of_times++;
+		}
+			
+		for (int i = 0; i < ob.size_bulletData; i++)
+		{
+			pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
 			//cout << "\n firing";
-		
-		if (ob.size_upgrade_data == 1)
-			pl1[ship_id]->udata.push_back(ob.udata);
-		
-		if(ob.size_update_cost==1)
-			pl1[ship_id]->map_cost_data.push_back(ob.cdata);
-		
+		}
+		int found = 0;
+		for (int i = 0; i < ob.size_upgrade_data; i++)
+		{
+			pl1[ship_id]->udata.push_back(ob.udata[i]);
+			found = 1;
+		}
+		for (int i = 0; i < ob.size_update_cost; i++)
+		{
+			pl1[ship_id]->map_cost_data.push_back(ob.cdata[i]);
+		}
 
 	}
 	friend class graphics;
