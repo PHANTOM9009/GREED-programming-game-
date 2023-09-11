@@ -299,6 +299,15 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int threshold_ammo = -1;
 	int threshold_fuel = -1;
 	//to check if the values of these things have changed or not
+	int nav_data_count = 0;
+	int nav_data_once = 0;
+	int b_data_count = 0;
+	int b_data_once = 0;
+	int c_data_count = 0;
+	int c_data_once = 0;
+	int u_data_once = 0;
+	int u_data_count = 0;
+	
 	while (1)
 	{
 		/*NOTES:
@@ -357,8 +366,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			{
 				memset((void*)&data1, 0, sizeof(data1));
 				bytes_recv = recv(peer_socket, (char*)&data1, sizeof(data1), 0);
-				
-				
+					
 				
 				if (bytes_recv < 1)//connection is broken
 				{
@@ -1140,7 +1148,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				select(sending_socket + 1, 0, &writes, 0, &timeout);
 				if (threshold_health==pl1[ship_id]->threshold_health&&threshold_ammo==pl1[ship_id]->threshold_ammo&&threshold_fuel==pl1[ship_id]->threshold_fuel&& pl1[ship_id]->nav_data_final.size() == 0 && pl1[ship_id]->bullet_info.size() == 0 && pl1[ship_id]->udata.size() == 0 && pl1[ship_id]->map_cost_data.size() == 0)
 				{
-					cout << "\n stopped the packet from going empty";
+					
 				}//sending the data only when there is any update from the client..
 				else
 				{
@@ -1149,7 +1157,32 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					threshold_health = pl1[ship_id]->threshold_health;
 					if (FD_ISSET(sending_socket, &writes))
 					{
-
+						if (pl1[ship_id]->nav_data_final.size() > 0)
+						{
+							nav_data_count++;
+							nav_data_once += pl1[ship_id]->nav_data_final.size();
+						}
+						if(pl1[ship_id]->bullet_info.size()>0)
+						{
+							b_data_count++;
+							b_data_once += pl1[ship_id]->bullet_info.size();
+						}
+						if (pl1[ship_id]->udata.size() > 0)
+						{
+							u_data_count++;
+							u_data_once += pl1[ship_id]->udata.size();
+						}
+						if (pl1[ship_id]->map_cost_data.size() > 0)
+						{
+							c_data_count++;
+							c_data_once += pl1[ship_id]->map_cost_data.size();
+							cout << "\n printing the coordinates sent==>" << endl;
+							for (int i = 0; i < pl1[ship_id]->map_cost_data.size(); i++)
+							{
+								cout << pl1[ship_id]->map_cost_data[i].ob.r << " " << pl1[ship_id]->map_cost_data[i].ob.c << endl;
+							}
+						}
+						
 						control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
 						data2.packet_id = frame_number;
 						data2.shipdata_forServer = shipdata;
@@ -1196,6 +1229,12 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		next_frame = elapsed_time * 60;
 			
 	}
+	cout << "\n size of the packet sent to server==>" << sizeof(send_data);
+	cout << "\n size of the packet sent to the client==>" << sizeof(recv_data);
+	cout << "\navg navigation is==>" << (double)nav_data_once / nav_data_count;
+	cout << "\n avg bullet is==>" << (double)b_data_once / b_data_count;
+	cout << "\n avg update is==>" << (double)u_data_once / u_data_count;
+	cout << "\n avg cost is==>" << (double)c_data_once / c_data_count;
 	cout << "\n avg send is==>" << (double)send_count / total_frames1;
 	CLOSESOCKET(peer_socket);
 	CLOSESOCKET(sending_socket);

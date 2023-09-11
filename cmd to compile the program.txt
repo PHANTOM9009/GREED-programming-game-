@@ -1,5 +1,0 @@
-cl -I"F:\GREED(programming game)\final_libs" -I"C:\SFML visual c++\SFML-2.5.1\include" -I"C:\TGUI-0.10-nightly\include" class_outlet.cpp /link /LIBPATH:"F:\GREED(programming game)\final_libs" /LIBPATH:"C:\SFML visual c++\SFML-2.5.1\lib" /LIBPATH:"C:\TGUI-0.10-nightly\lib"  lib2.lib tgui.lib sfml-graphics.lib sfml-audio.lib sfml-network.lib sfml-window.lib sfml-system.lib
-
-
-to compile the final file
-cl /EHsc /MT -I"F:\GREED(programming game)\final_libs" /MD -I"C:\SFML visual c++\SFML-2.5.1\include" -I"C:\TGUI-0.10-nightly\include" "F:\GREED(programming game)\GREED(programming game)\greed.cpp" /link /LIBPATH:"F:\GREED(programming game)\final_libs" /LIBPATH:"C:\SFML visual c++\SFML-2.5.1\lib" /LIBPATH:"C:\TGUI-0.10-nightly\lib"  lib2.lib tgui.lib sfml-graphics.lib sfml-audio.lib sfml-network.lib sfml-window.lib sfml-system.lib

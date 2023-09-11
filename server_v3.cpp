@@ -280,9 +280,10 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 					{
 						continue;
 					}
-
+					
 					if (pl1[i]->nav_data.size() > 0)
 					{
+						cout << "\n navigation req came from==>" << i;
 						if (pl1[i]->nav_data[0].type == 0)//for target type
 						{
 							if (pl1[i]->nav_data[0].target.r != -1 && pl1[i]->nav_data[0].target.c != -1)
@@ -624,7 +625,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	int prev_packet_terminal = 0;
 	int prev_packet_display = 0;
 	//sending the data to the client display to check the connectivity issue
-		
+	int bullet_count = 0;
+	int bullet_once = 0;
+	int animation_count = 0;
+	int animation_once = 0;
 	
 	while (1)
 	{
@@ -773,6 +777,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						}
 						else if (pl1[i]->udata[j].type == 1)
 						{
+							cout << "\n health upgrade came==>" << i;
 							pl1[i]->upgradeHealth(pl1[i]->udata[j].n);
 						}
 						else if (pl1[i]->udata[j].type == 2)
@@ -810,7 +815,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					//updating the cost of the local map of the player
 					for (int j = 0; j < pl1[i]->map_cost_data.size(); j++)
 					{
-						cout << "\n request to udpate the cost came from==>" << i;//just a check statement
+						
 						pl1[i]->updateCost(pl1[i]->map_cost_data[j].ob, pl1[i]->map_cost_data[j].new_cost);
 					}
 					pl1[i]->map_cost_data.clear();
@@ -1327,7 +1332,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				ship_packet.ob[i].died = pl1[i]->died;
 				ship_packet.ob[i].tile_pos_front = pl1[i]->tile_pos_front;
 				ship_packet.ob[i].tile_pos_rear = pl1[i]->tile_pos_rear;
-				for (int j = 0; j <= pl1[i]->bullet_pointer && bullet_no < 500; j++)
+				for (int j = 0; j <= pl1[i]->bullet_pointer && bullet_no < 50; j++)
 				{
 					if (pl1[i]->died == 0)
 					{
@@ -1346,7 +1351,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			//adding the bullets of the cannons
 			for (int i = 0; i < cannon_list.howMany(); i++)
 			{
-				for (int j = 0; j < cannon_list[i].bullet_list.size() && bullet_no < 500; j++)
+				for (int j = 0; j < cannon_list[i].bullet_list.size() && bullet_no < 50; j++)
 				{
 					if (cannon_list[i].isDead == 0)
 					{
@@ -1470,7 +1475,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			}
 	
 			ship_packet.no_of_animation = animation_list.howMany();
-			for (int i = 0; i < animation_list.howMany(); i++)
+			for (int i = 0; i < animation_list.howMany() && i<50; i++)
 			{
 				//cout << "\n second";
 				   // cout << "\n bullet number==>" << i << " " << "ttl=>" << animation_list[i].ttl;
@@ -1540,7 +1545,18 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				advance(it, i);
 				ship_packet.packet_no = total_time;
 				ship_packet.total_secs = total_secs;
+				if (ship_packet.no_of_bullets > 0)
+				{
+					bullet_count++;
+					bullet_once += ship_packet.no_of_bullets;
+				}
+				if (ship_packet.no_of_animation > 0)
+				{
+					animation_count++;
+					animation_once += ship_packet.no_of_animation;
+				}
 				
+
 				prev_packet_display = ship_packet.packet_no;
 				unique_lock<mutex> lk(mutx->send_display);
 				display_data.push_back(pair<int, top_layer>(it->first, ship_packet));
@@ -1688,6 +1704,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	cout << "\n navigation_ship=>" << navigation_ship1 / total_frames;
 	cout << "\n fire_ship=>" << fire_ship1 / total_frames;
 	cout << "\n fire _cannon=>" << fire_cannon1 / total_frames;
+
+	cout << "\navg bullet send is==>" << bullet_once / bullet_count;
+	cout << "\navg animation send is==>" << animation_once / animation_count;
 }
 
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player

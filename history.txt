@@ -173,3 +173,5 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  also sending the packets but the client display unit is not able to receive it. this is the problem.
  atleast 40 mbps upload must be there to work with the game.....
  -----------------------------------------------------------------------------------------------------
+ problem in health upgrade, it is reaching the server too late, need to check on this..
+ increase the size of upgrading stuff.

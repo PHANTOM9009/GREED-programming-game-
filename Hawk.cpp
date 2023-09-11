@@ -73,14 +73,12 @@ namespace user1
 					
 				}
 			
-				
-				if (e.eventType == Event::EventType::LowHealth)
+				if (ob.getCurrentHealth() <= 50)
 				{
+					//cout << "\n updated health";
 					ob.Greed_upgradeHealth(20);
-
-					std::time_t result = std::time(nullptr);
-					//cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec;
 				}
+				
 				if (e.eventType == Event::EventType::ShipFire)
 				{
 					

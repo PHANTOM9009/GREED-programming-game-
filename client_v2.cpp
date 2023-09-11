@@ -1085,8 +1085,9 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 			game_token = argv[5];
 			ip_address = argv[6];
 	}
+	
+	
 	/*
-	* to run this file manually
 	strcpy(server_port, "8081");
 	my_id = 1;
 	username = "username";
@@ -1095,9 +1096,8 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 	cin >> game_token;
 	ip_address = "127.0.0.1";
 	*/
-	//connecting with the server_v3 here
 	peer_socket = connect_to_server();
-
+	
 	cout << "\n max player are==>" << max_players;
 	const int no_of_players = max_players;
 	Control control;

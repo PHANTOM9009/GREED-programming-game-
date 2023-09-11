@@ -1270,16 +1270,16 @@ class shipData_forServer
 	int radius;//square radius
 
 	int size_navigation;
-	navigation nav_data[10];
+	navigation nav_data[2];
 
 	int size_bulletData;
-	bullet_data b_data[100];
+	bullet_data b_data[10];
 
 	int size_upgrade_data;
 	upgrade_data udata[10];
 
 	int size_update_cost;//to update the cost of the local map of the user
-	map_cost cdata[10];//to update the data
+	map_cost cdata[80];//to update the data
 
 public:
 	shipData_forServer()
@@ -1301,7 +1301,7 @@ class shipData_forMe
 
 	int killer_ship_id;
 	int killed_ships_size;
-	int killed_ships[20];
+	int killed_ships[10];
 	int score;
 	int radius;//square radius
 
@@ -1324,7 +1324,7 @@ class shipData_forMe
 	int collided_ships[10];
 
 	int size_hit_bullet;
-	bullet_data_client hit_bullet[100];
+	bullet_data_client hit_bullet[10];
 
 	int size_unlock;
 	int unlock[5];
@@ -1366,7 +1366,7 @@ class recv_data//to be recv by the client and to be  sent by the server
 	int packet_id; //for debugging purpose only
 	char token[20];//current token for the game
 	int s1;
-	shipData_exceptMe shipdata_exceptMe[20];
+	shipData_exceptMe shipdata_exceptMe[10];
 	
 	shipData_forMe shipdata_forMe;
 	int gameOver;//0 for game not over, 1 for over;
@@ -2342,16 +2342,16 @@ class control1
 		{
 			int a;
 		}
-		if (pl1[ship_id]->nav_data_final.size() <= 10)
+		if (pl1[ship_id]->nav_data_final.size() <= 2)
 		{
 			ob.size_navigation = pl1[ship_id]->nav_data_final.size();
 		}
 		else 
 		{
-			ob.size_navigation = 10;
+			ob.size_navigation = 2;
 		}
 		
-		for (int i = 0; i < ob.size_navigation && i<10; i++)
+		for (int i = 0; i < ob.size_navigation && i<2; i++)
 		{
 			ob.nav_data[i] = pl1[ship_id]->nav_data_final[i];
 			//cout << "\n type is=>" << pl1[ship_id]->nav_data[i].type;
@@ -2361,20 +2361,20 @@ class control1
 		pl1[ship_id]->nav_data_final.clear();
 		
 		//ob.size_bulletData = pl1[ship_id]->bullet_info.size();
-		if (pl1[ship_id]->bullet_info.size() <= 100)
+		if (pl1[ship_id]->bullet_info.size() <= 10)
 		{
 			ob.size_bulletData = pl1[ship_id]->bullet_info.size();
 		}
 		else
 		{
-			ob.size_bulletData = 100;
+			ob.size_bulletData = 10;
 		}
 		if (ob.size_bulletData > 0)
 		{
 			avg_bullet += ob.size_bulletData;
 			no_of_times++;
 		}
-		for (int i = 0; i < ob.size_bulletData && i<100; i++)
+		for (int i = 0; i < ob.size_bulletData && i<10; i++)
 		{
 			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
 		}
@@ -2383,28 +2383,35 @@ class control1
 		if (pl1[ship_id]->udata.size() <= 10)
 		{
 			ob.size_upgrade_data = pl1[ship_id]->udata.size();
+		
 		}
 		else
 		{
 			ob.size_upgrade_data = 10;
 		}
+	
 		if (pl1[ship_id]->udata.size() > 3)
 		{
 			cout << "\n sending more than 3 locks to update the stuff";
 		}
 		for (int i = 0; i < ob.size_upgrade_data; i++)
 		{
+			if (pl1[ship_id]->udata[i].type == 1)
+			{
+				cout << "\n sent for health by=>" << ship_id;
+			}
+
 			ob.udata[i] = pl1[ship_id]->udata[i];
 		}
-		pl1[ship_id]->udata.clear();
+		pl1[ship_id]->udata.clear();	
 
-		if (pl1[ship_id]->map_cost_data.size() <= 10)
+		if (pl1[ship_id]->map_cost_data.size() <= 80)
 		{
 			ob.size_update_cost = pl1[ship_id]->map_cost_data.size();
 		}
 		else
 		{
-			ob.size_update_cost = 10;
+			ob.size_update_cost = 80;
 		}
 		for (int i = 0; i < ob.size_update_cost; i++)
 		{
@@ -2631,14 +2638,15 @@ public:
 	pack_ship ob[10];
 	//for the bullets
 	int no_of_bullets;
-	Greed::abs_pos bullet_pos[500];
+	Greed::abs_pos bullet_pos[50];
 	//for cannons
 	cannon_data cannon_ob[3];//object for cannon
 	int no_of_animation;
-	animation_data animation_ob[500];
+	animation_data animation_ob[50];
 	top_layer()
 	{
 		no_of_bullets = 0;
+		no_of_animation = 0;
 	}
 	int gameOver;//0 for no, 1 for yes;
 
