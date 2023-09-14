@@ -37,7 +37,15 @@
 #include<iostream>
 #include<chrono>
 using namespace std;
-
+class data
+{
+public:
+    int arr[4000];
+    data()
+    {
+        memset(arr, 0, sizeof(arr));
+    }
+};
 int main() 
 {
 #if defined(_WIN32)
@@ -85,25 +93,48 @@ int main()
         cout << "\n the message recved is==>" << read;
     }
     int n = 0;
+   
+    const int MAX_LENGTH = 1000;
+    
     while (1)
     {
-        bytes = sendto(socket_peer, (char*)&n, sizeof(n), 0, (sockaddr*)&client_address, client_len);
-        if (bytes < 1)
+        ::data ob;
+        ob.arr[0] = n;
+        ob.arr[3999] = n-1;
+        char buffer[sizeof(ob)];
+        memcpy(buffer, &ob, sizeof(ob));
+       
+        int sent_bytes = 0;
+        //sending that starting a new packet
+        int sending_new = 1;
+        sendto(socket_peer,(char*)&sending_new,sizeof(sending_new), 0, (sockaddr*)&client_address, client_len);
+        while (sent_bytes < sizeof(ob))
         {
-            cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
-        }
-        else
-        {
-            cout << "\n sent=>" << n;
-            auto now = std::chrono::system_clock::now();
-            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-            auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-            auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-            auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+            
+			int bytesToSend = min(MAX_LENGTH, sizeof(ob) - sent_bytes);
+            bytes = sendto(socket_peer, buffer+sent_bytes, bytesToSend, 0, (sockaddr*)&client_address, client_len);
+            if (bytes < 1)
+            {
+                cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+            }
+            else
+            {
+                sent_bytes += MAX_LENGTH;
+                cout << "\n sent=>" << bytes;
+                auto now = std::chrono::system_clock::now();
+                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+                auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+                auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+                auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-            cout << "\n sent data to the client at==> " <<
-                hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+               // cout << "\n sent data to the client at==> " <<
+                 //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+            }
         }
+        cout << "\n sent one packet-------------------------------------------------------------";
+        Sleep(100);
+        
+        
         n++;
     }
     

@@ -614,8 +614,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 	vector<debug> de;
 
-	cout << "\n size of recv_data=>" << sizeof(recv_data);
-	cout << "\n size of top player=>" << sizeof(top_layer);
+	cout << "\n size of recv_data=>" << sizeof(recv_data);//2832 bytes
+	cout << "\n size of top player=>" << sizeof(top_layer);//5688 bytes
+	cout << "\n size of send data==>" << sizeof(send_data);//4352 bytes
 
 	vector<int> prev_packet_id(n, -1);//previous packet id received from the player so that any old packet may not be use
 	int game_over_frame;//at which frame did the game get over

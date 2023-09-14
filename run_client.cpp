@@ -61,7 +61,15 @@
 #include<iostream>
 #include<chrono>
 using namespace std;
-
+class data
+{
+public:
+    int arr[4000];
+    data()
+    {
+        memset(arr, 0, sizeof(arr));
+    }
+};
 int main() {
 
 #if defined(_WIN32)
@@ -111,25 +119,69 @@ int main() {
         cout << "\n sent hello to the server";
     }
     
+    int n;
+    
+    const int MAX_SIZE = 1000;
+    int found;
     while (1)
     {
-        int num;
-        bytes = recv(socket_listen,(char*)&num, sizeof(num), 0);
-        if (bytes < 1)
+        ::data ob;
+        int recv_bytes = 0;
+        char comp[sizeof(ob)];
+        int checker;
+        if (found == 0)
         {
-            cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
+            recv(socket_listen, (char*)&checker, sizeof(checker), 0);
         }
-        else
+        if(checker==1 || found==1)
         {
-            cout << "\n recved bytes from the server=>" << num;
-            auto now = std::chrono::system_clock::now();
-            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-            auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-            auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-            auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+            while (recv_bytes < sizeof(ob))
+            {
+                char buffer[1000];
+                found = 0;
+                bytes = recv(socket_listen, (char*)&buffer, sizeof(buffer), 0);
+                if (bytes < 1)
+                {
+                    cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
+                }
+                else if (bytes == 4)
+                {
+                    int check;
+                    memcpy(&check, buffer, sizeof(int));
+                    if (check == 1)
+                    {
+                        cout << "\n problem occured breaking...";
+                        found = 1;
+                        break;
+                    }
+                }
+                else if (bytes == 1000)
+                {
+                    if (bytes == 4)
+                    {
+                        int check;
+                        memcpy(&check, buffer, sizeof(int));
+                        if (check == 101)
+                        {
+                            //new packet is starting so break out of the loop
+                        }
+                    }
+                    memcpy(comp + recv_bytes, buffer, bytes);
+                    recv_bytes += bytes;
+                    //cout << "\n recved bytes from the server=>" << bytes << " " << ob.arr[100];
+                    auto now = std::chrono::system_clock::now();
+                    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+                    auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+                    auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+                    auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-            	cout << "\n recved data from the server at the time==> " <<
-               	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+                    //cout << "\n recved data from the server at the time==> " <<
+                    //hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+                }
+               
+            }
+            memcpy(&ob, comp, sizeof(ob));
+            cout << "\n value of the packet==>" << ob.arr[0] << " " << ob.arr[3999];
         }
     }
 
