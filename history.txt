@@ -175,3 +175,21 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  -----------------------------------------------------------------------------------------------------
  problem in health upgrade, it is reaching the server too late, need to check on this..
  increase the size of upgrading stuff.
+ -----------------------------------
+ server is not sending the cannon data to any of the client terminal
+  the problem is this:
+  client is recving data at a very fast rate in every 1/60th of a second client is having 400+ values of data
+  this is the reason for following
+  since in the current client loop is running at 60 fps and only extracting the end packet from the queue, this way the client is skipping
+  the packets, and hence skipping the packet to open the lock of the upgrade_health thing, due to this the lock is not opening
+  but this sheer value of data in one turn is too much to even take it into consideration, hence we have to find why is this number so huge
+  if the server is sending data at 60fps, wtf is happening here bro?
+
+
+  the major problem was in the frame rate of the client terminal version which was not maintained by sfml
+  due to this there was a lag, the the speed was not pure 60 fps which we will call it, so
+  we need to find a way on how to get this speed changed.
+  solved this problem by doubling the value of the multiplier to maintain the frame rate
+  i don't know why this solved this problem this needs to be investigated tomorrow and check why was this happening
+  moreover the issue is now solved. and the first prototype of the new sending and recving method is working fine(seems to be)
+  now we can add this functionality to the other sending and recving part of the game as well.

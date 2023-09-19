@@ -1079,6 +1079,7 @@ ship::ship()//default ctor for now
 	killer_cannon_id = -1;
 	threshold_health = 10;
 	threshold_ammo = 10;
+	threshold_fuel = 10;
 	score = 0;
 	minutes = INT_MAX;
 	seconds = INT_MAX;
@@ -3139,6 +3140,7 @@ bool ship::upgradeHealth(int n)// 1 health in 5 money
 			t.h.n = health;
 			this->time_line.push_back(t);
 			unlock.push_back(1);
+			cout << "\n unlocked the seal for the user=>" << this->ship_id;
 			return true;
 		}
 	}

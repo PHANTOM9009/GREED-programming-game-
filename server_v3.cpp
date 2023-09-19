@@ -47,7 +47,10 @@ starting client_v1 will automatically start the client_v2 unit so no need to sta
 
 #include "sqlite3.h" 
 #include<stdlib.h>
+#include<math.h>
+#include<stdio.h>
 
+#define MAX_LENGTH 1000
 int max_player=0;
 string my_token;//token of the current game instance
 
@@ -453,12 +456,42 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 		for (int i = 0; i < data.size(); i++)
 		{
 			//send the data to the client
-			int bytes = sendto(socket_listen, (char*)&data[i].second, sizeof(data[i].second), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
-			if (bytes < 0)
-			{
-				cout << "\n error in sending the data to the client==>"<<i<<" due to the reason==>"<<GetLastErrorAsString();
-			}
+			data[i].second.st = 100;
+			data[i].second.end = 101;
 			
+			recv_data ob = data[i].second;
+			char buffer[sizeof(data[i].second)];
+			memcpy(buffer, &ob, sizeof(ob));
+
+			int sent_bytes = 0;
+			//sending that starting a new packet
+			int sending_new = 1;
+			sendto(socket_listen, (char*)&sending_new, sizeof(sending_new), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
+			while (sent_bytes < sizeof(ob))
+			{
+				int fuck = sizeof(ob) - sent_bytes;
+				int bytesToSend = min(MAX_LENGTH, fuck);
+				int bytes= sendto(socket_listen, buffer + sent_bytes, bytesToSend, 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
+				if (bytes < 1)
+				{
+					cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+				}
+				else
+				{
+					sent_bytes += bytes;
+					
+					auto now = std::chrono::system_clock::now();
+					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+					// cout << "\n sent data to the client at==> " <<
+					  //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+				}
+			}
+			//cout << "\n sent bytes to==>" <<data[i].first;
+						
 		}	
 	}
 }
@@ -1390,11 +1423,19 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
 			for(int sid=0;sid<max_player;sid++)
 			{
+				for (int i = 0; i < pl1[sid]->unlock.size(); i++)
+				{
+					if (pl1[sid]->unlock[i] == 1)
+					{
+						cout << "\n unlocking health for=>" << sid << " packet id=>" << data1.packet_id;
+					}
+				}
 					shipData_forMe sdfm;
 					control.me_to_packet(sdfm, sid, pl1);
 					data1.shipdata_forMe = sdfm;
 					//sending the data
 					data1.packet_id = total_time;
+					
 					unique_lock<mutex> lk(mutx->send_terminal);
 					terminal_data.push_back(pair<int, recv_data>(sid, data1));
 					
@@ -1608,6 +1649,15 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					}
 					if (bytes > 0)
 					{
+						//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
+						for (int k = 0; k < data2.shipdata_forServer.size_upgrade_data; k++)
+						{
+							if (data2.shipdata_forServer.udata[k].type == 1)
+							{
+								cout << "\n health upgrade came from =>" << sid << "  packet id=>" << data2.packet_id;
+							}
+
+						}
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
 						if (sid == 1)//for 1 only
@@ -1623,12 +1673,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						}
 
 					}
-					else if(bytes>0)
-					{
-						cout << "\n non verified user sending data..";
-						cout << "\n the authenticated data sent is==>" << data2.user_cred.username << " " << data2.user_cred.password;
-
-					}
+					
 
 					std::time_t result = std::time(nullptr);
 					//cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec << " server frame=>" << total_time << " " << "received frame=>" << data2.packet_id;
@@ -1695,19 +1740,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		sending2 += de[i].avg_send2;
 	
 	}
-	cout << "\n sending=>" << sending0 / total_frames;
-	cout << "\n sending to the client terminal==>" << sending1 / total_frames;
-	cout << "\n sending to the client display unit==>" << sending2 / total_frames;
-	cout << "\n processing1=>" << processing1 / total_frames;
-	cout << "\n processing2=>" << processing2 / total_frames;
-	cout << "\n receiving=>" << receiving / total_frames;
-	cout << "\n fire updgrade=>" << fire_update1 / total_frames;
-	cout << "\n navigation_ship=>" << navigation_ship1 / total_frames;
-	cout << "\n fire_ship=>" << fire_ship1 / total_frames;
-	cout << "\n fire _cannon=>" << fire_cannon1 / total_frames;
 
-	cout << "\navg bullet send is==>" << bullet_once / bullet_count;
-	cout << "\navg animation send is==>" << animation_once / animation_count;
 }
 
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player

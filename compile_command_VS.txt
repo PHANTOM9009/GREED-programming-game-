@@ -5,3 +5,6 @@ cl /EHsc /MT /MD -I"C:\\SFML visual c++\\SFML-2.5.1\\include" -I"C:\\TGUI-1.0-ni
 client
 
 cl /EHsc /MT /MD -I"C:\\SFML visual c++\\SFML-2.5.1\\include" -I"C:\\TGUI-1.0-nightly\\include" "run_server.cpp" /link /LIBPATH:"C:\\SFML visual c++\\SFML-2.5.1\\lib" /LIBPATH:"C:\\TGUI-1.0-nightly\\lib" sqlite3.lib tgui.lib sfml-graphics.lib sfml-audio.lib sfml-network.lib sfml-window.lib sfml-system.lib /out:test_server.exe
+
+
+F:\visual studio setup\VC\Auxiliary\Build

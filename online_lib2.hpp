@@ -398,7 +398,7 @@ public:
 };
 class Mutex//class protecting all the mutexes
 {
-
+public:
 	mutex bullet_mutex[20];//for the complete list of bullets of the player
 	mutex m_global_map;//mutex for syncrhonization of globalMap variable
 
@@ -416,8 +416,12 @@ class Mutex//class protecting all the mutexes
 	condition_variable cond_terminal;//to check if terminal is ready to recv the data
 	condition_variable cond_display;//to check if the display is ready to recv the data
 
+	mutex recv_terminal;//to recv the data from the client terminal side
+	mutex recv_display;//to recv the data from the display client side
+	
 
-public:
+
+
 	Mutex()
 	{
 
@@ -1095,6 +1099,7 @@ public:
 };
 class upgrade_data
 {
+public:
 	int type;
 	/*
 	* 0 for ammo
@@ -1102,7 +1107,7 @@ class upgrade_data
 	* 2 for fuel
 	*/
 	int n;//upgrade by number
-public:
+
 	upgrade_data(){}
 	upgrade_data(int t, int n)
 	{
@@ -1295,6 +1300,7 @@ class shipData_forMe
 	/*
 	* it has data like after getting hit by a bullet
 	*/
+public:
 	int ship_id;
 	int seconds;
 	int minutes;
@@ -1363,6 +1369,8 @@ class shipData_exceptMe //updated data that the server will send for the client
 void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m);
 class recv_data//to be recv by the client and to be  sent by the server
 {
+public:
+	int st;//to check the authenticity of the incoming packet
 	int packet_id; //for debugging purpose only
 	char token[20];//current token for the game
 	int s1;
@@ -1370,7 +1378,7 @@ class recv_data//to be recv by the client and to be  sent by the server
 	
 	shipData_forMe shipdata_forMe;
 	int gameOver;//0 for game not over, 1 for over;
-
+	int end;//to check the authenticity of the incoming packet
 	friend class graphics;
 	friend void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m);
 };
@@ -2036,27 +2044,30 @@ public:
 
 	void Greed_upgradeHealth(int n)
 	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (lock_health == 0)
 		{
-			unique_lock<mutex> lk(mutx->m[ship_id]);
+			
 			udata.push_back(upgrade_data(1, n));
 			lock_health = 1;
 		}
 	}
 	void Greed_upgradeAmmo(int n)
 	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (lock_ammo == 0)
 		{
-			unique_lock<mutex> lk(mutx->m[ship_id]);
+			
 			udata.push_back(upgrade_data(0, n));
 			lock_ammo = 1;
 		}
 	}
 	void Greed_upgradeFuel(int n)
 	{
+		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (lock_fuel == 0)
 		{
-			unique_lock<mutex> lk(mutx->m[ship_id]);
+			
 			udata.push_back(upgrade_data(2, n));
 			lock_fuel = 1;
 		}
@@ -2228,6 +2239,7 @@ class control1
 			else if (ob.unlock[i] == 1)
 			{
 				pl1[id]->lock_health = 0;
+				cout << "\n health unlocked by the user..";
 			}
 			else if (ob.unlock[i] == 2)
 			{
@@ -2306,6 +2318,7 @@ class control1
 		if (pl1[id]->unlock.size() <= 5)
 		{
 			ob.size_unlock = pl1[id]->unlock.size();
+			
 		}
 		else
 		{
@@ -2314,6 +2327,7 @@ class control1
 		for (int i = 0; i < ob.size_unlock; i++)
 		{
 			ob.unlock[i] = pl1[id]->unlock[i];
+			
 		}
 
 		pl1[id]->unlock.clear();
@@ -2454,6 +2468,7 @@ class control1
 		for (int i = 0; i < ob.size_upgrade_data; i++)
 		{
 			pl1[ship_id]->udata.push_back(ob.udata[i]);
+			
 			found = 1;
 		}
 		for (int i = 0; i < ob.size_update_cost; i++)

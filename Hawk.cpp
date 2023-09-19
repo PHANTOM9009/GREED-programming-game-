@@ -50,6 +50,7 @@ namespace user1
 
 			if (ob.frame_rate_limiter())
 			{//this is anchit rana talking to the world and i want ot know the difference between
+				//cout<<"\n my health is==>"<<ob.getCurrentHealth();
 				frame_rate++;
 				sf::Time time = clock.restart();
 				elapsed_time += time.asSeconds();
@@ -59,6 +60,7 @@ namespace user1
 					frame_rate = 0;
 					elapsed_time = 0;
 				}
+			//	cout << "\n my health  is=>" << ob.getCurrentHealth();
 				//ob.chaseShip(2);
 				deque<shipInfo> shipList = ob.getShipList();
 				Event e;
@@ -87,7 +89,7 @@ namespace user1
 						ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::REAR);
 					}
 				}
-				ob.Greed_fireCannon(cannon::FRONT, 0, ShipSide::REAR);
+				//ob.Greed_fireCannon(cannon::FRONT, 0, ShipSide::REAR);
 				if (e.eventType == Event::EventType::LowAmmo)
 				{
 					//ob.Greed_upgradeAmmo(20);
