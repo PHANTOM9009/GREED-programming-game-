@@ -64,6 +64,7 @@ vector<int> socket_display;//depracated we dont use it anymore, we are using an 
 unordered_map<int,sockaddr_storage> socket_id_display;
 unordered_map<int, user_credentials> user_cred;
 
+deque<deque<send_data>> input_data(10);//input data from all the clients
 
 deque<pair<int,recv_data>> terminal_data;//data queue to send data to the client terminal unit..pair of id and data
 deque<pair<int, top_layer>> display_data;//data for the display unit of the client: pair of id and top_layer data
@@ -533,7 +534,92 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 		}
 	}
 }
+void recver_func(Mutex* m)
+{
+	int found = 0;
+	int bytes;
+	sf::Clock clock;
+	double et = 0;
+	int count = 0;
+	while (1)
+	{
+		et += clock.restart().asSeconds();
+		if (et > 1)
+		{
+			cout << "\n the count of packet is==>" << count;
+			et = 0;
+			count = 0;
+		}
 
+		send_data ob;
+		int recv_bytes = 0;
+		char comp[sizeof(ob)];
+		int checker = 0;
+		if (found == 0)
+		{
+			sockaddr_storage client_address;
+			socklen_t client_len = sizeof(client_address);
+			recvfrom(recver, (char*)&checker, sizeof(checker), 0,(sockaddr*)&client_address,&client_len);
+		}
+		if (checker == 1 || found == 1)
+		{
+			while (recv_bytes < sizeof(ob))
+			{
+				char buffer[1000];
+				found = 0;
+				bytes = recv(socket_listen, (char*)&buffer, sizeof(buffer), 0);
+				if (bytes < 1)
+				{
+					cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
+				}
+				if (bytes == 4)
+				{
+					int check;
+					memcpy(&check, buffer, sizeof(int));
+					if (check == 1)
+					{
+						cout << "\n problem occured breaking...";
+						found = 1;
+						break;
+					}
+				}
+
+				memcpy(comp + recv_bytes, buffer, bytes);
+				recv_bytes += bytes;
+				//cout << "\n recved bytes from the server=>" << bytes << " " << ob.arr[100];
+				auto now = std::chrono::system_clock::now();
+				auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+				auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+				auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+				auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+				//cout << "\n recved data from the server at the time==> " <<
+				//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+
+
+			}
+			memcpy(&ob, comp, sizeof(ob));
+			if (ob.st == 100 && ob.end == 101)
+			{
+				//cout << "\n data is correct==>" << ob.packet_id;
+
+
+			//	cout << "\n received health is=>" << ob.shipdata_forMe.health;
+
+				unique_lock<mutex> lk(m->recv_terminal);
+				int sid = ob.shipdata_forServer.ship_id;
+				input_data[sid].push_back(ob);
+
+				count++;
+			}
+			else
+			{
+				cout << "\n faulty data";
+			}
+		}
+		//Sleep(10);
+	}
+}
 bool checkUser(user_credentials& cred)
 {
 	string username = cred.username;
@@ -663,7 +749,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	int bullet_once = 0;
 	int animation_count = 0;
 	int animation_once = 0;
-	
+
+	int input_size = 0;
+	int net_frame = 0;
+	thread t4(&recver_func, mutx);
+	t4.detach();
 	while (1)
 	{
 
@@ -678,6 +768,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	
 		if (next_frame != current_frame)
 		{
+			net_frame++;
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 			{
 				break;
@@ -1621,35 +1712,20 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					continue;
 				}
 				
-				select(recver+1, &read, 0, 0, &timeout);
-			
-				if (FD_ISSET(recver, &read))
-				{
+				
 					send_data data2;
-					memset((void*)&data2, 0, sizeof(data2));
-					struct sockaddr_storage client_address;
-					socklen_t client_len = sizeof(client_address);
-					int bytes = recvfrom(recver, (char*)&data2, sizeof(data2), 0, (sockaddr*)&client_address, &client_len);
-					//bytes will be recved by the recver socket
-					if (bytes < 1)
+					unique_lock<mutex> lk(mutx->recv_terminal);
+					if (input_data[j].size() > 0)
 					{
-					    cout << "\n could not recv the data from the client==>" <<j<<" "<< GetLastErrorAsString();
-					}
-					
-					
-					//data is received now convert it to appropriate form
-					int sid = data2.shipdata_forServer.ship_id;
-					if (data2.shipdata_forServer.ship_id != sid)
-					{
-						cout << "\n fukk";
-					}
-					if (pl1[sid]->died == 1)
-					{
-						continue;
-					}
-					if (bytes > 0)
-					{
-						//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
+						data2 = input_data[j][0];
+						input_data[j].pop_front();
+						if (j == 0)
+						{
+							input_size += input_data[j].size();
+						}
+						lk.unlock();
+
+						int sid = data2.shipdata_forServer.ship_id;
 						for (int k = 0; k < data2.shipdata_forServer.size_upgrade_data; k++)
 						{
 							if (data2.shipdata_forServer.udata[k].type == 1)
@@ -1658,6 +1734,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							}
 
 						}
+
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
 						if (sid == 1)//for 1 only
@@ -1667,18 +1744,19 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
 							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-							
+
 							//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
 							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 						}
-
 					}
+
+			}
 					
 
 					std::time_t result = std::time(nullptr);
 					//cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec << " server frame=>" << total_time << " " << "received frame=>" << data2.packet_id;
-				}
-			}
+				
+			
 			sf::Time time4 = recv_data.getElapsedTime();
 			avg_recv += time4.asSeconds();
 
@@ -1740,7 +1818,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		sending2 += de[i].avg_send2;
 	
 	}
-
+	cout << "\n avg input size queue is==>" << (double)input_size / net_frame;
 }
 
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player

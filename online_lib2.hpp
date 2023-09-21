@@ -411,12 +411,12 @@ public:
 	mutex updating_data;//for server only
 	mutex gameOver_check;
 	
-	mutex send_terminal;//for sending the data to the client terminal
+	mutex send_terminal;//for sending the data to the client terminal also used by the client to send the data to the client
 	mutex send_display;//for sending the data to the client display unit
 	condition_variable cond_terminal;//to check if terminal is ready to recv the data
 	condition_variable cond_display;//to check if the display is ready to recv the data
 
-	mutex recv_terminal;//to recv the data from the client terminal side
+	mutex recv_terminal;//to recv the data from the client terminal side and recv data from the client and give it to the server
 	mutex recv_display;//to recv the data from the display client side
 	
 
@@ -1265,7 +1265,7 @@ class shipData_forServer
 {
 	/* this class has the format of data that the client will send to the server
 	*/
-
+public:
 	int ship_id;//id of the ship
 		
 	double threshold_health;
@@ -1286,7 +1286,7 @@ class shipData_forServer
 	int size_update_cost;//to update the cost of the local map of the user
 	map_cost cdata[80];//to update the data
 
-public:
+
 	shipData_forServer()
 	{
 
@@ -1384,12 +1384,14 @@ public:
 };
 class send_data// to be sent by the client and to be received by the server
 {
+public:
+	int st;
 	int packet_id; //for debugging purpose only
 	user_credentials user_cred;
 
 	shipData_forServer shipdata_forServer;//my data to be sent to the server
+	int end;
 
-public:
 	send_data()
 	{
 

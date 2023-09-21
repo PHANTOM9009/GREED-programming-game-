@@ -67,7 +67,7 @@ SOCKET sending_socket;//socket to send data to the server
 //peer_socket is for recving data from the server
 
 deque<recv_data> input_data;//input data from the server to the client
-
+deque<send_data> output_data;//data that has to be sent to the server
 
 bool SEND(SOCKET sock, char* buff, int length)
 {
@@ -314,6 +314,10 @@ void data_recver(SOCKET socket_listen,Mutex *m)
 	}
 }
 
+void data_sender(Mutex* m)
+{
+
+}
 void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns], Map& map_ob,int peer_s,ship &player)
 {
 
@@ -503,7 +507,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					{
 						mutx->recv_terminal.unlock();
 					}
-		
+				
 					unique_lock<mutex> lk1(pl1[ship_id]->mutx->m[ship_id]);
 					if (current_health < pl1[ship_id]->health)
 					{
@@ -1280,6 +1284,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						data2.packet_id = frame_number;
 						data2.shipdata_forServer = shipdata;
 						data2.user_cred = user_credentials(username, password);
+						data2.st = 100;
+						data2.end = 101;
 						//sending the data
 						int bytes = send(sending_socket, (char*)&data2, sizeof(data2), 0);
 
