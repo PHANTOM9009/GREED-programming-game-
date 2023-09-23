@@ -64,7 +64,7 @@ vector<int> socket_display;//depracated we dont use it anymore, we are using an 
 unordered_map<int,sockaddr_storage> socket_id_display;
 unordered_map<int, user_credentials> user_cred;
 
-
+deque<deque<send_data>> input_data(10);//data to queue to store the data from the client terminal unit
 deque<pair<int,recv_data>> terminal_data;//data queue to send data to the client terminal unit..pair of id and data
 deque<pair<int, top_layer>> display_data;//data for the display unit of the client: pair of id and top_layer data
 
@@ -521,19 +521,134 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 		//now sending the data using socket_listen2
 		for (int i = 0; i < data.size(); i++)
 		{
-			int bytes = sendto(socket_listen2, (char*)&data[i].second, sizeof(data[i].second), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
-			if (bytes > 0)
+			//send the data to the client
+			data[i].second.st = 100;
+			data[i].second.end = 101;
+
+			top_layer ob = data[i].second;
+			char buffer[sizeof(data[i].second)];
+			memcpy(buffer, &ob, sizeof(ob));
+
+			int sent_bytes = 0;
+			//sending that starting a new packet
+			int sending_new = 1;
+			sendto(socket_listen2, (char*)&sending_new, sizeof(sending_new), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
+			while (sent_bytes < sizeof(ob))
 			{
-				//cout << "\n sent bytes to the client display unit==>" << data[i].first;
+				int fuck = sizeof(ob) - sent_bytes;
+				int bytesToSend = min(MAX_LENGTH, fuck);
+				int bytes = sendto(socket_listen2, buffer + sent_bytes, bytesToSend, 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
+				if (bytes < 1)
+				{
+					cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+				}
+				else
+				{
+					sent_bytes += bytes;
+
+					auto now = std::chrono::system_clock::now();
+					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+					// cout << "\n sent data to the client at==> " <<
+					  //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+				}
 			}
-			if (bytes < 0)
-			{
-				cout << "\n error in sending the data to the client display unit==>" << i << " due to the reason==>" << GetLastErrorAsString();
-			}
+			//cout << "\n sent bytes to==>" <<data[i].first;
+
 		}
 	}
 }
+void recv_data_terminal(Mutex* m)
+{
+	int found = 0;
+	int bytes;
+	sf::Clock clock;
+	double et = 0;
+	int count = 0;
+	
+	while (1)
+	{
+		et += clock.restart().asSeconds();
+		if (et > 1)
+		{
+			cout << "\n the count of packet is==>" << count;
+			et = 0;
+			count = 0;
+		}
 
+		send_data ob;
+		int recv_bytes = 0;
+		char comp[sizeof(ob)];
+		int checker = 0;
+		if (found == 0)
+		{
+			sockaddr_storage client_address;
+			socklen_t client_len = sizeof(client_address);
+			recvfrom(recver, (char*)&checker, sizeof(checker), 0,(sockaddr*)&client_address,&client_len);
+		}
+		if (checker == 1 || found == 1)
+		{
+			while (recv_bytes < sizeof(ob))
+			{
+				char buffer[1000];
+				found = 0;
+				sockaddr_storage client_address;
+				socklen_t client_len = sizeof(client_address);
+				bytes = recvfrom(recver, (char*)&buffer, sizeof(buffer), 0,(sockaddr*)&client_address,&client_len);
+				if (bytes < 1)
+				{
+					cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
+				}
+				if (bytes == 4)
+				{
+					int check;
+					std::memcpy(&check, buffer, sizeof(int));
+					if (check == 1)
+					{
+						cout << "\n problem occured breaking...";
+						found = 1;
+						break;
+					}
+				}
+
+				std::memcpy(comp + recv_bytes, buffer, bytes);
+				recv_bytes += bytes;
+				//cout << "\n recved bytes from the server=>" << bytes << " " << ob.arr[100];
+				auto now = std::chrono::system_clock::now();
+				auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+				auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+				auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+				auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+				//cout << "\n recved data from the server at the time==> " <<
+				//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+
+
+			}
+
+			std::memcpy(&ob, comp, sizeof(ob));
+			if (ob.st == 100 && ob.end == 101)
+			{
+				//cout << "\n data is correct==>" << ob.packet_id;
+
+
+			//	cout << "\n received health is=>" << ob.shipdata_forMe.health;
+
+				unique_lock<mutex> lk(m->recv_terminal);
+				input_data[ob.shipdata_forServer.ship_id].push_back(ob);
+				count++;
+			}
+			else
+			{
+				cout << "\n faulty data";
+			}
+		}
+		//Sleep(10);
+	}
+}
 bool checkUser(user_credentials& cred)
 {
 	string username = cred.username;
@@ -619,7 +734,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 	thread t3(send_data_display, socket_id_display, mutx);
 	t3.detach();
-		
+	
+	thread t4(recv_data_terminal, mutx);
+	t4.detach();
 	List<graphics::animator> animation_list;
 
 	vector<int> checker;
@@ -1621,64 +1738,45 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					continue;
 				}
 				
-				select(recver+1, &read, 0, 0, &timeout);
-			
-				if (FD_ISSET(recver, &read))
+				unique_lock<mutex> lk(mutx->recv_terminal);
+				if (input_data[j].size())
 				{
+
 					send_data data2;
 					memset((void*)&data2, 0, sizeof(data2));
-					struct sockaddr_storage client_address;
-					socklen_t client_len = sizeof(client_address);
-					int bytes = recvfrom(recver, (char*)&data2, sizeof(data2), 0, (sockaddr*)&client_address, &client_len);
-					//bytes will be recved by the recver socket
-					if (bytes < 1)
-					{
-					    cout << "\n could not recv the data from the client==>" <<j<<" "<< GetLastErrorAsString();
-					}
-					
-					
-					//data is received now convert it to appropriate form
+					data2 = input_data[j][0];
+					input_data[j].pop_front();
+					lk.unlock();
 					int sid = data2.shipdata_forServer.ship_id;
-					if (data2.shipdata_forServer.ship_id != sid)
+					//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
+					for (int k = 0; k < data2.shipdata_forServer.size_upgrade_data; k++)
 					{
-						cout << "\n fukk";
-					}
-					if (pl1[sid]->died == 1)
-					{
-						continue;
-					}
-					if (bytes > 0)
-					{
-						//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
-						for (int k = 0; k < data2.shipdata_forServer.size_upgrade_data; k++)
+						if (data2.shipdata_forServer.udata[k].type == 1)
 						{
-							if (data2.shipdata_forServer.udata[k].type == 1)
-							{
-								cout << "\n health upgrade came from =>" << sid << "  packet id=>" << data2.packet_id;
-							}
-
-						}
-						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
-						prev_packet_id[sid] = data2.packet_id;
-						if (sid == 1)//for 1 only
-						{
-							auto now = std::chrono::system_clock::now();
-							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-							
-							//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
-							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+							cout << "\n health upgrade came from =>" << sid << "  packet id=>" << data2.packet_id;
 						}
 
 					}
+					control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
+					prev_packet_id[sid] = data2.packet_id;
+					if (sid == 1)//for 1 only
+					{
+						auto now = std::chrono::system_clock::now();
+						auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+						auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+						auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+						auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+						//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					}
+				}
+
+			}
 					
 
 					std::time_t result = std::time(nullptr);
-					//cout << "\n time=>" << std::localtime(&result)->tm_hour << ":" << std::localtime(&result)->tm_min << ":" << std::localtime(&result)->tm_sec << " server frame=>" << total_time << " " << "received frame=>" << data2.packet_id;
-				}
-			}
+			
 			sf::Time time4 = recv_data.getElapsedTime();
 			avg_recv += time4.asSeconds();
 

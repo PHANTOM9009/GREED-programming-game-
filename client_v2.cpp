@@ -38,6 +38,7 @@
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 
+#define MAX_LENGTH 1000
 SOCKET peer_socket;//the main socket that is used for handshaking only
 SOCKET recver_socket;//socket for recving data from the server
 
@@ -50,6 +51,7 @@ string password;
 string ip_address;
 bool sound = true;//intiially the sound is on
 
+deque<top_layer> input_data;
 
 bool SEND(SOCKET sock, char* buff, int length)
 {
@@ -161,6 +163,34 @@ void update_frame(deque<ship*>& pl1, pack_ship& ob, int i)
 	}
 	//data ends
 }
+
+
+std::string GetLastErrorAsString()
+{
+	//Get the error message ID, if any.
+	DWORD errorMessageID = ::GetLastError();
+	if (errorMessageID == 0) {
+		return std::string(); //No error message has been recorded
+	}
+
+	LPSTR messageBuffer = nullptr;
+
+	//Ask Win32 to give us the string version of that message ID.
+	//The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
+	size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+	//Copy the error message into a std::string.
+	std::string message(messageBuffer, size);
+
+	//Free the Win32's string's buffer.
+	LocalFree(messageBuffer);
+
+	return message;
+}
+
+
+
 SOCKET connect_to_server()//first connection to the server
 {
 
@@ -235,6 +265,95 @@ void graphics::GuiRenderer::sound_button_function(graphics::GuiRenderer& gui_ren
 		gui_renderer.sound_button->getRenderer()->setTexture(sound_on);
 	}
 }
+
+void recv_data(Mutex* m)
+{
+	int found = 0;
+	int bytes;
+	sf::Clock clock;
+	double et = 0;
+	int count = 0;
+	while (1)
+	{
+		et += clock.restart().asSeconds();
+		if (et > 1)
+		{
+			cout << "\n the count of packet is==>" << count;
+			et = 0;
+			count = 0;
+		}
+
+		top_layer ob;
+		int recv_bytes = 0;
+		char comp[sizeof(ob)];
+		int checker = 0;
+		if (found == 0)
+		{
+			int b=recv(recver_socket, (char*)&checker, sizeof(checker), 0);
+			if (b < 1)
+			{
+				cout << "\n cannot recv bytes==>" << GetLastErrorAsString();
+			}
+			cout << "\n recvd the data=>" << checker;
+		}
+		if (checker == 1 || found == 1)
+		{
+			while (recv_bytes < sizeof(ob))
+			{
+				char buffer[1000];
+				found = 0;
+				bytes = recv(recver_socket, (char*)&buffer, sizeof(buffer), 0);
+				if (bytes < 1)
+				{
+					cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
+				}
+				if (bytes == 4)
+				{
+					int check;
+					memcpy(&check, buffer, sizeof(int));
+					if (check == 1)
+					{
+						cout << "\n problem occured breaking...";
+						found = 1;
+						break;
+					}
+				}
+
+				memcpy(comp + recv_bytes, buffer, bytes);
+				recv_bytes += bytes;
+				//cout << "\n recved bytes from the server=>" << bytes << " " << ob.arr[100];
+				auto now = std::chrono::system_clock::now();
+				auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+				auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+				auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+				auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+				//cout << "\n recved data from the server at the time==> " <<
+				//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+
+
+			}
+			memcpy(&ob, comp, sizeof(ob));
+			if (ob.st == 100 && ob.end == 101)
+			{
+				//cout << "\n data is correct==>" << ob.packet_id;
+
+
+			//	cout << "\n received health is=>" << ob.shipdata_forMe.health;
+				cout << "\n got the data";
+				unique_lock<mutex> lk(m->recv_display);
+				input_data.push_back(ob);
+				count++;
+			}
+			else
+			{
+				cout << "\n faulty data";
+			}
+		}
+		//Sleep(10);
+	}
+}
+
 void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& map_ob)//taking the ship object so as to access the list of the player
 {
 	deque<int> dying_ships;
@@ -483,6 +602,10 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	}
 	music.setLoop(true);
 	music.play();
+
+	thread t(recv_data, mutx);
+	t.detach();
+
 	while (window.isOpen())
 	{
 		if (!sound)
@@ -600,27 +723,21 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			timeout.tv_sec = 0;
 			timeout.tv_usec = 10;
 
-			if (select(recver_socket + 1, &temp_set, NULL, NULL, &timeout) < 0)
-			{
-				cout << "\n error in select";
-			}
-			
+		
 			int bytes_received = -1;
-			if (FD_ISSET(recver_socket,&temp_set))
+			unique_lock<mutex> lk(mutx->recv_display);
+			if (input_data.size()>0)
 			{
 				memset((void*)&ship_data, 0, sizeof(ship_data));
 				//receiving the data
+				ship_data = input_data.front();
+				input_data.pop_front();
+				lk.unlock();
 				gone = 1;
-				bytes_received = recv(recver_socket, (char*)&ship_data, sizeof(ship_data), 0);
-				if (bytes_received < 1)
-				{
-					cout << "\n server disconnected the connection";
-					CLOSESOCKET(peer_socket);
-					continue;
-				}
+			
 				
-				if (1)
-				{
+				
+				
 					if (abs(ship_data.ob[1].absolutePosition.x - prev_x) > 2 || abs(ship_data.ob[1].absolutePosition.y - prev_y) > 2)
 					{
 						cout << "\n discrepency in position of the ship at==>" << ship_data.packet_no << " packet difference is==>" << ship_data.packet_no - previous;
@@ -647,10 +764,13 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 					//	cout << "\n recved data from the server==>" << ship_data.packet_no << " at the time==> " <<
 							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-				}
+				
 				
 			}
-
+			if (bytes_received == -1)
+			{
+				lk.unlock();
+			}
 			/*code to update the timer*/
 			int min = ship_data.total_secs / 60;
 			int sec = (int)ship_data.total_secs % 60;

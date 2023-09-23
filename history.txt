@@ -193,3 +193,6 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
   i don't know why this solved this problem this needs to be investigated tomorrow and check why was this happening
   moreover the issue is now solved. and the first prototype of the new sending and recving method is working fine(seems to be)
   now we can add this functionality to the other sending and recving part of the game as well.
+  -------------------------------------------------------------------------------------------------------
+  server_v3 exe compiled using MSVC terminal is breaking without any reason, but an exe compiled with visual studio is not breaking
+  I don't know why is this happening

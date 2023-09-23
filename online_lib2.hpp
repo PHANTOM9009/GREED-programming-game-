@@ -1265,7 +1265,7 @@ class shipData_forServer
 {
 	/* this class has the format of data that the client will send to the server
 	*/
-
+public:
 	int ship_id;//id of the ship
 		
 	double threshold_health;
@@ -1286,7 +1286,7 @@ class shipData_forServer
 	int size_update_cost;//to update the cost of the local map of the user
 	map_cost cdata[80];//to update the data
 
-public:
+
 	shipData_forServer()
 	{
 
@@ -1384,12 +1384,14 @@ public:
 };
 class send_data// to be sent by the client and to be received by the server
 {
+public:
+	int st;
 	int packet_id; //for debugging purpose only
 	user_credentials user_cred;
 
 	shipData_forServer shipdata_forServer;//my data to be sent to the server
 
-public:
+	int end;
 	send_data()
 	{
 
@@ -2646,6 +2648,7 @@ public:
 class top_layer
 {
 public:
+	int st;
 	double long total_secs;
 	double long packet_no;//no. of the packet that is sent, this is used to keep track of the packet sent 
 	//for the ships
@@ -2658,12 +2661,15 @@ public:
 	cannon_data cannon_ob[3];//object for cannon
 	int no_of_animation;
 	animation_data animation_ob[50];
+	int gameOver;//0 for no, 1 for yes;
+	int end;
+
 	top_layer()
 	{
 		no_of_bullets = 0;
 		no_of_animation = 0;
 	}
-	int gameOver;//0 for no, 1 for yes;
+	
 
 
 };

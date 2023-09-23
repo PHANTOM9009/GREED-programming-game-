@@ -33,6 +33,7 @@
 #define SOCKET int
 #define GETSOCKETERRNO() (errno)
 #endif
+#define MAX_LENGTH 1000
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
@@ -67,7 +68,7 @@ SOCKET sending_socket;//socket to send data to the server
 //peer_socket is for recving data from the server
 
 deque<recv_data> input_data;//input data from the server to the client
-
+deque<send_data> terminal_data;
 
 bool SEND(SOCKET sock, char* buff, int length)
 {
@@ -313,6 +314,69 @@ void data_recver(SOCKET socket_listen,Mutex *m)
 		//Sleep(10);
 	}
 }
+void data_send(Mutex* m)
+{
+	while (1)
+	{
+		
+		unique_lock<mutex> lk(m->send_terminal);
+		m->cond_terminal.wait(lk, [] {return !terminal_data.empty(); });
+		//terminal_data queue has data now make its copy and clear the queue
+		deque<send_data> data;
+		for (int i = 0; i < terminal_data.size(); i++)
+		{
+			data.push_back(terminal_data[i]);
+
+		}
+		terminal_data.clear();//clearing the queue
+		lk.unlock();
+		
+		for (int i = 0; i < data.size(); i++)
+		{
+			//send the data to the client
+			data[i].st = 100;
+			data[i].end = 101;
+
+			send_data ob = data[i];
+			char buffer[sizeof(data[i])];
+			memcpy(buffer, &ob, sizeof(ob));
+
+			int sent_bytes = 0;
+			//sending that starting a new packet
+			int sending_new = 1;
+			send(sending_socket, (char*)&sending_new, sizeof(sending_new), 0);
+			while (sent_bytes < sizeof(ob))
+			{
+				int fuck = sizeof(ob) - sent_bytes;
+				int bytesToSend = min(MAX_LENGTH, fuck);
+				if (ob.st != 100 || ob.end != 101)
+				{
+					cout << "\n sending the wrong data from the client side";
+				}
+				int bytes = send(sending_socket, buffer + sent_bytes, bytesToSend, 0);
+				if (bytes < 1)
+				{
+					cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+				}
+				else
+				{
+					sent_bytes += bytes;
+
+					auto now = std::chrono::system_clock::now();
+					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+					// cout << "\n sent data to the client at==> " <<
+					  //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+				}
+			}
+			//cout << "\n sent bytes to==>" <<data[i].first;
+
+		}
+	}
+}
 
 void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns], Map& map_ob,int peer_s,ship &player)
 {
@@ -396,6 +460,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	
 	thread t1(&data_recver, peer_socket, mutx);
 	t1.detach();
+
+	thread t3(data_send, mutx);
+	t3.detach();
 	int avg_input = 0;
 	int total_count = 0;
 
@@ -1235,10 +1302,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			{
 				send_data data2;
 				shipData_forServer shipdata;
-				memset((void*)&shipdata, 0, sizeof(shipdata));
-				memset((void*)&data2, 0, sizeof(data2));
+				std::memset((void*)&shipdata, 0, sizeof(shipdata));
+				std::memset((void*)&data2, 0, sizeof(data2));
 				
-				select(sending_socket + 1, 0, &writes, 0, &timeout);
+				
 				if (threshold_health==pl1[ship_id]->threshold_health&&threshold_ammo==pl1[ship_id]->threshold_ammo&&threshold_fuel==pl1[ship_id]->threshold_fuel&& pl1[ship_id]->nav_data_final.size() == 0 && pl1[ship_id]->bullet_info.size() == 0 && pl1[ship_id]->udata.size() == 0 && pl1[ship_id]->map_cost_data.size() == 0)
 				{
 					
@@ -1248,65 +1315,23 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					threshold_ammo = pl1[ship_id]->threshold_ammo;
 					threshold_fuel = pl1[ship_id]->threshold_fuel;
 					threshold_health = pl1[ship_id]->threshold_health;
-					if (FD_ISSET(sending_socket, &writes))
-					{
-						if (pl1[ship_id]->nav_data_final.size() > 0)
-						{
-							nav_data_count++;
-							nav_data_once += pl1[ship_id]->nav_data_final.size();
-						}
-						if(pl1[ship_id]->bullet_info.size()>0)
-						{
-							b_data_count++;
-							b_data_once += pl1[ship_id]->bullet_info.size();
-						}
-						if (pl1[ship_id]->udata.size() > 0)
-						{
-							u_data_count++;
-							u_data_once += pl1[ship_id]->udata.size();
-						}
-						if (pl1[ship_id]->map_cost_data.size() > 0)
-						{
-							c_data_count++;
-							c_data_once += pl1[ship_id]->map_cost_data.size();
-							cout << "\n printing the coordinates sent==>" << endl;
-							for (int i = 0; i < pl1[ship_id]->map_cost_data.size(); i++)
-							{
-								cout << pl1[ship_id]->map_cost_data[i].ob.r << " " << pl1[ship_id]->map_cost_data[i].ob.c << endl;
-							}
-						}
+					
 						
 						control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
 						data2.packet_id = frame_number;
 						data2.shipdata_forServer = shipdata;
 						data2.user_cred = user_credentials(username, password);
-						//sending the data
-						int bytes = send(sending_socket, (char*)&data2, sizeof(data2), 0);
-
-						if (bytes < 1)
-						{
-							cout << "\n breaking because not being able to the send the data";
-							//CLOSESOCKET(peer_socket);
-							break;
-						}
-						else
-						{
+						
 							if (data2.shipdata_forServer.size_navigation > 0)
 							{
 								cout << "\n sent navigation request to the server";
 							}
 							send_count++;
-							auto now = std::chrono::system_clock::now();
-							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-
-							//cout << "\n sent data to the server=>" << data2.packet_id << " at the time==> " <<
-							//	hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-						}
-
-					}
+							unique_lock<mutex> lk(mutx->send_terminal);
+							terminal_data.push_back(data2);
+							lk.unlock();
+							mutx->cond_terminal.notify_one();
+					
 				}
 			}
 			avg_send += sending.getElapsedTime().asSeconds();
