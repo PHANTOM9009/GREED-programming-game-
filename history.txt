@@ -196,3 +196,8 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
   -------------------------------------------------------------------------------------------------------
   server_v3 exe compiled using MSVC terminal is breaking without any reason, but an exe compiled with visual studio is not breaking
   I don't know why is this happening
+
+  in testing with  the virtual machine :
+  data sending and recving is working fine with 1k bytes limit, congo for that.
+  but there is an issue in recving data at the server side, because there is a single function for all the clients the data is getting merged
+  and due to that something is causing the buffer to overfow so design a new method, by reading the pattern

@@ -294,7 +294,7 @@ void recv_data(Mutex* m)
 			{
 				cout << "\n cannot recv bytes==>" << GetLastErrorAsString();
 			}
-			cout << "\n recvd the data=>" << checker;
+
 		}
 		if (checker == 1 || found == 1)
 		{
@@ -340,8 +340,8 @@ void recv_data(Mutex* m)
 
 
 			//	cout << "\n received health is=>" << ob.shipdata_forMe.health;
-				cout << "\n got the data";
-				unique_lock<mutex> lk(m->recv_display);
+				
+				unique_lock<mutex> lk5(m->recv_display);
 				input_data.push_back(ob);
 				count++;
 			}
@@ -603,7 +603,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	music.setLoop(true);
 	music.play();
 
-	thread t(recv_data, mutx);
+	thread t(&recv_data, mutx);
 	t.detach();
 
 	while (window.isOpen())
@@ -725,17 +725,17 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 		
 			int bytes_received = -1;
-			unique_lock<mutex> lk(mutx->recv_display);
+			mutx->recv_display.lock();
 			if (input_data.size()>0)
 			{
 				memset((void*)&ship_data, 0, sizeof(ship_data));
 				//receiving the data
 				ship_data = input_data.front();
 				input_data.pop_front();
-				lk.unlock();
+				mutx->recv_display.unlock();
 				gone = 1;
 			
-				
+				bytes_received = 1;
 				
 				
 					if (abs(ship_data.ob[1].absolutePosition.x - prev_x) > 2 || abs(ship_data.ob[1].absolutePosition.y - prev_y) > 2)
@@ -769,7 +769,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			}
 			if (bytes_received == -1)
 			{
-				lk.unlock();
+				mutx->recv_display.unlock();
 			}
 			/*code to update the timer*/
 			int min = ship_data.total_secs / 60;
@@ -1193,7 +1193,7 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 	//extracting the data
 	
 	//setting the port number of the server that has to connected with
-	
+	/*
 	if (argc > 5)
 	{
 		strcpy(server_port, argv[1]);
@@ -1205,17 +1205,17 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 			game_token = argv[5];
 			ip_address = argv[6];
 	}
+	*/
 	
 	
-	/*
 	strcpy(server_port, "8081");
 	my_id = 1;
 	username = "username";
 	password = "password";
 	cout << "\n enter the game token=>";
 	cin >> game_token;
-	ip_address = "127.0.0.1";
-	*/
+	ip_address = "52.66.245.96";
+	
 	peer_socket = connect_to_server();
 	
 	cout << "\n max player are==>" << max_players;

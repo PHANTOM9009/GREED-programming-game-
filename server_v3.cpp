@@ -585,6 +585,7 @@ void recv_data_terminal(Mutex* m)
 		int checker = 0;
 		if (found == 0)
 		{
+			
 			sockaddr_storage client_address;
 			socklen_t client_len = sizeof(client_address);
 			recvfrom(recver, (char*)&checker, sizeof(checker), 0,(sockaddr*)&client_address,&client_len);
@@ -598,6 +599,10 @@ void recv_data_terminal(Mutex* m)
 				sockaddr_storage client_address;
 				socklen_t client_len = sizeof(client_address);
 				bytes = recvfrom(recver, (char*)&buffer, sizeof(buffer), 0,(sockaddr*)&client_address,&client_len);
+				char ip[100];
+				char port[100];
+				getnameinfo((sockaddr*)&client_address, client_len, ip, sizeof(ip), port, sizeof(port), NI_NUMERICSERV | NI_NUMERICHOST);
+				cout << "\n port of the data recved is==>" << port;
 				if (bytes < 1)
 				{
 					cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
@@ -1739,15 +1744,19 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				}
 				
 				unique_lock<mutex> lk(mutx->recv_terminal);
-				if (input_data[j].size())
+				int gone = 0;
+				
+				if (input_data[j].size()>0)
 				{
 
+					
 					send_data data2;
 					memset((void*)&data2, 0, sizeof(data2));
 					data2 = input_data[j][0];
 					input_data[j].pop_front();
 					lk.unlock();
 					int sid = data2.shipdata_forServer.ship_id;
+					gone = 1;
 					//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
 					for (int k = 0; k < data2.shipdata_forServer.size_upgrade_data; k++)
 					{
@@ -1771,9 +1780,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 					}
 				}
+				if (gone == 0)
+				{
+					lk.unlock();
+				}
 
 			}
-					
+			
 
 					std::time_t result = std::time(nullptr);
 			
@@ -1844,7 +1857,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player
 {
 	//recving the client credentials from the lobby server
-				
+			
 	printf("now waiting for the clients to connect...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -1853,6 +1866,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	hints.ai_flags = AI_PASSIVE;
 
 	struct addrinfo* bind_address;
+
 	//convert port to string
 	char port_str[10];
 	// Convert port to string
