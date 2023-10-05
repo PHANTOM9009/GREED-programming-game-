@@ -201,3 +201,5 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
   data sending and recving is working fine with 1k bytes limit, congo for that.
   but there is an issue in recving data at the server side, because there is a single function for all the clients the data is getting merged
   and due to that something is causing the buffer to overfow so design a new method, by reading the pattern
+  -----------------------------
+  more testing required for the new function....

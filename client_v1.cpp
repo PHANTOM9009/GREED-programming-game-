@@ -220,13 +220,13 @@ SOCKET connect_to_server(int port)//first connection to the server
 	strcpy(gc.token, game_token.c_str());
 	
 
-	if (!SEND(socket_peer, (char*)&gc, sizeof(gc)))
+	if (!send(socket_peer, (char*)&gc, sizeof(gc),0))
 	{
 		cout << "\n cannot send the code to the server=>" << GETSOCKETERRNO();
 	}
 	
 	cout << "\n waiting for the game server to send me the id..";
-	RECV(socket_peer, (char*)&my_id, sizeof(my_id));
+	recv(socket_peer, (char*)&my_id, sizeof(my_id),0);
 	cout << "\n id sent by the client is=>" << my_id;
 	return socket_peer;
 
@@ -297,10 +297,6 @@ void data_recver(SOCKET socket_listen,Mutex *m)
 			memcpy(&ob, comp, sizeof(ob));
 			if (ob.st == 100 && ob.end == 101)
 			{
-				//cout << "\n data is correct==>" << ob.packet_id;
-
-				
-			//	cout << "\n received health is=>" << ob.shipdata_forMe.health;
 				
 				unique_lock<mutex> lk(m->recv_terminal);
 				input_data.push_back(ob);
@@ -343,7 +339,7 @@ void data_send(Mutex* m)
 
 			int sent_bytes = 0;
 			//sending that starting a new packet
-			int sending_new = 1;
+			int sending_new = my_id;//sending my id to the person
 			send(sending_socket, (char*)&sending_new, sizeof(sending_new), 0);
 			while (sent_bytes < sizeof(ob))
 			{
@@ -515,7 +511,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			cur_frame = next_frame;
 			//for handling the ship
 			total_time++;
-			frame_number++;
+			
 			frames++;
 			frame_no++;//for nav data
 			tot++;
@@ -1318,6 +1314,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					
 						
 						control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
+						frame_number++;
 						data2.packet_id = frame_number;
 						data2.shipdata_forServer = shipdata;
 						data2.user_cred = user_credentials(username, password);
@@ -1518,7 +1515,16 @@ int main(int argc,char* argv[])
 			cout << "\n my pos is=>" << start_data.starting_pos.r << " " << start_data.starting_pos.c;
 			const int no_of_players = start_data.no_of_players;
 			cout << "\n number of players==>" << no_of_players;
-		*/		
+	*/		
+	/*
+	cout << "\n waiting to recv the data before going for tcp ";
+	int st = 0;
+	int recvy = recv(socket_listen, (char*)&st, sizeof(st),0);
+	if (st != 1)
+	{
+		cout << "\n found the wrong data";
+	}
+	*/
 
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -1530,31 +1536,39 @@ int main(int argc,char* argv[])
 	sprintf(port2_str, "%d", port2);
 	//cout << "\n port of the server2 is==>" << port2_str;
 	getaddrinfo(ip_address.c_str(),port2_str, &hints, &bind_address);
-	
+	cout << "\n tcp connection port is=>" << port2_str;
 	SOCKET tcp_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(tcp_socket))
 	{
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		//return 1;
 	}
-	//cout << "\n connecting with the game server using tcp.....";
-	while (connect(tcp_socket, bind_address->ai_addr, bind_address->ai_addrlen))
+	
+	while (::connect(tcp_socket, bind_address->ai_addr, bind_address->ai_addrlen))
 	{
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
 		cout << GetLastErrorAsString();
 		//return 1;
 	}
+	char ip[100];
+	char cport[100];
+	getnameinfo(bind_address->ai_addr,bind_address->ai_addrlen, ip, sizeof(ip), cport, sizeof(cport), NI_NUMERICHOST | NI_NUMERICSERV);
+	cout << "\n address of the tcp server=>" << ip;
+	cout << "\n port of the tcp server=>" << cport;
 	freeaddrinfo(bind_address);
+	cout << "\n tcp connected with the client..";
 	//cout << "\n connected with the game server using tcp. ";
 	int bytes = send(tcp_socket, (char*)&my_id, sizeof(my_id), 0);
+	
 	if (bytes < 1)
 	{
 		cout << "\n error in sending my id to the game server=>" << GetLastErrorAsString();
 		cout << GETSOCKETERRNO();
 	}
+	cout << "\n sent the bytes to the server...";
 	Startup_info_client start_data;
 	memset((void*)&start_data, 0, sizeof(start_data));
-	bytes = recv(tcp_socket, (char*)&start_data, sizeof(start_data), 0);
+	bytes = ::recv(tcp_socket, (char*)&start_data, sizeof(start_data), 0);
 	if (bytes < 1)
 	{
 		cout << "\n error in receiving startup info from the game server=>" << GetLastErrorAsString();
@@ -1631,7 +1645,7 @@ int main(int argc,char* argv[])
 
 	//waiting for the game server for the green signal to start the game;
 	int start = 0;
-	bytes = recv(tcp_socket, (char*)&start, sizeof(start), 0);
+	bytes = ::recv(tcp_socket, (char*)&start, sizeof(start), 0);
 	if (bytes < 1)
 	{
 		cout << "\n error in receiving startup info from the game server=>" << GetLastErrorAsString();

@@ -53,6 +53,8 @@ bool sound = true;//intiially the sound is on
 
 deque<top_layer> input_data;
 
+bool gameOver = false;
+
 bool SEND(SOCKET sock, char* buff, int length)
 {
 	/*overload of send function of UDP having the mechanism of resending and ack*/
@@ -240,10 +242,10 @@ SOCKET connect_to_server()//first connection to the server
 	ob.user_cred = user_credentials(username, password);
 	strcpy(ob.token, game_token.c_str());
 
-	SEND(recver_socket, (char*)&ob, sizeof(ob));//using the 2nd socket for everything
+	send(recver_socket, (char*)&ob, sizeof(ob),0);//using the 2nd socket for everything
 	
 	//receiving from the server how many players will play
-	RECV(recver_socket, (char*)&max_players, sizeof(max_players));
+	recv(recver_socket, (char*)&max_players, sizeof(max_players),0);
 	
 	cout << "\n data recved from server max player playing are=>" << max_players;
 	freeaddrinfo(server_add);
@@ -275,6 +277,13 @@ void recv_data(Mutex* m)
 	int count = 0;
 	while (1)
 	{
+		unique_lock<mutex> lk1(m->gameOver_check);
+		if (gameOver)
+		{
+			cout << "\n breaking from recv_data";
+			break;
+		}
+		lk1.unlock();
 		et += clock.restart().asSeconds();
 		if (et > 1)
 		{
@@ -755,6 +764,14 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 					previous = ship_data.packet_no;
 					gameOver = ship_data.gameOver;
+
+					if (ship_data.gameOver)
+					{
+						unique_lock<mutex> lk(mutx->gameOver_check);
+						::gameOver = true;
+						lk.unlock();
+					}
+
 					started = true;
 					auto now = std::chrono::system_clock::now();
 					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
@@ -1178,7 +1195,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	}
 	CLOSESOCKET(peer_socket);
 	CLOSESOCKET(recver_socket);
-	cout << "\n avg bullet is=>" << avg_bullet / total_time;
+	
 }
 
 int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is password
@@ -1193,7 +1210,7 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 	//extracting the data
 	
 	//setting the port number of the server that has to connected with
-	/*
+	
 	if (argc > 5)
 	{
 		strcpy(server_port, argv[1]);
@@ -1205,17 +1222,17 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 			game_token = argv[5];
 			ip_address = argv[6];
 	}
-	*/
 	
 	
+	/*
 	strcpy(server_port, "8081");
 	my_id = 1;
 	username = "username";
 	password = "password";
 	cout << "\n enter the game token=>";
 	cin >> game_token;
-	ip_address = "52.66.245.96";
-	
+	ip_address = "65.2.40.56";
+	*/
 	peer_socket = connect_to_server();
 	
 	cout << "\n max player are==>" << max_players;

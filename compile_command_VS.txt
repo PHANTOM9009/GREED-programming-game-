@@ -1,6 +1,6 @@
 server
 
-cl /EHsc /MT /MD -I"C:\\SFML visual c++\\SFML-2.5.1\\include" -I"C:\\TGUI-1.0-nightly\\include" "server_v3.cpp" /link /LIBPATH:"C:\\SFML visual c++\\SFML-2.5.1\\lib" /LIBPATH:"C:\\TGUI-1.0-nightly\\lib" sqlite3.lib tgui.lib sfml-graphics.lib sfml-audio.lib sfml-network.lib sfml-window.lib sfml-system.lib /out:server_v3_new.exe
+cl /EHsc /MT /MD -I"C:\\SFML visual c++\\SFML-2.5.1\\include" -I"C:\\TGUI-1.0-nightly\\include" "server_v3.cpp" /link /LIBPATH:"C:\\SFML visual c++\\SFML-2.5.1\\lib" /LIBPATH:"C:\\TGUI-1.0-nightly\\lib" sqlite3.lib tgui.lib sfml-graphics.lib sfml-audio.lib sfml-network.lib sfml-window.lib sfml-system.lib /out:server_v3.exe
 
 client
 
