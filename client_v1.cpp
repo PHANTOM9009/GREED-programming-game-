@@ -207,27 +207,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 		return 1;
 	}
 	//sending the greet_client object to the game server, with my code and credentials.
-	int msg;
-	if(mode==1)
-	 msg = 0;//0 means client_v1_process
-	else if (mode == 2)
-	{
-		msg = 2;
-	}
-	greet_client gc;
-	gc.code = msg;
-	gc.user_cred = user_credentials(username, password);
-	strcpy(gc.token, game_token.c_str());
 	
-
-	if (!send(socket_peer, (char*)&gc, sizeof(gc),0))
-	{
-		cout << "\n cannot send the code to the server=>" << GETSOCKETERRNO();
-	}
-	
-	cout << "\n waiting for the game server to send me the id..";
-	recv(socket_peer, (char*)&my_id, sizeof(my_id),0);
-	cout << "\n id sent by the client is=>" << my_id;
 	return socket_peer;
 
 }
@@ -1501,21 +1481,7 @@ int main(int argc,char* argv[])
 	
 	
 	
-	//receiving the startupinfo data
-	/*
-		Startup_info_client start_data;
-		memset((void*)&start_data, 0, sizeof(start_data));
-
-		struct sockaddr_storage client_address;
-		int client_length = sizeof(client_address);
-		char buffer[1000];
-		RECV(socket_listen, (char*)&start_data, sizeof(start_data));
-					
-			cout << "\n my ship id is==>" << start_data.ship_id;
-			cout << "\n my pos is=>" << start_data.starting_pos.r << " " << start_data.starting_pos.c;
-			const int no_of_players = start_data.no_of_players;
-			cout << "\n number of players==>" << no_of_players;
-	*/		
+		
 	/*
 	cout << "\n waiting to recv the data before going for tcp ";
 	int st = 0;
@@ -1558,6 +1524,34 @@ int main(int argc,char* argv[])
 	freeaddrinfo(bind_address);
 	cout << "\n tcp connected with the client..";
 	//cout << "\n connected with the game server using tcp. ";
+	int msg;
+	if (mode == 1)
+		msg = 0;//0 means client_v1_process
+	else if (mode == 2)
+	{
+		msg = 2;
+	}
+	greet_client gc;
+	gc.code = msg;
+	gc.user_cred = user_credentials(username, password);
+	strcpy(gc.token, game_token.c_str());
+
+
+	if (!send(tcp_socket, (char*)&gc, sizeof(gc), 0))
+	{
+		cout << "\n cannot send the code to the server=>" << GETSOCKETERRNO();
+	}
+
+	cout << "\n waiting for the game server to send me the id..";
+	recv(tcp_socket, (char*)&my_id, sizeof(my_id), 0);
+	cout << "\n id sent by the client is=>" << my_id;
+
+	//stage 2.............
+	//asking if everything is ready for stage 2?
+	int st = 1;
+	int b = recv(tcp_socket, (char*)&st, sizeof(st), 0);
+	cout << "\n we are ready for stage 2==>"<<st;
+
 	int bytes = send(tcp_socket, (char*)&my_id, sizeof(my_id), 0);
 	
 	if (bytes < 1)
@@ -1568,7 +1562,7 @@ int main(int argc,char* argv[])
 	cout << "\n sent the bytes to the server...";
 	Startup_info_client start_data;
 	memset((void*)&start_data, 0, sizeof(start_data));
-	bytes = ::recv(tcp_socket, (char*)&start_data, sizeof(start_data), 0);
+	bytes = recv(tcp_socket, (char*)&start_data, sizeof(start_data), 0);
 	if (bytes < 1)
 	{
 		cout << "\n error in receiving startup info from the game server=>" << GetLastErrorAsString();
@@ -1654,6 +1648,20 @@ int main(int argc,char* argv[])
 	cout << "\n starting the game==>" << start;
 
 	CLOSESOCKET(tcp_socket);
+
+
+	//sending the final request to the client....for the udp socket
+
+	for (int i = 1; i <= 10; i++)
+	{
+		
+		int bytes = send(socket_listen, (char*)&my_id, sizeof(my_id), 0);
+		if (bytes < 1)
+		{
+			cout << "\n error in sending the final bytes==>" << GetLastErrorAsString();
+		}
+	}
+
 	graphics cg;
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish

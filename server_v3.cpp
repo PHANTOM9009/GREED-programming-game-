@@ -1915,6 +1915,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player
 {
+	//tcp tcp udp
 	struct addrinfo hints1;
 	memset(&hints1, 0, sizeof(hints1));
 	hints1.ai_family = AF_INET;
@@ -1972,9 +1973,9 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 	printf("Creating socket...\n");
 
-	socket_listen = socket(bind_address->ai_family,bind_address->ai_socktype, bind_address->ai_protocol);
-	socket_listen2 = socket(bind_address1->ai_family, bind_address1->ai_socktype, bind_address1->ai_protocol);
-	recver = socket(bind_address2->ai_family, bind_address2->ai_socktype, bind_address2->ai_protocol);
+	socket_listen = socket(bind_address->ai_family,bind_address->ai_socktype, bind_address->ai_protocol);//to send data to client terminal
+	socket_listen2 = socket(bind_address1->ai_family, bind_address1->ai_socktype, bind_address1->ai_protocol);//to send data to client display unit
+	recver = socket(bind_address2->ai_family, bind_address2->ai_socktype, bind_address2->ai_protocol);//to recv the data from the client terminal
 	
 	if (!ISVALIDSOCKET(socket_listen))
 	{
@@ -2013,7 +2014,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	
 	fd_set master;
 	FD_ZERO(&master);
-	FD_SET(socket_listen, &master);
+	FD_SET(tcp_socket, &master);
 	FD_SET(socket_listen2, &master);
 	
 	fd_set reads;
@@ -2027,83 +2028,106 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	int max_display = 0;
 	int curdisp = 0;
 	/*also add if..10 minutes are up, then no more waiting and we will start with whatever we have*/
+	vector<int> tcp_socket_storage;//id to tcp socket storage
+	if (listen(tcp_socket, 20) < 0)
+	{
+		cout << "\n socket failed";
+	}
+	freeaddrinfo(bind_addres);
 	while (max_player > nn || max_display > curdisp)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, &timeout);
-		if(FD_ISSET(socket_listen,&reads))
+		for (int i = 1; i <= max_socket; i++)
 		{
-				greet_client gc;
-				struct sockaddr_storage client_address;
-				socklen_t client_len = sizeof(client_address);
-				int read;
-				int bit= recvfrom(socket_listen, (char*)&gc, sizeof(gc),0,(sockaddr*)&client_address,(int*)& client_len);
-				if (bit < 0)
+			if (FD_ISSET(i, &reads))
+			{
+				if (i == tcp_socket)
 				{
-					cout << "\n error in recving bytes==>" << GetLastErrorAsString();
-				}
-				int found = 0;				
-
-				if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
-				{
-					read = gc.code;
-					string sread = to_string(read);
-					//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-					cout << "\n code recved is=>" << read;
-					if (sread[0] == '0' || sread[0]=='2')
+					struct sockaddr_storage client_address;
+					socklen_t client_len = sizeof(client_address);
+					SOCKET client = accept(tcp_socket, (sockaddr*)&client_address, &client_len);
+					cout << "\n connection accepted=>" << client;
+					FD_SET(client, &master);
+					if (client > max_socket)
 					{
-							socket_id[idc] = client_address;
+						max_socket = client;
+					}
+				}
+				else if (i != tcp_socket && i != socket_listen2)
+				{
+					greet_client gc;
+					
+					int read;
+					int bit = recv(i, (char*)&gc, sizeof(gc), 0);
+					if (bit < 0)
+					{
+						cout << "\n error in recving bytes==>" << GetLastErrorAsString();
+					}
+					int found = 0;
+
+					if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
+					{
+						read = gc.code;
+						string sread = to_string(read);
+						//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
+						cout << "\n code recved is=>" << read;
+						if (sread[0] == '0' || sread[0] == '2')
+						{
+							//socket_id[idc] = client_address;//to be done later
 							//sending the id of the client to the client
-							sendto(socket_listen, (char*)&idc, sizeof(idc),0, (sockaddr*)&client_address, (int)client_len);
+							send(i, (char*)&idc, sizeof(idc), 0);
 							user_cred[idc] = gc.user_cred;//setting the user credential
 							idc++;
 							nn++;
-							
-					}
-					if (sread[0] == '0')//2 is for when the client does not want its display unit to open
-					{
-						max_display++;
-					}
-						
-				}
-				else
-				{
-					cout << "\n client who did not have the correct game token tried to contact the game server..";
-				}	
-			
-		}
-		if (FD_ISSET(socket_listen2, &reads))
-		{
-			greet_client gc;
-			struct sockaddr_storage client_address;
-			socklen_t client_len = sizeof(client_address);
-			int read;
-			recvfrom(socket_listen2, (char*)&gc, sizeof(gc),0,(struct sockaddr*)&client_address,(int* )&client_len);
-			cout << "\n recved data=>" << gc.token;
-				if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
-				{
-					read = gc.code;
-					string sread = to_string(read);
-					//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-					cout << "\n code recved is=>" << read;
-					if (sread[0] == '1')
-					{
-						//finding the id of the client through the code sent by the display unit
-						int id = stoi(sread.substr(1, sread.length() - 1));
-						cout << "\n id sent is==>" << id;
-						socket_id_display[id] = client_address;
-						//sending the max_player to the display unit
-						sendto(socket_listen2, (char*)&max_player, sizeof(max_player),0,(sockaddr*)&client_address, client_len);
-						curdisp++;
-					//	nn++;//to be removed;
+							tcp_socket_storage.push_back(i);
+
+						}
+						if (sread[0] == '0')//2 is for when the client does not want its display unit to open
+						{
+							max_display++;
+						}
 					}
 				}
-			
+
+
+
+
+
+				if (i == socket_listen2)
+				{
+					greet_client gc;
+					struct sockaddr_storage client_address;
+					socklen_t client_len = sizeof(client_address);
+					int read;
+					recvfrom(socket_listen2, (char*)&gc, sizeof(gc), 0, (struct sockaddr*)&client_address, (int*)&client_len);
+					cout << "\n recved data=>" << gc.token;
+					if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
+					{
+						read = gc.code;
+						string sread = to_string(read);
+						//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
+						cout << "\n code recved is=>" << read;
+						if (sread[0] == '1')
+						{
+							//finding the id of the client through the code sent by the display unit
+							int id = stoi(sread.substr(1, sread.length() - 1));
+							cout << "\n id sent is==>" << id;
+							socket_id_display[id] = client_address;
+							//sending the max_player to the display unit
+							sendto(socket_listen2, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address, client_len);
+							curdisp++;
+							//	nn++;//to be removed;
+						}
+					}
+
+				}
+			}
 		}
 
 
 	}
-
+	/*
 	//setting the ip address and port of the client terminal
 	for (auto c : socket_id)
 	{
@@ -2119,6 +2143,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		port = cport;
 		id_ip_port.push_back(pair<int, pair<string, string>>(c.first, pair<string, string>(ip, port)));
 	}
+	*/
 
 	int no_of_players = n;
 	Control control;
@@ -2239,29 +2264,31 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		
 	}
 	*/
-	//starting the tcp connection with the clients for the connection
-	//send to all the clients that the server is ready for starting tcp connection
-	/*
-	for (auto c : socket_id)
+//sending all the clients to start the stage 2 of data sending
+	for (int i = 0; i < tcp_socket_storage.size(); i++)
 	{
 		int st = 1;
-		sendto(socket_listen,(char*)&st,sizeof(st),0,(sockaddr*)&c.second,sizeof(c.second));
+		send(tcp_socket_storage[i], (char*)&st, sizeof(st), 0);
 	}
-	*/
+
 
 	
-	if (listen(tcp_socket, 20) < 0)
-	{
-		cout << "\n socket failed";
-	}
-	freeaddrinfo(bind_addres);
+	
 	fd_set all;
 	FD_ZERO(&all);
-	FD_SET(tcp_socket, &all);
-	fd_set read;
+	max_socket = 0;
+	for (int i = 0; i < tcp_socket_storage.size(); i++)
+	{
+		if (tcp_socket_storage[i] > max_socket)
+		{
+			max_socket = tcp_socket_storage[i];
+		}
+		FD_SET(tcp_socket_storage[i], &all);
+	}
+		fd_set read;
 	FD_ZERO(&read);
 	int count = 0;
-	max_socket = tcp_socket;
+	
 	while (count != max_player)
 	{
 		read = all;
@@ -2274,22 +2301,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 			if (FD_ISSET(i, &read))
 			{
-				if (i == tcp_socket)
-				{
-					//connect with the client
-					struct sockaddr_storage client_address;
-					socklen_t client_len = sizeof(client_address);
-					SOCKET client = accept(tcp_socket, (sockaddr*)&client_address, &client_len);
-					cout << "\n connection accepted=>" << client;
-					FD_SET(client, &all);
-					if (client > max_socket)
-					{
-						max_socket = client;
-					}
-
-				}
-				else
-				{
+				
 					int id;
 					int bytes = recv(i, (char*)&id, sizeof(id), 0);
 					if (bytes < 1)
@@ -2309,7 +2321,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 						cout << "\n sent data to the client==>" << id;
 						count++;
 					}
-				}
+				
 
 
 			}
@@ -2337,8 +2349,52 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 			CLOSESOCKET(i);
 		}
 	}
-	
+	CLOSESOCKET(tcp_socket);
 	cout << "\n data is sent to all the clients";
+
+	//initiating udp requests only for socket_listen...
+	//receiving requests from all clients, clients will send the request and server will store their address. to make sure that the packet
+	//reaches the server, client will be sending the data multiple times and server will accept it only once
+	int new_count = 0;
+	fd_set master1;
+	FD_ZERO(&master1);
+	FD_SET(socket_listen, &master1);
+	FD_ZERO(&read);
+	max_socket = socket_listen;
+	
+	while (new_count != max_player)
+	{
+		read = master1;
+		select(max_socket + 1, &read, 0, 0, &timeout);
+		if (FD_ISSET(socket_listen, &read))
+		{
+			int sid = -1;
+			sockaddr_storage client_a;
+			socklen_t client_l = sizeof(client_a);
+			int bytes = recvfrom(socket_listen, (char*)&sid, sizeof(sid), 0, (sockaddr*)&client_a, &client_l);
+			if (bytes < 1)
+			{
+				cout << "\n cannot recv bytes==>" << GETSOCKETERRNO();
+			}
+			if (sid != -1 && socket_id.find(sid)==socket_id.end())
+			{
+				socket_id[sid] = client_a;
+				char cip[100];
+				char cport[100];
+				getnameinfo((sockaddr*)&client_a, client_l, cip, sizeof(cip), cport, sizeof(cport), NI_NUMERICHOST | NI_NUMERICSERV);
+				string sip = cip;
+				string sport = cport;
+				id_ip_port.push_back(pair<int, pair<string, string>>(sid, pair<string, string>(sip, sport)));
+
+				new_count++;
+				cout << "\n sid recved from==>" << sid;
+			}
+		}
+	
+	}
+
+
+
 	control.setShipList(slist, 2369);
 
 	List<Greed::cannon> cannon_list;
