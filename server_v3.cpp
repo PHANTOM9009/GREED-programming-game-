@@ -636,7 +636,7 @@ void recv_data_terminal(Mutex* m)
 					std::memcpy(&ob, all_buffer[id], sizeof(ob));
 					if (ob.st == 100 && ob.end == 101)
 					{
-						unique_lock<mutex> lk(m->recv_terminal);
+						unique_lock<mutex> lk(m->recv_ship[id]);
 						input_data[id].push_back(ob);
 						cout << "\n came here";
 						count++;
@@ -686,7 +686,7 @@ void recv_data_terminal(Mutex* m)
 					{
 						
 						count++;
-						unique_lock<mutex> lk(m->recv_terminal);
+						unique_lock<mutex> lk(m->recv_ship[id]);
 						input_data[id].push_back(ob);
 					}
 					else
@@ -1799,50 +1799,52 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					
 					continue;
 				}
-				
-				unique_lock<mutex> lk(mutx->recv_terminal);
 				int gone = 0;
-				
-				if (input_data[j].size()>0)
+				if (mutx->recv_ship[j].try_lock())
 				{
 
-					input_size += input_data[j].size();
-					total_times++;
-
-					send_data data2;
-					memset((void*)&data2, 0, sizeof(data2));
-					data2 = input_data[j][0];
-					input_data[j].pop_front();
-					lk.unlock();
-					int sid = data2.shipdata_forServer.ship_id;
-					gone = 1;
-					//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
-					for (int k = 0; k < data2.shipdata_forServer.size_upgrade_data; k++)
+					if (input_data[j].size() > 0)
 					{
-						if (data2.shipdata_forServer.udata[k].type == 1)
+
+						input_size += input_data[j].size();
+						total_times++;
+
+						send_data data2;
+						memset((void*)&data2, 0, sizeof(data2));
+						data2 = input_data[j][0];
+						input_data[j].pop_front();
+						mutx->recv_ship[j].unlock();
+						int sid = data2.shipdata_forServer.ship_id;
+						gone = 1;
+						//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
+						for (int k = 0; k < data2.shipdata_forServer.size_upgrade_data; k++)
 						{
-							cout << "\n health upgrade came from =>" << sid << "  packet id=>" << data2.packet_id;
+							if (data2.shipdata_forServer.udata[k].type == 1)
+							{
+								cout << "\n health upgrade came from =>" << sid << "  packet id=>" << data2.packet_id;
+							}
+
 						}
+						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
+						prev_packet_id[sid] = data2.packet_id;
+						if (sid == 1)//for 1 only
+						{
+							auto now = std::chrono::system_clock::now();
+							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
+							//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+						}
 					}
-					control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
-					prev_packet_id[sid] = data2.packet_id;
-					if (sid == 1)//for 1 only
+					if (gone == 0)
 					{
-						auto now = std::chrono::system_clock::now();
-						auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-						auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-						auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-						auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-
-						//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
-						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+						mutx->recv_ship[j].unlock();
 					}
 				}
-				if (gone == 0)
-				{
-					lk.unlock();
-				}
+				
 
 			}
 			

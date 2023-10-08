@@ -419,6 +419,7 @@ public:
 	mutex recv_terminal;//to recv the data from the client terminal side
 	mutex recv_display;//to recv the data from the display client side
 	
+	mutex recv_ship[10];//mutex for recving data for  each user
 
 
 
