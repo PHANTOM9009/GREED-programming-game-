@@ -203,3 +203,8 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
   and due to that something is causing the buffer to overfow so design a new method, by reading the pattern
   -----------------------------
   more testing required for the new function....
+  --------------------------------------------------------------------------------- 
+  8 oct 23
+  Now the issue was health was upgrading late, almost 20 health, not at 50, I checked the issue
+  in the server, the req to upgrade the health reached at 20 at the server
+  and the client is sending the req late, at 20, so the issue is many clients are running at the same computer, so the issue is not in the game

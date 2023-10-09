@@ -3140,7 +3140,7 @@ bool ship::upgradeHealth(int n)// 1 health in 5 money
 			t.h.n = health;
 			this->time_line.push_back(t);
 			unlock.push_back(1);
-			cout << "\n unlocked the seal for the user=>" << this->ship_id;
+			//cout << "\n unlocked the seal for the user=>" << this->ship_id;
 			return true;
 		}
 	}

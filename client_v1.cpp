@@ -1298,7 +1298,13 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						data2.packet_id = frame_number;
 						data2.shipdata_forServer = shipdata;
 						data2.user_cred = user_credentials(username, password);
-						
+						for (int i = 0; i < data2.shipdata_forServer.size_upgrade_data; i++)
+						{
+							if (data2.shipdata_forServer.udata[i].type == 1)
+							{
+								cout << "\n sending for health to the sever at the health level=>" << pl1[ship_id]->getCurrentHealth();
+							}
+						}
 							if (data2.shipdata_forServer.size_navigation > 0)
 							{
 								cout << "\n sent navigation request to the server";
@@ -1436,7 +1442,7 @@ int main(int argc,char* argv[])
 	int port = 0;
 	SOCKET socket_listen = 0;
 	 port=connect_to_lobby_server();
-	socket_listen = connect_to_server(port);   
+	socket_listen = connect_to_server(port);   //no connection is established here only the socket initialization is done here
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	if (mode == 1)

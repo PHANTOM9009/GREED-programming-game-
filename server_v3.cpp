@@ -555,12 +555,10 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-					// cout << "\n sent data to the client at==> " <<
-					  //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					
 				}
 			}
-			//cout << "\n sent bytes to==>" <<data[i].first;
-
+			
 		}
 	}
 }
@@ -574,6 +572,7 @@ void recv_data_terminal(Mutex* m)
 	unordered_map<int, string> id_port;//for mapping of id and port
 	while (1)
 	{
+		
 		unique_lock<mutex> lk1(m->gameOver_check);
 		if (gameOver)
 		{
@@ -584,6 +583,7 @@ void recv_data_terminal(Mutex* m)
 		et += clock.restart().asSeconds();
 		if (et > 1)
 		{
+			
 			cout << "\n the count of packet is==>" << count;
 			et = 0;
 			count = 0;
@@ -612,18 +612,21 @@ void recv_data_terminal(Mutex* m)
 			if (id_port.find(ship_id) == id_port.end())
 			{
 				id_port[ship_id] = port;
+
+				cout << "\n port packet set for ship id====================>" << ship_id;
 			}
-			else if (id_port[ship_id] != port)
-			{
-				id_port[ship_id] = port;
-			}
+						
 			int id = -1;
 			for (auto c:id_port)
 			{
-				if (id_ip_port[c.first].second.first == sip && c.second == sport)
+				for (int i = 0; i < id_ip_port.size(); i++)
 				{
-					id = c.first;
-					break;
+					if (id_ip_port[i].first == c.first && id_ip_port[i].second.first == sip && c.second == sport)
+					{
+						id = c.first;
+						break;
+					}
+				
 				}
 			}
 			if (id != -1)
@@ -651,6 +654,10 @@ void recv_data_terminal(Mutex* m)
 				total_bytes[id] = 0;
 
 			}
+			else
+			{
+				cout << "\n in the first part of recv_data, recved id =-1==>"<<sip<<" "<<sport<<endl;
+			}
 		}
 		else if (bytes > 4)
 		{
@@ -661,14 +668,18 @@ void recv_data_terminal(Mutex* m)
 			getnameinfo((sockaddr*)&client_add, client_length, cip, sizeof(cip), cport, sizeof(cport), NI_NUMERICHOST | NI_NUMERICSERV);
 			ip = cip;
 			port = cport;
-
+			
 			int id = -1;
 			for (auto c : id_port)
 			{
-				if (id_ip_port[c.first].second.first == ip && c.second == port)
+				for (int i = 0; i < id_ip_port.size(); i++)
 				{
-					id = c.first;
-					break;
+					if (id_ip_port[i].first == c.first && id_ip_port[i].second.first == ip && c.second == port)
+					{
+						id = c.first;
+						break;
+					}
+
 				}
 			}
 			if (id != -1)
@@ -700,6 +711,10 @@ void recv_data_terminal(Mutex* m)
 				
 				
 
+			}
+			else
+			{
+				cout << "\n someone came with id=-1-------------------------------------=>"<<ip<<" "<<port;
 			}
 
 			
@@ -990,7 +1005,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						}
 						else if (pl1[i]->udata[j].type == 1)
 						{
-							cout << "\n health upgrade came==>" << i;
+							cout << "\n health upgrade came==>" << i<<" at health level=>"<<pl1[i]->health;
 							pl1[i]->upgradeHealth(pl1[i]->udata[j].n);
 						}
 						else if (pl1[i]->udata[j].type == 2)
@@ -1817,14 +1832,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					int sid = data2.shipdata_forServer.ship_id;
 					gone = 1;
 					//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
-					for (int k = 0; k < data2.shipdata_forServer.size_upgrade_data; k++)
-					{
-						if (data2.shipdata_forServer.udata[k].type == 1)
-						{
-							cout << "\n health upgrade came from =>" << sid << "  packet id=>" << data2.packet_id;
-						}
-
-					}
+					
 					control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 					prev_packet_id[sid] = data2.packet_id;
 					if (sid == 1)//for 1 only
@@ -1845,7 +1853,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				}
 
 			}
-			
+			  
 
 					std::time_t result = std::time(nullptr);
 			
@@ -2393,8 +2401,11 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	
 	}
 
-
-
+	cout << "\n the ip address of the users are==>";
+	for (int i = 0; i < id_ip_port.size(); i++)
+	{
+		cout << "\nip address=>" << id_ip_port[i].second.first;
+	}
 	control.setShipList(slist, 2369);
 
 	List<Greed::cannon> cannon_list;
