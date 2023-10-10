@@ -558,6 +558,7 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 					
 				}
 			}
+			cout << "\n sent packet to the client display unit...";
 			
 		}
 	}
@@ -1774,7 +1775,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			*/
 			sending.restart();
 			
-			//apply this logic and then check if it is  working with 7 players or not
+			
 			for(int i=0;i<socket_id_display.size();i++)
 			{
 				auto it = socket_id_display.begin();
