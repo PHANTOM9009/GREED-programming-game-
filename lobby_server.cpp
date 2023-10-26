@@ -54,7 +54,7 @@
 
 //runs on the port 8080
 
-#define GAME_SERVER_COUNT 2
+#define GAME_SERVER_COUNT 1
 using namespace std;
 
 sqlite3* db;
@@ -275,7 +275,7 @@ void listener()
 					if (bytes > 0)
 					{
 						cout << "\n received credentials are==>" << cred.username << " " << cred.password;
-						if(checkUser(cred))//put the condition if the current user is verified or not
+						if(1)//put the condition if the current user is verified or not
 						{
 							unique_lock<mutex> lk(m->m_valid);
 							valid_connections.push_back(i);

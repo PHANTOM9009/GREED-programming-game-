@@ -1,39 +1,8 @@
-﻿  Hawk.cpp
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(563,15): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(567,15): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(578,16): warning C4305: '=': truncation from 'int' to 'bool'
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(579,55): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(671,37): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(671,29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(1648,62): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(1648,22): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(2296,53): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(2328,57): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(2341,55): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(2357,41): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(2398,58): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(2417,55): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(2432,51): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(2457,58): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\greed_offline.hpp(2394,8): warning C4101: 'a': unreferenced local variable
-F:\current projects\GREED(programming game)\GREED(programming game)\Hawk.cpp(13,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-  Generating code
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\greed_offline.hpp(1658): warning C4715: 'ship::getGlobalMapref': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\List.h(254): warning C4715: 'List<Greed::point>::operator[]': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::cannon>::operator[]': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\List.h(254): warning C4715: 'List<int>::operator[]': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\List.h(254): warning C4715: 'List<Greed::coords>::operator[]': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\List.h(254): warning C4715: 'List<Greed::vertex>::operator[]': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\List.h(254): warning C4715: 'List<Greed::bullet>::operator[]': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\greed_offline.hpp(2559): warning C4715: 'Control::getCannonList': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\greed_offline.hpp(2549): warning C4715: 'Control::getShipList': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\greed_offline.cpp(1019): warning C4715: 'ship::getRadiusCoords_cannon': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\greed_offline.cpp(2485): warning C4715: 'ship::isShipInMyRadius': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(LIBS)\GREED(LIBS)\greed_offline.cpp(5505): warning C4723: potential divide by 0
-  1612 of 2286 functions (70.5%) were compiled, the rest were copied from previous compilation.
-    103 functions were new in current compilation
-    117 functions had inline decision re-evaluated but remain unchanged
+﻿  Generating code
+  5 of 2286 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
 greed_offline.lib(pch.obj) : warning LNK4020: a type record in '' is corrupted; some symbols and types may not be accessible from the debugger
-greed_offline.lib(sfml-graphics-2.dll) : warning LNK4020: a type record in '' is corrupted; some symbols and types may not be accessible from the debugger
+msvcprt.lib(MSVCP140.dll) : warning LNK4020: a type record in '' is corrupted; some symbols and types may not be accessible from the debugger
   GREED(programming game).vcxproj -> F:\current projects\GREED(programming game)\x64\Release\GREED(programming game).exe
