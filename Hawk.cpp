@@ -1,6 +1,6 @@
-#include "online_lib2.hpp"
-namespace user1
-{
+
+#include "greed_offline.hpp"
+
 
 	int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob,int hate_id)
 	{
@@ -43,7 +43,7 @@ namespace user1
 		ob.Greed_chaseShip(index);
 		cout << "\n chasing the ship==>" << index;
 		int frame_rate = 0;
-		sf::Clock clock;
+		
 		double elapsed_time = 0;
 		while (1)
 		{
@@ -52,8 +52,7 @@ namespace user1
 			{//this is anchit rana talking to the world and i want ot know the difference between
 				//cout<<"\n my health is==>"<<ob.getCurrentHealth();
 				frame_rate++;
-				sf::Time time = clock.restart();
-				elapsed_time += time.asSeconds();
+				
 				if (elapsed_time > 1)
 				{
 				
@@ -77,7 +76,7 @@ namespace user1
 			
 				if (ob.getCurrentHealth() <= 50)
 				{
-					//cout << "\n updated health";
+					
 					ob.Greed_upgradeHealth(20);
 				}
 				
@@ -149,5 +148,5 @@ namespace user1
 
 
 	}
-}
+
 

@@ -37,7 +37,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "hawk.cpp"
+//#include "hawk.cpp"
 #include<ctime>
 #include<chrono>
 /*
@@ -57,7 +57,7 @@
 * recv part:
 * recv the information of other ships enough to process its own algorithm
 */
-
+void GreedMain(ship& ob);
 string username = "username";
 string password = "password";
 string game_token;
@@ -399,7 +399,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 	vector<Greed::bullet> newBullets;
 	cout << "\n from now on the statements will be printed of your algorithm..\n";
-	thread t(user1::GreedMain, ref(player));
+	thread t(GreedMain, ref(player));
 	t.detach();
 	int frame_no = 0;
 	double avg_nav_req = 0;

@@ -1,9 +1,7 @@
 // lib2.cpp : Defines the functions for the static library.
 //
 #include "online_lib2.hpp"
-//#include "main_lilb.hpp"
 
-#include "proxy_file.cpp"
 
 using namespace std;
 
@@ -1051,7 +1049,7 @@ ship::ship()//default ctor for now
 	lock_health = 0;
 	lock_chase_ship = 0;
 
-	frame_rate_limit = 30;
+	frame_rate_limit = 60;
 	elapsed_time = 0;
 	current_frame_no = -1;
 	current_time = chrono::high_resolution_clock::time_point();

@@ -195,6 +195,65 @@ std::string GetLastErrorAsString()
 
 SOCKET connect_to_server()//first connection to the server
 {
+	//anyways recver socket is the main shit so use that
+	//this function is used for both tcp and udp connections 
+
+	struct addrinfo hints1;
+	memset(&hints1, 0, sizeof(hints1));
+	hints1.ai_family = AF_INET;
+	hints1.ai_socktype = SOCK_STREAM;
+	struct addrinfo* bind_address;
+	int port2 = 8081 + 3;
+	char port2_str[10];
+	sprintf(port2_str, "%d", port2);
+	//cout << "\n port of the server2 is==>" << port2_str;
+	getaddrinfo(ip_address.c_str(), port2_str, &hints1, &bind_address);
+	cout << "\n tcp connection port is=>" << port2_str;
+	SOCKET tcp_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
+	if (!ISVALIDSOCKET(tcp_socket))
+	{
+		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		//return 1;
+	}
+
+	while (::connect(tcp_socket, bind_address->ai_addr, bind_address->ai_addrlen))
+	{
+		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+		cout << GetLastErrorAsString();
+		//return 1;
+	}
+	char ip[100];
+	char cport[100];
+	getnameinfo(bind_address->ai_addr, bind_address->ai_addrlen, ip, sizeof(ip), cport, sizeof(cport), NI_NUMERICHOST | NI_NUMERICSERV);
+	cout << "\n address of the tcp server=>" << ip;
+	cout << "\n port of the tcp server=>" << cport;
+	freeaddrinfo(bind_address);
+	cout << "\n tcp connected with the client..";
+	string msg = "1";//1 means that  this is client_v2 process
+	string tot = msg + to_string(my_id);
+	int var = stoi(tot);
+	greet_client ob;
+	ob.code = var;
+	ob.user_cred = user_credentials(username, password);
+	strcpy(ob.token, game_token.c_str());
+
+	send(tcp_socket, (char*)&ob, sizeof(ob), 0);//using the 2nd socket for everything
+
+	//receiving from the server how many players will play
+	recv(tcp_socket, (char*)&max_players, sizeof(max_players), 0);
+	cout << "\n data recved from server max player playing are=>" << max_players;
+	
+	cout << "\n waiting for server to send message to start the udp stage...";
+	int st = 0;
+	int b = recv(tcp_socket, (char*)&st, sizeof(st), 0);
+	cout << "\n recved the message from the server to send the udp message..." << st;
+	
+	
+	cout << "\n now sending UDP hi to the server 10 times...";
+
+
+	CLOSESOCKET(tcp_socket);
+	//send the id to the server over the udp connection
 
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -204,10 +263,10 @@ SOCKET connect_to_server()//first connection to the server
 	struct addrinfo* server_add;
 	char buff[1000];
 	struct addrinfo* server_add1;
-	getaddrinfo(ip_address.c_str(), server_port, &hints, &server_add);
+	getaddrinfo(ip_address.c_str(), server_port, &hints, &server_add);//8081
 	//convert server_port to int
 	int port = atoi(server_port);
-	port += 1;
+	port += 1;//8082
 	char server_port1[10];
 	sprintf(server_port1, "%d", port);
 	getaddrinfo(ip_address.c_str(), server_port1, &hints, &server_add1);
@@ -234,20 +293,14 @@ SOCKET connect_to_server()//first connection to the server
 	connect(recver_socket, server_add1->ai_addr, server_add1->ai_addrlen);
 	//sending the bytes to the server
 	
-	string msg = "1";//1 means that  this is client_v2 process
-	string tot = msg + to_string(my_id);
-	int var = stoi(tot);
-	greet_client ob;
-	ob.code = var;
-	ob.user_cred = user_credentials(username, password);
-	strcpy(ob.token, game_token.c_str());
-
-	send(recver_socket, (char*)&ob, sizeof(ob),0);//using the 2nd socket for everything
+	//sending the id to the server using recver_socket 
+	for (int i = 0; i < 10; i++)
+	{
+		
+		send(recver_socket, (char*)&my_id, sizeof(my_id), 0);
+	}
 	
-	//receiving from the server how many players will play
-	recv(recver_socket, (char*)&max_players, sizeof(max_players),0);
 	
-	cout << "\n data recved from server max player playing are=>" << max_players;
 	freeaddrinfo(server_add);
 	freeaddrinfo(server_add1);
 
@@ -275,6 +328,9 @@ void recv_data(Mutex* m)
 	sf::Clock clock;
 	double et = 0;
 	int count = 0;
+	char buffer[sizeof(top_layer)];//temp buffer that will be cleared everytime the data is complete
+	memset(buffer, 0, sizeof(buffer));
+	int total_bytes = 0;
 	while (1)
 	{
 		unique_lock<mutex> lk1(m->gameOver_check);
@@ -291,75 +347,65 @@ void recv_data(Mutex* m)
 			et = 0;
 			count = 0;
 		}
-
-		top_layer ob;
-		int recv_bytes = 0;
-		char comp[sizeof(ob)];
-		int checker = 0;
-		if (found == 0)
+		sockaddr_storage client_address;
+		socklen_t client_length = sizeof(client_address);
+		char buff[MAX_LENGTH];
+		int bytes = recv(recver_socket, buff, sizeof(buff), 0);
+		if (bytes < 1)
 		{
-			int b=recv(recver_socket, (char*)&checker, sizeof(checker), 0);
-			if (b < 1)
-			{
-				cout << "\n cannot recv bytes==>" << GetLastErrorAsString();
-			}
-
+			cout << "\n cannot recv the bytes==>" << GetLastErrorAsString();
 		}
-		if (checker == 1 || found == 1)
+		if (bytes == 4)//new data is incoming clear the buffer and turn buffer into the object
 		{
-			while (recv_bytes < sizeof(ob))
+			int check = -1;
+			std::memcpy((void*)&check, buff, sizeof(int));
+			if (check != 1)
 			{
-				char buffer[1000];
-				found = 0;
-				bytes = recv(recver_socket, (char*)&buffer, sizeof(buffer), 0);
-				if (bytes < 1)
+				cout << "\n check is not one...";
+			}
+			if (total_bytes == sizeof(top_layer))
+			{
+				top_layer ob;
+				std::memcpy(&ob, buffer, sizeof(top_layer));
+				if (ob.st == 100 && ob.end == 101)
 				{
-					cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
+					unique_lock<mutex> lk(m->recv_display);
+					input_data.push_back(ob);
+					count++;
 				}
-				if (bytes == 4)
+				else
 				{
-					int check;
-					memcpy(&check, buffer, sizeof(int));
-					if (check == 1)
-					{
-						cout << "\n problem occured breaking...";
-						found = 1;
-						break;
-					}
+					cout << "\n wrong data came in the first part...";
 				}
-
-				memcpy(comp + recv_bytes, buffer, bytes);
-				recv_bytes += bytes;
-				//cout << "\n recved bytes from the server=>" << bytes << " " << ob.arr[100];
-				auto now = std::chrono::system_clock::now();
-				auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-				auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-				auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-				auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-
-				//cout << "\n recved data from the server at the time==> " <<
-				//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-
-
 			}
-			memcpy(&ob, comp, sizeof(ob));
-			if (ob.st == 100 && ob.end == 101)
-			{
-				//cout << "\n data is correct==>" << ob.packet_id;
-
-
-			//	cout << "\n received health is=>" << ob.shipdata_forMe.health;
-				
-				unique_lock<mutex> lk5(m->recv_display);
-				input_data.push_back(ob);
-				count++;
-			}
-			else
-			{
-				cout << "\n faulty data";
-			}
+			std::memset(buffer, 0, sizeof(buffer));
+			total_bytes = 0;
 		}
-		//Sleep(10);
+		else if (bytes > 4)
+		{
+			std::memcpy(buffer + total_bytes, buff, bytes);
+			total_bytes += bytes;
+			if (total_bytes == sizeof(top_layer))
+			{
+				top_layer ob;
+				std::memcpy(&ob, buffer, sizeof(ob));
+				if (ob.st == 100 && ob.end == 101)
+				{
+					count++;
+					unique_lock<mutex> lk(m->recv_display);
+					input_data.push_back(ob);
+				}
+				else
+				{
+					cout << "\n wrong data came in the second part...";
+				}
+				memset(buffer, 0, sizeof(buffer));
+				total_bytes = 0;
+			}
+			
+			
+		}
+
 	}
 }
 
@@ -1231,8 +1277,10 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 	password = "password";
 	cout << "\n enter the game token=>";
 	cin >> game_token;
-	ip_address = "65.2.40.56";
+	cout << "\n enter the ip address of the game server==>";
+	cin >> ip_address;
 	*/
+	
 	peer_socket = connect_to_server();
 	
 	cout << "\n max player are==>" << max_players;

@@ -558,7 +558,6 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 					
 				}
 			}
-			cout << "\n sent packet to the client display unit...";
 			
 		}
 	}
@@ -1931,7 +1930,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	hints1.ai_socktype = SOCK_STREAM;
 	hints1.ai_flags = AI_PASSIVE;
 	struct addrinfo* bind_addres;
-	int port2 = port + 3;//8081+10
+	int port2 = port + 3;//8081+3=8084 is the port of the tcp connection
 	char port2_str[10];
 	sprintf(port2_str, "%d", port2);
 	getaddrinfo(0, port2_str, &hints1, &bind_addres);//this server is running on port 8080
@@ -1941,13 +1940,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	{
 		cout << "\n socket not created=>" << GETSOCKETERRNO();
 	}
-	/*
-	int option = 0;
-	if (setsockopt(socket_listen, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&option, sizeof(option)))//for accepting ipv6 as well
-	{
-		cout << "\n problem in setting the flag==>";
-	}
-	*/
+	
 	cout << "\n binding the socket==>";
 	if (bind(tcp_socket, (const sockaddr*)bind_addres->ai_addr, (int)bind_addres->ai_addrlen))
 	{
@@ -2030,7 +2023,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	FD_ZERO(&reads);
 	int idc = 0;
 	int nn = 0;
-	SOCKET max_socket = max(socket_listen, socket_listen2);
+	SOCKET max_socket = tcp_socket;
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 10;
@@ -2043,7 +2036,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		cout << "\n socket failed";
 	}
 	freeaddrinfo(bind_addres);
-	while (max_player > nn || max_display > curdisp)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
+	vector<int> disp_socket;//collection of sockets of the display unit
+	while (max_player > nn || max_display>curdisp)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, &timeout);
@@ -2063,7 +2057,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 						max_socket = client;
 					}
 				}
-				else if (i != tcp_socket && i != socket_listen2)
+				else if (i != tcp_socket)
 				{
 					greet_client gc;
 					
@@ -2096,63 +2090,30 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 						{
 							max_display++;
 						}
-					}
-				}
 
-
-
-
-
-				if (i == socket_listen2)
-				{
-					greet_client gc;
-					struct sockaddr_storage client_address;
-					socklen_t client_len = sizeof(client_address);
-					int read;
-					recvfrom(socket_listen2, (char*)&gc, sizeof(gc), 0, (struct sockaddr*)&client_address, (int*)&client_len);
-					cout << "\n recved data=>" << gc.token;
-					if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
-					{
-						read = gc.code;
-						string sread = to_string(read);
-						//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-						cout << "\n code recved is=>" << read;
 						if (sread[0] == '1')
 						{
-							//finding the id of the client through the code sent by the display unit
-							int id = stoi(sread.substr(1, sread.length() - 1));
-							cout << "\n id sent is==>" << id;
-							socket_id_display[id] = client_address;
-							//sending the max_player to the display unit
-							sendto(socket_listen2, (char*)&max_player, sizeof(max_player), 0, (sockaddr*)&client_address, client_len);
-							curdisp++;
-							//	nn++;//to be removed;
-						}
-					}
 
+								//sending the max_player to the display unit
+								send(i, (char*)&max_player, sizeof(max_player), 0);
+								curdisp++;
+								disp_socket.push_back(i);
+
+								//	nn++;//to be removed;
+						}
+						
+					}
 				}
+								
 			}
 		}
 
 
 	}
-	/*
-	//setting the ip address and port of the client terminal
-	for (auto c : socket_id)
-	{
-		string ip;
-		string port;
-
-		char cip[100];
-		char cport[100];
-
-		socklen_t client_len = sizeof(c.second);
-		getnameinfo((sockaddr*)&c.second, client_len, cip, sizeof(cip), cport, sizeof(cport), NI_NUMERICHOST | NI_NUMERICHOST);
-		ip = cip;
-		port = cport;
-		id_ip_port.push_back(pair<int, pair<string, string>>(c.first, pair<string, string>(ip, port)));
-	}
-	*/
+	
+	
+	
+	
 
 	int no_of_players = n;
 	Control control;
@@ -2261,18 +2222,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	//connector_show(socket_display,socket_id_display, 1);//connecting with display unit of the client
 
 	cout << "\n sending the data to the clients=>";
-/*
-	for (int i = 0; i < no_of_players; i++)
-	{
-		auto it = socket_id.begin();
-		advance(it, i);
-		Startup_info_client data1(60, no_of_players, it->first, spawn[it->first]);
-		cout << "\n the id is==>" << it->first;
-		//sendto(socket_listen, (char*)&data1, sizeof(data1), 0, (sockaddr*)&it->second, sizeof(it->second));
-		SENDTO(socket_listen, (char*)&data1, sizeof(data1),(sockaddr*)&it->second, sizeof(it->second));
-		
-	}
-	*/
+
 //sending all the clients to start the stage 2 of data sending
 	for (int i = 0; i < tcp_socket_storage.size(); i++)
 	{
@@ -2351,14 +2301,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		}
 	}
 	//closing the sockets now
-	for (int i = 1; i <= max_socket; i++)
-	{
-		if (FD_ISSET(i, &all))
-		{
-			CLOSESOCKET(i);
-		}
-	}
-	CLOSESOCKET(tcp_socket);
+	
 	cout << "\n data is sent to all the clients";
 
 	//initiating udp requests only for socket_listen...
@@ -2402,6 +2345,41 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	
 	}
 
+	//completing the config process with the display unit of the game
+	//sending tcp message to all the display units to send udp req. to the server
+	for (int i = 0; i < disp_socket.size(); i++)
+	{
+		int st = 1;
+		int bytes = send(disp_socket[i], (char*)&st, sizeof(st), 0);
+	}
+	int c = 0;
+	while (c != disp_socket.size())
+	{
+		sockaddr_storage display_addr;
+		socklen_t display_addr_len = sizeof(display_addr);
+		int display_id = -1;
+		int tits = recvfrom(socket_listen2, (char*)&display_id, sizeof(display_id), 0, (sockaddr*)&display_addr, &display_addr_len);
+		if (tits < 1)
+		{
+			cout << "\n cannot recv id from the client display unit==>" << GetLastErrorAsString();
+		}
+		else if(socket_id_display.find(display_id)==socket_id_display.end())
+		{
+			c++;
+			socket_id_display[display_id] = display_addr;
+			cout << "\n recved the id and the address of the client display unit...";
+		}
+	}
+	//closing all the tcp connections here
+	for (int i = 0; i < tcp_socket_storage.size(); i++)
+	{
+		CLOSESOCKET(tcp_socket_storage[i]);
+	}
+	for (int i = 0; i < disp_socket.size(); i++)
+	{
+		CLOSESOCKET(disp_socket[i]);
+	}
+	CLOSESOCKET(tcp_socket);
 	cout << "\n the ip address of the users are==>";
 	for (int i = 0; i < id_ip_port.size(); i++)
 	{
