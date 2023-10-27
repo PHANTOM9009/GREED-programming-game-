@@ -37,7 +37,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-//#include "hawk.cpp"
+#include "hawk.cpp"
 #include<ctime>
 #include<chrono>
 /*
@@ -1445,45 +1445,7 @@ int main(int argc,char* argv[])
 	socket_listen = connect_to_server(port);   //no connection is established here only the socket initialization is done here
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
-	if (mode == 1)
-	{
-		//added the thing that when the game overs, the client will break the loop and close the connection.
-		char path_c[MAX_PATH];
-		string path;
-		if (GetCurrentDirectoryA(MAX_PATH, path_c) != 0)
-		{
-			path = path_c;
-		}
-		path += "\\client_v2_new.exe ";
-		
-		ZeroMemory(&si, sizeof(si));
-		si.cb = sizeof(si);
-		ZeroMemory(&pi, sizeof(pi));
-		//LPTSTR* arg = { "hello.exe" };
-		//convert port to string and append in commandLine
-
-		string port_str = to_string(port);
-		string id = to_string(my_id);
-		char cwd[256];
-
-		string commandLine = path + port_str + " " + id + " " + username + " " + password + " " + game_token + " " + ip_address;
-		//cout << "\n command line is==>" << commandLine;
-		char str[100];
-		strcpy(str, commandLine.c_str());
-
-		//char commandLine[] = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" 8080";
-		if (!CreateProcessA(NULL, str, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
-		{
-			cout << "Error creating process" << GetLastErrorAsString();
-
-			return 1;
-		}
-		else
-		{
-			cout << "Process created";
-			//return 0;
-		}
-	}
+	
 	
 	
 	
@@ -1552,6 +1514,47 @@ int main(int argc,char* argv[])
 	recv(tcp_socket, (char*)&my_id, sizeof(my_id), 0);
 	cout << "\n id sent by the client is=>" << my_id;
 
+
+	//starting the display unit
+	if (mode == 1)
+	{
+		//added the thing that when the game overs, the client will break the loop and close the connection.
+		char path_c[MAX_PATH];
+		string path;
+		if (GetCurrentDirectoryA(MAX_PATH, path_c) != 0)
+		{
+			path = path_c;
+		}
+		path += "\\client_v2_new.exe ";
+
+		ZeroMemory(&si, sizeof(si));
+		si.cb = sizeof(si);
+		ZeroMemory(&pi, sizeof(pi));
+		//LPTSTR* arg = { "hello.exe" };
+		//convert port to string and append in commandLine
+
+		string port_str = to_string(port);
+		string id = to_string(my_id);
+		char cwd[256];
+
+		string commandLine = path + port_str + " " + id + " " + username + " " + password + " " + game_token + " " + ip_address;
+		//cout << "\n command line is==>" << commandLine;
+		char str[100];
+		strcpy(str, commandLine.c_str());
+
+		//char commandLine[] = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" 8080";
+		if (!CreateProcessA(NULL, str, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
+		{
+			cout << "Error creating process" << GetLastErrorAsString();
+
+			return 1;
+		}
+		else
+		{
+			cout << "Process created";
+			//return 0;
+		}
+	}
 	//stage 2.............
 	//asking if everything is ready for stage 2?
 	int st = 1;

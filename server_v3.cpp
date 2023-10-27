@@ -867,7 +867,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		{
 			ep = 0;
 		}
-		next_frame = ep * 60;
+		next_frame = ep * 80;
 
 	
 		if (next_frame != current_frame)
@@ -2359,6 +2359,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		socklen_t display_addr_len = sizeof(display_addr);
 		int display_id = -1;
 		int tits = recvfrom(socket_listen2, (char*)&display_id, sizeof(display_id), 0, (sockaddr*)&display_addr, &display_addr_len);
+		cout << "\n recved lund";
 		if (tits < 1)
 		{
 			cout << "\n cannot recv id from the client display unit==>" << GetLastErrorAsString();

@@ -294,6 +294,7 @@ SOCKET connect_to_server()//first connection to the server
 	//sending the bytes to the server
 	
 	//sending the id to the server using recver_socket 
+	cout << "\n my id is==>" << my_id;
 	for (int i = 0; i < 10; i++)
 	{
 		
