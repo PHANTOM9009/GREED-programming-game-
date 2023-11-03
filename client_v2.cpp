@@ -243,15 +243,52 @@ SOCKET connect_to_server()//first connection to the server
 	//receiving from the server how many players will play
 	recv(tcp_socket, (char*)&max_players, sizeof(max_players), 0);
 	cout << "\n data recved from server max player playing are=>" << max_players;
-	
-	cout << "\n waiting for server to send message to start the udp stage...";
-	int st = 0;
-	int b = recv(tcp_socket, (char*)&st, sizeof(st), 0);
-	if (b < 1)
+	//herewe will send heartbeat messages so we can use SFML to get the time
+	double elapsed_time = 0;
+	sf::Clock clock;
+	fd_set master;
+	fd_set read;
+	FD_ZERO(&master);
+	FD_ZERO(&read);
+	FD_SET(tcp_socket, &master);
+
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
+	while (1)
 	{
-		cout << "\n error in recving bytes before starting the to send the udp message==>" << GetLastErrorAsString();
+		
+		elapsed_time += clock.restart().asSeconds();
+		read = master;
+		select(tcp_socket + 1, &read, 0, 0, &timeout);
+		if (FD_ISSET(tcp_socket, &read))
+		{
+			cout << "\n waiting for server to send message to start the udp stage...";
+			int st = 0;
+			int b = recv(tcp_socket, (char*)&st, sizeof(st), 0);
+			if (b < 1)
+			{
+				cout << "\n error in recving bytes before starting the to send the udp message==>" << GetLastErrorAsString();
+			}
+			cout << "\n recved the message from the server to send the udp message..." << st;
+			break;
+		}
+		if (elapsed_time > 60)
+		{
+			elapsed_time = 0;
+			char buff[10] = "hi";
+			int bytes = send(tcp_socket, buff, sizeof(buff), 0);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the byes==>" << GETSOCKETERRNO();
+			}
+		}
+
 	}
-	cout << "\n recved the message from the server to send the udp message..." << st;
+
+
+
+	
 	
 	
 	cout << "\n now sending UDP hi to the server 10 times...";

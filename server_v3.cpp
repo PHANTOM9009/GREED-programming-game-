@@ -2091,40 +2091,46 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 				}
 				else if (i != tcp_socket)
 				{
-					greet_client gc;
-					
-					int read;
-					int bit = recv(i, (char*)&gc, sizeof(gc), 0);
+					char buffer[1000];
+					int bit = recv(i, buffer, sizeof(buffer), 0);
 					if (bit < 0)
 					{
 						cout << "\n error in recving bytes==>" << GetLastErrorAsString() << " Error code is=>" << GETSOCKETERRNO();
 					}
-					int found = 0;
-
-					if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
+					cout << "\n bytes recved are==>" << bit;
+					greet_client gc;
+					if (bit == sizeof(gc))
 					{
-						read = gc.code;
-						string sread = to_string(read);
-						//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
-						cout << "\n code recved is=>" << read;
-						if (sread[0] == '0' || sread[0] == '2')
-						{
-							//socket_id[idc] = client_address;//to be done later
-							//sending the id of the client to the client
-							send(i, (char*)&idc, sizeof(idc), 0);
-							user_cred[idc] = gc.user_cred;//setting the user credential
-							idc++;
-							nn++;
-							tcp_socket_storage.push_back(i);
+						memcpy((void*)&gc, buffer, sizeof(gc));
 
-						}
-						if (sread[0] == '0')//2 is for when the client does not want its display unit to open
-						{
-							max_display++;
-						}
+						int read;
 
-						if (sread[0] == '1')
+						int found = 0;
+
+						if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
 						{
+							read = gc.code;
+							string sread = to_string(read);
+							//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
+							cout << "\n code recved is=>" << read;
+							if (sread[0] == '0' || sread[0] == '2')
+							{
+								//socket_id[idc] = client_address;//to be done later
+								//sending the id of the client to the client
+								send(i, (char*)&idc, sizeof(idc), 0);
+								user_cred[idc] = gc.user_cred;//setting the user credential
+								idc++;
+								nn++;
+								tcp_socket_storage.push_back(i);
+
+							}
+							if (sread[0] == '0')//2 is for when the client does not want its display unit to open
+							{
+								max_display++;
+							}
+
+							if (sread[0] == '1')
+							{
 
 								//sending the max_player to the display unit
 								send(i, (char*)&max_player, sizeof(max_player), 0);
@@ -2132,8 +2138,14 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 								disp_socket.push_back(i);
 
 								//	nn++;//to be removed;
+							}
+
 						}
-						
+					}
+					else
+					{
+						//cout << "\n received the heartbeat..";
+						continue;
 					}
 				}
 								

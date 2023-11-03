@@ -1582,11 +1582,53 @@ int main(int argc,char* argv[])
 			//return 0;
 		}
 	}
+	//before stage2 we need to keep on sending heart beat messages to the server to keep the connection alive as long as some data is
+	// not ready to recv from the server
 	//stage 2.............
 	//asking if everything is ready for stage 2?
-	int st = 1;
-	int b = recv(tcp_socket, (char*)&st, sizeof(st), 0);
-	cout << "\n we are ready for stage 2==>"<<st;
+	fd_set master;
+	fd_set read;
+	FD_ZERO(&master);
+	FD_ZERO(&read);
+	FD_SET(tcp_socket, &master);
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
+	double elapsed_time = 0;
+	while (1)
+	{
+		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+		read = master;
+		select(tcp_socket + 1, &read, 0, 0, &timeout);
+		if (FD_ISSET(tcp_socket, &read))
+		{
+			int st = 1;
+			int b = recv(tcp_socket, (char*)&st, sizeof(st), 0);
+				cout << "\n we are ready for stage 2==>" << st;
+				break;
+		}
+		//sending heartbeat messages to the server here..............
+		//chekcing if one second has elapsed or not 
+		//these heartbeat message are used to  tell the server that the client is active so dont close the tcp connection
+		//these heartbeat messages are set to be sent every 1 second of the tick
+		chrono::steady_clock::time_point end = chrono::steady_clock::now();
+		chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(end - begin);
+		elapsed_time += time_span.count();
+		if (elapsed_time > 60)
+		{
+			elapsed_time = 0;
+			//send the heartbeat message here
+			char buff[100] = "hi terminal";
+			int bytes = send(tcp_socket, buff, sizeof(buff), 0);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the byes==>" << GETSOCKETERRNO();
+			}
+			cout << "\nsent heartbeat to the server";
+			
+		}
+	}
+	
 
 	int bytes = send(tcp_socket, (char*)&my_id, sizeof(my_id), 0);
 	
