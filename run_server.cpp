@@ -58,93 +58,64 @@ int main()
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	struct addrinfo* bind_address;
+	struct addrinfo* bind_addres;
+
 	//convert port to string
 	
-	getaddrinfo(0,"8080", &hints, &bind_address);
-	
-	printf("Creating socket...\n");
-
-	SOCKET socket_peer = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
-	
-	if (!ISVALIDSOCKET(socket_peer))
+	getaddrinfo(0,"8080", &hints, &bind_addres);
+	SOCKET tcp_socket = socket(bind_addres->ai_family, bind_addres->ai_socktype, bind_addres->ai_protocol);
+	if (!ISVALIDSOCKET(tcp_socket))
 	{
-		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		cout << "\n socket not created=>" << GETSOCKETERRNO();
+	}
+	int enableKeepAlive = 1;
+	setsockopt(tcp_socket, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enableKeepAlive, sizeof(enableKeepAlive));
+
+	cout << "\n binding the socket==>";
+	if (bind(tcp_socket, (const sockaddr*)bind_addres->ai_addr, (int)bind_addres->ai_addrlen))
+	{
+		cout << "\n failed to bind the socket==>" << GETSOCKETERRNO();
+	}
+	listen(tcp_socket, 10);
+	int count = 0;
+	SOCKET re=0;
+	fd_set master;
+	fd_set read;
+	FD_ZERO(&master);
+	FD_ZERO(&read);
+	FD_SET(tcp_socket, &master);
+	struct timeval timeout;
+	timeout.tv_usec = 0;
+	timeout.tv_sec = 0;
+	int max_socket = tcp_socket;
+	while (count != 2)
+	{
+		read = master;
+		
+		select(max_socket + 1, &read, 0, 0, &timeout);
+		if (FD_ISSET(tcp_socket, &read))
+		{
+			sockaddr_storage client_address;
+			socklen_t client_length;
+			SOCKET client = accept(tcp_socket, (sockaddr*)&client_address, (int*)&client_length);
+			count++;
+			client = re;
+			cout << "\n connected with the client,...";
+		}
+	}
+	char buff[100];
+	int bytes = recv(re, buff, sizeof(buff), 0);
+	if (bytes < 1)
+	{
+		cout << "\n bytes are==>" << bytes << " error is==>" << GETSOCKETERRNO();
+	}
+	CLOSESOCKET(tcp_socket);
+	while (1)
+	{
 
 	}
-	if (::bind(socket_peer,
-		bind_address->ai_addr, bind_address->ai_addrlen)) {
-		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
-
-	}
-    struct sockaddr_storage client_address;
-	socklen_t client_len = sizeof(client_address);
-	char read[1024];
-    int bytes = recvfrom(socket_peer, read, 1024, 0, (sockaddr*)&client_address, &client_len);
-    if (bytes < 1)
-    {
-        cout << "\n cannot recv the bytes from the client==>" << GETSOCKETERRNO();
-    }
-    else
-    {
-        cout << "\n the message recved is==>" << read;
-    }
-    int n = 0;
-   
-    const int MAX_LENGTH = 1000;
-    
-    while (1)
-    {
-        ::data ob;
-        ob.arr[0] = n;
-        ob.arr[3999] = n-1;
-        char buffer[sizeof(ob)];
-        memcpy(buffer, &ob, sizeof(ob));
-       
-        int sent_bytes = 0;
-        //sending that starting a new packet
-        int sending_new = 1;
-        sendto(socket_peer,(char*)&sending_new,sizeof(sending_new), 0, (sockaddr*)&client_address, client_len);
-        while (sent_bytes < sizeof(ob))
-        {
-            
-			int bytesToSend = min(MAX_LENGTH, sizeof(ob) - sent_bytes);
-            bytes = sendto(socket_peer, buffer+sent_bytes, bytesToSend, 0, (sockaddr*)&client_address, client_len);
-            if (bytes < 1)
-            {
-                cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
-            }
-            else
-            {
-                sent_bytes += MAX_LENGTH;
-                cout << "\n sent=>" << bytes;
-                auto now = std::chrono::system_clock::now();
-                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-                auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-                auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-                auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-
-               // cout << "\n sent data to the client at==> " <<
-                 //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-            }
-        }
-        cout << "\n sent one packet-------------------------------------------------------------";
-        Sleep(100);
-        
-        
-        n++;
-    }
-    
-
-    CLOSESOCKET(socket_peer);
-
-#if defined(_WIN32)
-    WSACleanup();
-#endif
-
-    printf("Finished.\n");
     return 0;
 }

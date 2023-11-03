@@ -215,7 +215,8 @@ SOCKET connect_to_server()//first connection to the server
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		//return 1;
 	}
-
+	int enableKeepAlive = 1;
+	setsockopt(tcp_socket, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enableKeepAlive, sizeof(enableKeepAlive));
 	while (::connect(tcp_socket, bind_address->ai_addr, bind_address->ai_addrlen))
 	{
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
@@ -246,13 +247,17 @@ SOCKET connect_to_server()//first connection to the server
 	cout << "\n waiting for server to send message to start the udp stage...";
 	int st = 0;
 	int b = recv(tcp_socket, (char*)&st, sizeof(st), 0);
+	if (b < 1)
+	{
+		cout << "\n error in recving bytes before starting the to send the udp message==>" << GetLastErrorAsString();
+	}
 	cout << "\n recved the message from the server to send the udp message..." << st;
 	
 	
 	cout << "\n now sending UDP hi to the server 10 times...";
 
 
-	CLOSESOCKET(tcp_socket);
+	
 	//send the id to the server over the udp connection
 
 	struct addrinfo hints;
@@ -300,8 +305,21 @@ SOCKET connect_to_server()//first connection to the server
 		
 		send(recver_socket, (char*)&my_id, sizeof(my_id), 0);
 	}
+	cout << "\n waiting for server to start the game...";
+	int flag = 0;
+	int bytes = recv(tcp_socket, (char*)&flag, sizeof(flag), 0);
 	
+	if (!flag)
+	{
+		cout << "\n flag recved is==>" << flag;
+		cout << "\n waiting in the while loop....";
+	}
+	while (!flag)
+	{
 	
+	}
+	
+	CLOSESOCKET(tcp_socket);
 	freeaddrinfo(server_add);
 	freeaddrinfo(server_add1);
 
@@ -321,7 +339,7 @@ void graphics::GuiRenderer::sound_button_function(graphics::GuiRenderer& gui_ren
 		gui_renderer.sound_button->getRenderer()->setTexture(sound_on);
 	}
 }
-
+deque<pair<int, int>> logs;
 void recv_data(Mutex* m)
 {
 	int found = 0;
@@ -329,9 +347,10 @@ void recv_data(Mutex* m)
 	sf::Clock clock;
 	double et = 0;
 	int count = 0;
-	char buffer[sizeof(top_layer)];//temp buffer that will be cleared everytime the data is complete
+	char buffer[sizeof(top_layer)+MAX_LENGTH];//temp buffer that will be cleared everytime the data is complete
 	memset(buffer, 0, sizeof(buffer));
 	int total_bytes = 0;
+	int flag = 0;
 	while (1)
 	{
 		unique_lock<mutex> lk1(m->gameOver_check);
@@ -364,45 +383,49 @@ void recv_data(Mutex* m)
 			{
 				cout << "\n check is not one...";
 			}
-			if (total_bytes == sizeof(top_layer))
-			{
-				top_layer ob;
-				std::memcpy(&ob, buffer, sizeof(top_layer));
-				if (ob.st == 100 && ob.end == 101)
-				{
-					unique_lock<mutex> lk(m->recv_display);
-					input_data.push_back(ob);
-					count++;
-				}
-				else
-				{
-					cout << "\n wrong data came in the first part...";
-				}
-			}
+			
 			std::memset(buffer, 0, sizeof(buffer));
 			total_bytes = 0;
+			logs.clear();
+			logs.push_back(pair<int, int>(1, -1));
+			flag = 1;
 		}
 		else if (bytes > 4)
 		{
-			std::memcpy(buffer + total_bytes, buff, bytes);
-			total_bytes += bytes;
-			if (total_bytes == sizeof(top_layer))
+			if (total_bytes + bytes > sizeof(top_layer))
 			{
-				top_layer ob;
-				std::memcpy(&ob, buffer, sizeof(ob));
-				if (ob.st == 100 && ob.end == 101)
-				{
-					count++;
-					unique_lock<mutex> lk(m->recv_display);
-					input_data.push_back(ob);
-				}
-				else
-				{
-					cout << "\n wrong data came in the second part...";
-				}
 				memset(buffer, 0, sizeof(buffer));
 				total_bytes = 0;
+				flag = 0;//if error occurs then turn the flag to 0 and wait till it becomes 1
+				continue;
 			}
+			if (flag == 1)
+			{
+				std::memcpy(buffer + total_bytes, buff, bytes);
+				total_bytes += bytes;
+				logs.push_back(pair<int, int>(0, total_bytes));
+
+				if (total_bytes == sizeof(top_layer))
+				{
+					top_layer ob;
+					std::memcpy(&ob, buffer, sizeof(ob));
+					if (ob.st == 100 && ob.end == 101)
+					{
+						count++;
+						unique_lock<mutex> lk(m->recv_display);
+						input_data.push_back(ob);
+					}
+					else
+					{
+						cout << "\n wrong data came in the second part...";
+					}
+					memset(buffer, 0, sizeof(buffer));
+					total_bytes = 0;
+					logs.push_back(pair<int, int>(2, -1));
+
+				}
+			}
+			
 			
 			
 		}
@@ -1202,8 +1225,15 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 		
 			if (gameOver && ran == 0)
 			{
+				for (int i = 0; i < pl1.size(); i++)
+				{
+					if (pl1[i]->minutes == INT_MAX && pl1[i]->seconds == INT_MAX)
+					{
+						pl1[i]->score += 100;
+					}
+				}
 				findWinner(pl1);
-
+				
 				gui_renderer.final_window->setVisible(true);
 				for (int i = 0; i < pl1.size(); i++)
 				{
@@ -1273,7 +1303,7 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 	
 	/*
 	strcpy(server_port, "8081");
-	my_id = 1;
+	my_id = 0;
 	username = "username";
 	password = "password";
 	cout << "\n enter the game token=>";

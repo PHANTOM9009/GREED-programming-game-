@@ -290,10 +290,20 @@ void data_recver(SOCKET socket_listen,Mutex *m)
 		//Sleep(10);
 	}
 }
-void data_send(Mutex* m)
+void data_send(Mutex* m,deque<ship*> &pl1)
 {
+	sf::Clock clock;
+	double ep = 0;
+	int count = 0;
 	while (1)
 	{
+		ep += clock.restart().asSeconds();
+		if (ep > 1)
+		{
+			ep = 0;
+			cout << "\n packets sent are==>" << count << endl;
+			count = 0;
+		}
 		
 		unique_lock<mutex> lk(m->send_terminal);
 		m->cond_terminal.wait(lk, [] {return !terminal_data.empty(); });
@@ -320,6 +330,7 @@ void data_send(Mutex* m)
 			int sent_bytes = 0;
 			//sending that starting a new packet
 			int sending_new = my_id;//sending my id to the person
+			
 			send(sending_socket, (char*)&sending_new, sizeof(sending_new), 0);
 			while (sent_bytes < sizeof(ob))
 			{
@@ -337,7 +348,7 @@ void data_send(Mutex* m)
 				else
 				{
 					sent_bytes += bytes;
-
+					
 					auto now = std::chrono::system_clock::now();
 					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
@@ -349,7 +360,22 @@ void data_send(Mutex* m)
 				}
 			}
 			//cout << "\n sent bytes to==>" <<data[i].first;
+			for (int j = 0; j < data[i].shipdata_forServer.size_upgrade_data; j++)
+			{
+				if (data[i].shipdata_forServer.udata[j].type == 1)
+				{
+					cout << "\n at send: sending for health at health==>" << pl1[data[i].shipdata_forServer.ship_id]->getCurrentHealth();
+					auto now = std::chrono::system_clock::now();
+					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
+					cout << "\n this packet =>" << ob.packet_id << " sent at the time==> " <<
+					hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+				}
+			}
+			count++;
 		}
 	}
 }
@@ -437,7 +463,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	thread t1(&data_recver, peer_socket, mutx);
 	t1.detach();
 
-	thread t3(data_send, mutx);
+	thread t3(data_send, mutx,std::ref(pl1));
 	t3.detach();
 	int avg_input = 0;
 	int total_count = 0;
@@ -1477,7 +1503,8 @@ int main(int argc,char* argv[])
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		//return 1;
 	}
-	
+	int enableKeepAlive = 1;
+	setsockopt(tcp_socket, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enableKeepAlive, sizeof(enableKeepAlive));
 	while (::connect(tcp_socket, bind_address->ai_addr, bind_address->ai_addrlen))
 	{
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
@@ -1647,16 +1674,18 @@ int main(int argc,char* argv[])
 	ship::cannon_list = cannon_list;
 
 	//waiting for the game server for the green signal to start the game;
+	cout << "\n waiting for the server to send green signal to start the game....";
 	int start = 0;
-	bytes = ::recv(tcp_socket, (char*)&start, sizeof(start), 0);
+	bytes = recv(tcp_socket, (char*)&start, sizeof(start), 0);
 	if (bytes < 1)
 	{
+		cout << "\n bytes recved are==>" << bytes;
 		cout << "\n error in receiving startup info from the game server=>" << GetLastErrorAsString();
 		cout << GETSOCKETERRNO();
 	}
 	cout << "\n starting the game==>" << start;
 
-	CLOSESOCKET(tcp_socket);
+	
 
 
 	//sending the final request to the client....for the udp socket
@@ -1670,7 +1699,26 @@ int main(int argc,char* argv[])
 			cout << "\n error in sending the final bytes==>" << GetLastErrorAsString();
 		}
 	}
+	cout << "\n waiting for the server to send the final flag to start the game...";
+	int flag = 0;
+	bytes = recv(tcp_socket, (char*)&flag, sizeof(flag), 0);
+	if (bytes < 1)
+	{
+		cout << "\n cannot recv the final bytes from the server==>" << GetLastErrorAsString();
+	}
+	if (!flag)
+	{
+		cout << "\n the value of flag recved is==>" << flag;
+		cout << "\n going to while loop....";
 
+	}
+	while (!flag) 
+	{
+
+	}
+	
+
+	CLOSESOCKET(tcp_socket);
 	graphics cg;
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
 	//waiting for the child process to finish

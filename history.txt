@@ -208,3 +208,10 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
   Now the issue was health was upgrading late, almost 20 health, not at 50, I checked the issue
   in the server, the req to upgrade the health reached at 20 at the server
   and the client is sending the req late, at 20, so the issue is many clients are running at the same computer, so the issue is not in the game
+  ----------------------------------------------------------
+  2nd NOV 2023:
+
+  the issue is when the server is waiting for more clients to come, and other clients are waiting on the server to send some data which server
+  will only after all the clients are connected, so the server is breaking the tcp connection due to inactivity in the connection. the connection
+  is getting closed likely by the server. This shit does not happen in UDP connection, because it does not maintain connection. UDP is connectionless
+  so we need to maintain keep_alive connection, so turning on socket options in both client and server so that the connection is kept alive.

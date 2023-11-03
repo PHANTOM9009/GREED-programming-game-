@@ -1,5 +1,5 @@
 
-
+#include "online_lib2.hpp"
 
 
 	int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob,int hate_id)
@@ -111,7 +111,7 @@
 				{
 					if (q[i].eventType == Event::EventType::ShipsInMyRadius)
 					{
-						
+						//cout << "\n ship is in my radius...";
 						for (int j = 0; j < q[i].radiusShip.getShipId().size(); j++)                                                     
 						{
 							
@@ -124,6 +124,7 @@
 					}
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
+						
 						vector<Greed::cannon> ls = ob.getCannonList();
 						if (ls[q[i].radiusCannon.getCannonId()[0]].isCannonDead() == 0)
 						{

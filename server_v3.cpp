@@ -562,13 +562,14 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 		}
 	}
 }
-void recv_data_terminal(Mutex* m)
+void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 {
 	int found = 0;
 	int bytes;
 	sf::Clock clock;
 	double et = 0;
-	int count = 0;
+	int count = 0;//for id=0
+	int count1 = 0;//for id=1;
 	unordered_map<int, string> id_port;//for mapping of id and port
 	while (1)
 	{
@@ -584,7 +585,9 @@ void recv_data_terminal(Mutex* m)
 		if (et > 1)
 		{
 			
-			cout << "\n the count of packet is==>" << count;
+			cout << "\n the count of packet from 0 is==>" << count;
+			cout << "\n the count of packet from 1 is==>" << count1;
+			count1 = 0;
 			et = 0;
 			count = 0;
 		}
@@ -642,7 +645,10 @@ void recv_data_terminal(Mutex* m)
 						unique_lock<mutex> lk(m->recv_terminal);
 						input_data[id].push_back(ob);
 						cout << "\n came here";
-						count++;
+						if (ob.shipdata_forServer.ship_id == 0)
+							count++;
+						else
+							count1++;
 					}
 					else
 					{
@@ -696,7 +702,27 @@ void recv_data_terminal(Mutex* m)
 					if (ob.st == 100 && ob.end == 101)
 					{
 						
-						count++;
+						if (ob.shipdata_forServer.ship_id == 0)
+							count++;
+						else
+							count1++;
+						//checking the data now
+						for (int i = 0; i < ob.shipdata_forServer.size_upgrade_data; i++)
+						{
+							if (ob.shipdata_forServer.udata[i].type == 1)
+							{
+								cout << "\n raw came for health for==>" << ob.shipdata_forServer.ship_id << " at the health==>" << pl1[ob.shipdata_forServer.ship_id]->getCurrentHealth();
+								auto now = std::chrono::system_clock::now();
+								auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+								auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+								auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+								auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+								cout << "\n this packet came=>" << ob.packet_id << " at the time==> " <<
+								hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+							}
+						}
+
 						unique_lock<mutex> lk(m->recv_terminal);
 						input_data[id].push_back(ob);
 					}
@@ -809,7 +835,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	thread t3(send_data_display, socket_id_display, mutx);
 	t3.detach();
 	
-	thread t4(recv_data_terminal, mutx);
+	thread t4(recv_data_terminal, mutx,std::ref(pl1));
 	t4.detach();
 	List<graphics::animator> animation_list;
 
@@ -867,7 +893,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		{
 			ep = 0;
 		}
-		next_frame = ep * 80;
+		next_frame = ep * 60;
 
 	
 		if (next_frame != current_frame)
@@ -1940,7 +1966,9 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	{
 		cout << "\n socket not created=>" << GETSOCKETERRNO();
 	}
-	
+	int enableKeepAlive = 1;
+	setsockopt(tcp_socket, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enableKeepAlive, sizeof(enableKeepAlive));
+
 	cout << "\n binding the socket==>";
 	if (bind(tcp_socket, (const sockaddr*)bind_addres->ai_addr, (int)bind_addres->ai_addrlen))
 	{
@@ -2017,10 +2045,10 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	fd_set master;
 	FD_ZERO(&master);
 	FD_SET(tcp_socket, &master);
-	FD_SET(socket_listen2, &master);
+	
 	
 	fd_set reads;
-	FD_ZERO(&reads);
+	FD_ZERO(&reads); 
 	int idc = 0;
 	int nn = 0;
 	SOCKET max_socket = tcp_socket;
@@ -2037,6 +2065,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	}
 	freeaddrinfo(bind_addres);
 	vector<int> disp_socket;//collection of sockets of the display unit
+	//stage 1 starts
+	cout << "\n stage 1 of connection starts....";
 	while (max_player > nn || max_display>curdisp)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		reads = master;
@@ -2050,6 +2080,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 					struct sockaddr_storage client_address;
 					socklen_t client_len = sizeof(client_address);
 					SOCKET client = accept(tcp_socket, (sockaddr*)&client_address, &client_len);
+					int enableKeepAlive = 1;
+					setsockopt(client, SOL_SOCKET, SO_KEEPALIVE, (const char*)&enableKeepAlive, sizeof(enableKeepAlive));
 					cout << "\n connection accepted=>" << client;
 					FD_SET(client, &master);
 					if (client > max_socket)
@@ -2065,7 +2097,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 					int bit = recv(i, (char*)&gc, sizeof(gc), 0);
 					if (bit < 0)
 					{
-						cout << "\n error in recving bytes==>" << GetLastErrorAsString();
+						cout << "\n error in recving bytes==>" << GetLastErrorAsString() << " Error code is=>" << GETSOCKETERRNO();
 					}
 					int found = 0;
 
@@ -2110,8 +2142,11 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 
 	}
-	
-	
+	//stage 1 ends
+	/*
+	* here in stage 1 client terminal will recv the its id, and client display unit will get the max_players playing in the game
+	*/
+	cout << "\n stage 1 ends....";
 	
 	
 
@@ -2221,9 +2256,11 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 	//connector_show(socket_display,socket_id_display, 1);//connecting with display unit of the client
 
-	cout << "\n sending the data to the clients=>";
+	
 
 //sending all the clients to start the stage 2 of data sending
+	//till here clients are waiting for all the clients  to get connected
+	cout << "\n stage 2 begins.....";
 	for (int i = 0; i < tcp_socket_storage.size(); i++)
 	{
 		int st = 1;
@@ -2359,7 +2396,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		socklen_t display_addr_len = sizeof(display_addr);
 		int display_id = -1;
 		int tits = recvfrom(socket_listen2, (char*)&display_id, sizeof(display_id), 0, (sockaddr*)&display_addr, &display_addr_len);
-		cout << "\n recved lund";
+		
 		if (tits < 1)
 		{
 			cout << "\n cannot recv id from the client display unit==>" << GetLastErrorAsString();
@@ -2372,6 +2409,26 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		}
 	}
 	//closing all the tcp connections here
+	cout << "\n sending to terminal and display to start the game...";
+	for (int i = 0; i < tcp_socket_storage.size(); i++)
+	{
+		int flag = 1;
+		int bytes = send(tcp_socket_storage[i], (char*)&flag, sizeof(flag), 0);
+		if (bytes < 1)
+		{
+			cout << "\n error in sending the final bytes==>" << GetLastErrorAsString();
+		}
+
+	}
+	for (int i = 0; i < disp_socket.size(); i++)
+	{
+		int flag = 1;
+		int bytes = send(disp_socket[i], (char*)&flag, sizeof(flag), 0);
+		if (bytes < 1)
+		{
+			cout << "\n error in sending the final bytes to the display unit==>" << GetLastErrorAsString();
+		}
+	}
 	for (int i = 0; i < tcp_socket_storage.size(); i++)
 	{
 		CLOSESOCKET(tcp_socket_storage[i]);
