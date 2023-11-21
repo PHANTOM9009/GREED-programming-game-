@@ -215,3 +215,12 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
   will only after all the clients are connected, so the server is breaking the tcp connection due to inactivity in the connection. the connection
   is getting closed likely by the server. This shit does not happen in UDP connection, because it does not maintain connection. UDP is connectionless
   so we need to maintain keep_alive connection, so turning on socket options in both client and server so that the connection is kept alive.
+
+  this issue is solved using heartbeat messages which i am sending to the server from client_v1 and display window, at an internval of 1 sec each
+  --------------------------------------------------------------------------------------------------
+  12th NOV 2023:
+  the new bug or the fault in my coding is: there is no sync between the server and client
+  understand it this way:
+  the server sent the environment information to the client at its tick 1 but it is not recving the client response at game tick 2, every client
+  is running at its own tick the drawback is that the clients are observing the environment differently, and not same, they are taking actions
+  for their own realities, not their interpretation of the reality.

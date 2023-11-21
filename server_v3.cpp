@@ -69,13 +69,16 @@ deque<pair<int,recv_data>> terminal_data;//data queue to send data to the client
 deque<pair<int, top_layer>> display_data;//data for the display unit of the client: pair of id and top_layer data
 
 deque <pair<int, pair<string, string>>> id_ip_port;// pair of id of the terminal to the ip address and port of the terminal
+vector<int> packet_id(10,0);//to keep track of the current packet id of the terminal units of the clients
+
 
 SOCKET socket_listen;//UDP socket to send data to the client terminal unit
 SOCKET socket_listen2;//UDP socket to send data to the client display unit
 SOCKET recver;//UDP socket to recv data from the client terminal unit
 
 SOCKET lobby_socket;//TCP  socket to talk to the lobby server
-
+long long game_tick_global = 1;
+long long game_tick = 1;
 bool gameOver = false;//making it public so that the running theads of chaseShip1 and nav_data_processor can check its status and closes themselves.
 
 sqlite3* db;
@@ -258,28 +261,29 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 	int next_frame = -1;
 	double elapsed_time = 0;
 	sf::Clock clock;
+	deque<deque<navigation>> temp(pl1.size());
 	while (1)
 	{
-	
-		sf::Time time = clock.restart();
-		elapsed_time += time.asSeconds();
-		next_frame = elapsed_time * 30;
-		if (elapsed_time > 1)
-		{
-			elapsed_time = 0;
-		}
-		if (next_frame != cur_frame)
-		{
-			cur_frame = next_frame;
+		
 			unique_lock<mutex> lk(mutx->gameOver_check);
 			if (gameOver == true)
 			{
 				return;
 			}
 			lk.unlock();
-			if (mutx->updating_data.try_lock())
-			{
 			
+			unique_lock<mutex> lk1(mutx->updating_data);
+			for (int i = 0; i < pl1.size(); i++)
+			{
+				for (int j = 0; j < pl1[i]->nav_data.size(); j++)
+				{
+					temp[i].push_back(pl1[i]->nav_data[j]);
+				}
+				pl1[i]->nav_data.clear();
+			}
+			
+			lk1.unlock();
+					
 				for (int i = 0; i < pl1.size(); i++)
 				{
 					if (pl1[i]->died == 1)
@@ -287,49 +291,58 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 						continue;
 					}
 					
-					if (pl1[i]->nav_data.size() > 0)
+					if (temp[i].size() > 0)
 					{
 						cout << "\n navigation req came from==>" << i;
-						if (pl1[i]->nav_data[0].type == 0)//for target type
+						if (temp[i][0].type == 0)//for target type
 						{
-							if (pl1[i]->nav_data[0].target.r != -1 && pl1[i]->nav_data[0].target.c != -1)
+							if (temp[i][0].target.r != -1 && temp[i][0].target.c != -1)
 							{
-								Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].target);
+								Greed::path_attribute path = pl1[i]->setTarget(temp[i][0].target);
 								pl1[i]->setPath(path.getPath());
-								//	cout << "\n in type 0 in target=>" << pl1[i]->nav_data[0].target.r << " " << pl1[i]->nav_data[0].target.c;
+								//	cout << "\n in type 0 in target=>" << temp[i][0].target.r << " " << temp[i][0].target.c;
 							}
-							else if (pl1[i]->nav_data[0].s_id != -1 && pl1[pl1[i]->nav_data[0].s_id]->getDiedStatus() == 0)
+							else if (temp[i][0].s_id != -1 && pl1[temp[i][0].s_id]->getDiedStatus() == 0)
 							{
-								Greed::path_attribute path = pl1[i]->setTarget(pl1[i]->nav_data[0].s_id);
+								Greed::path_attribute path = pl1[i]->setTarget(temp[i][0].s_id);
 								pl1[i]->setPath(path.getPath());
-								cout << "\n in type 0 for ship_id=>" << pl1[i]->nav_data[0].s_id;
+								cout << "\n in type 0 for ship_id=>" << temp[i][0].s_id;
 							}
 
 						}
-						else if (pl1[i]->nav_data[0].type == 1 && pl1[i]->nav_data[0].n > 0 && pl1[i]->nav_data[0].dir != Direction::NA)
+						else if (temp[i][0].type == 1 && temp[i][0].n > 0 && temp[i][0].dir != Direction::NA)
 						{
-							pl1[i]->sail(pl1[i]->nav_data[0].dir, pl1[i]->nav_data[0].n);
+							pl1[i]->sail(temp[i][0].dir, temp[i][0].n);
 							cout << "\n in sail";
 						}
-						else if (pl1[i]->nav_data[0].type == 2 && pl1[i]->nav_data[0].s_id >= 0 && pl1[pl1[i]->nav_data[0].s_id]->getDiedStatus()==0)
+						else if (temp[i][0].type == 2 && temp[i][0].s_id >= 0 && pl1[temp[i][0].s_id]->getDiedStatus()==0)
 						{
-							pl1[i]->chaseShip(pl1[i]->nav_data[0].s_id);
-								//cout << "\n " << i << " ship is chasing=>" << pl1[i]->nav_data[0].s_id;
+							pl1[i]->chaseShip(temp[i][0].s_id);
+								//cout << "\n " << i << " ship is chasing=>" << temp[i][0].s_id;
 							
 						}
-						else if (pl1[i]->nav_data[0].type == 3)
+						else if (temp[i][0].type == 3)
 						{
 							pl1[i]->anchorShip();
 						}
-						pl1[i]->nav_data.pop_front();
+						if (i == 1)
+						{
+							/*
+							auto now = std::chrono::system_clock::now();
+							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+							cout << "\n from server nav_data_processor, sent for the set Path function==>" << hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+							*/
+						}
+						temp[i].pop_front();
 
 					}
 
 				}
 				
-				mutx->updating_data.unlock();
-			}
-		}
+			
 	}
 	
 }
@@ -489,8 +502,8 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-					// cout << "\n sent data to the client at==> " <<
-					  //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					//cout << "\n sent data to the client terminal=> " <<ob.packet_id<<" "<<
+					  // hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 				}
 			}
 			//cout << "\n sent bytes to==>" <<data[i].first;
@@ -585,8 +598,8 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 		if (et > 1)
 		{
 			
-			cout << "\n the count of packet from 0 is==>" << count;
-			cout << "\n the count of packet from 1 is==>" << count1;
+			//cout << "\n the count of packet from 0 is==>" << count;
+			//cout << "\n the count of packet from 1 is==>" << count1;
 			count1 = 0;
 			et = 0;
 			count = 0;
@@ -642,9 +655,10 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 					std::memcpy(&ob, all_buffer[id], sizeof(ob));
 					if (ob.st == 100 && ob.end == 101)
 					{
+												
+						lk1.unlock();
 						unique_lock<mutex> lk(m->recv_terminal);
-						input_data[id].push_back(ob);
-						cout << "\n came here";
+					
 						if (ob.shipdata_forServer.ship_id == 0)
 							count++;
 						else
@@ -707,6 +721,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 						else
 							count1++;
 						//checking the data now
+						/*
 						for (int i = 0; i < ob.shipdata_forServer.size_upgrade_data; i++)
 						{
 							if (ob.shipdata_forServer.udata[i].type == 1)
@@ -722,9 +737,25 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 								hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 							}
 						}
+						
+						if (id == 1 && ob.shipdata_forServer.size_navigation > 0)
+						{
+							auto now = std::chrono::system_clock::now();
+							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+							cout << "\n from server in recv_data, sent for the set Path function==>" << hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 
+						}
+						*/
+					//	cout << "\n packet id==>" << ob.packet_id << " previous packet is==>" << packet_id[id];
 						unique_lock<mutex> lk(m->recv_terminal);
-						input_data[id].push_back(ob);
+						if (ob.packet_id > packet_id[id])
+						{
+							input_data[id].push_back(ob);
+							packet_id[id] = ob.packet_id;
+						}
 					}
 					else
 					{
@@ -881,11 +912,15 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	int animation_count = 0;
 	int animation_once = 0;
 
-	int input_size = 0;
+	double input_size = 0;
 	int total_times = 0;
 	
+	int first_send = 1;
+
+	int tick_frame_rate = 0;
 	while (1)
 	{
+		int flag = 1;//to check if the latest packets are here from the client, so that they get the same shit everytime
 
 		sf::Time tt = clock1.restart();
 		ep += tt.asSeconds();
@@ -893,7 +928,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		{
 			ep = 0;
 		}
-		next_frame = ep * 60;
+		next_frame = ep * 80;
 
 	
 		if (next_frame != current_frame)
@@ -902,7 +937,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			{
 				break;
 			}
-
+			
 			//creating a method for sending data to the clients
 			deque<int> client_terminal;
 			deque<int> client_display;
@@ -930,11 +965,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			total_secs += deltime.asSeconds();
 			//total_time += deltime.asSeconds();
 			total_time++;
-
+			
 			no_of_chase++;
 			if (t2 >= 1)
 			{
 				cout << "\n\n frame rate is==>" << c;
+				cout << "\n effective frame rate is==>" << tick_frame_rate;
+				tick_frame_rate = 0;
 				de.push_back(debug(avg_processing, avg_processing2, fire_upgrade, navigation_ship, fire_ship, fire_cannon, avg_send, avg_recv, avg_send1, avg_send2));
 				avg_processing = 0;
 				avg_processing2 = 0;
@@ -975,7 +1012,28 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 			sf::Clock processing1;
 			processing1.restart();
+			for (int i = 0; i < pl1.size(); i++)//checking here if the tick is ready to be executed or not
+			{
+				if (pl1[i]->died == 1)
+				{
+					continue;
+				}
+				unique_lock<mutex> lk(mutx->recv_terminal);
+				if (input_data[i].size() == 0)
+				{
+					flag = 0;
+					//cout << "\n one of the input buffer is empty==>" << i;
+					break;
+				}
+				if (input_data[i].size() > 0 && input_data[i][0].packet_id != game_tick)
+				{
+					flag = 0;
+					//cout << "\n" << i << "  has the input buffer packet number==>" << input_data[i][0].packet_id << " and the game tick is==>" << game_tick;
+					break;
+				}
 
+			}
+			
 			if (check_game_over(pl1) || (total_secs/60) >= 10)//if game is over/if time of the game is 10 minutes, then the game will be over.
 			{
 				if (!checked)
@@ -1009,520 +1067,523 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 				/*code to update the timer ends*/
 
-				//run a thread here which will update the path buffer according to the data received
-				//lets run just one thread now
-				//thread t(&control1::nav_data_processor, &con, ref(pl1), mutx);
-				//t.detach();
-
-				//con.nav_data_processor(pl1, mutx);
-
-				for (int i = 0; i < pl1.size(); i++)
-				{
-					if (pl1[i]->died == 1)
-					{
-						continue;
-					}
-					//upgrading the fuel, health, or anything else
-					for (int j = 0; j < pl1[i]->udata.size(); j++)
-					{
-						if (pl1[i]->udata[j].type == 0)
-						{
-							pl1[i]->upgradeAmmo(pl1[i]->udata[j].n);//when the user buys something
-						}
-						else if (pl1[i]->udata[j].type == 1)
-						{
-							cout << "\n health upgrade came==>" << i<<" at health level=>"<<pl1[i]->health;
-							pl1[i]->upgradeHealth(pl1[i]->udata[j].n);
-						}
-						else if (pl1[i]->udata[j].type == 2)
-						{
-							pl1[i]->upgradeFuel(pl1[i]->udata[j].n);
-						}
-					}
-					pl1[i]->udata.clear();
-					//printing the position of ship one
-					
-
-					for (int j = 0; j < pl1[i]->bullet_info.size(); j++)
-					{
-
-						if (pl1[i]->bullet_info[j].type == 0)
-						{
-
-							if (pl1[i]->bullet_info[j].s_id >= 0 && pl1[i]->bullet_info[j].s_id < pl1.size() && pl1[i]->bullet_info[j].s_id != i && (int)pl1[i]->bullet_info[j].can >= 0 && (int)pl1[i]->bullet_info[j].can <= 1 && (int)pl1[i]->bullet_info[j].s >= 0 && (int)pl1[i]->bullet_info[j].s <= 2)
-							{
-								pl1[i]->fireCannon(pl1[i]->bullet_info[j].can, pl1[i]->bullet_info[j].s_id, pl1[i]->bullet_info[j].s);
-
-							}
-						}
-						else if (pl1[i]->bullet_info[j].type == 1)
-						{
-
-							if (pl1[i]->bullet_info[j].c_id >= 0 && pl1[i]->bullet_info[j].c_id < cannon_list.howMany() && (int)pl1[i]->bullet_info[j].c_id >= 0 && (int)pl1[i]->bullet_info[j].c_id <= 1)
-							{
-								pl1[i]->fireAtCannon(pl1[i]->bullet_info[j].c_id, pl1[i]->bullet_info[j].can);
-
-							}
-						}
-					}
-					pl1[i]->bullet_info.clear();
-					//updating the cost of the local map of the player
-					for (int j = 0; j < pl1[i]->map_cost_data.size(); j++)
-					{
-						
-						pl1[i]->updateCost(pl1[i]->map_cost_data[j].ob, pl1[i]->map_cost_data[j].new_cost);
-					}
-					pl1[i]->map_cost_data.clear();
-				}
-				//till upgrade and fire
-				fire_upgrade += processing1.getElapsedTime().asSeconds();
-				sf::Clock processing2;
-				processing2.restart();
-				for (int i = 0; i < pl1.size(); i++)
+				if (flag == 1)
 				{
 
-
-					//getPointPath has to be protected by a mutex
-					if (pl1[i]->died == 1)
+					for (int i = 0; i < pl1.size(); i++)
 					{
-
-						continue;
-					}
-					//doing the navigation stuff
-
-					for (int j = 0; j < pl1.size(); j++)
-					{
-						if (i != j && pl1[j]->died == 0)
+						if (pl1[i]->died == 1)
 						{
-
-							if (pl1[i]->collide(j, pl1[i]->tile_pos_front))
+							continue;
+						}
+						//upgrading the fuel, health, or anything else
+						for (int j = 0; j < pl1[i]->udata.size(); j++)
+						{
+							if (pl1[i]->udata[j].type == 0)
 							{
-
-								pl1[i]->collided_ships.push_back(j);
-
-								pl1[i]->anchorShip_collision();
-
+								pl1[i]->upgradeAmmo(pl1[i]->udata[j].n);//when the user buys something
+							}
+							else if (pl1[i]->udata[j].type == 1)
+							{
+								cout << "health upgrade came by==>" << i << " at the health level=>" << pl1[i]->health;
+								pl1[i]->upgradeHealth(pl1[i]->udata[j].n);
+							}
+							else if (pl1[i]->udata[j].type == 2)
+							{
+								pl1[i]->upgradeFuel(pl1[i]->udata[j].n);
 							}
 						}
-					}
-					if (mutx->m[i].try_lock())
-					{
-						List<Greed::abs_pos>& l1 = pl1[i]->getPathList(2369);
+						pl1[i]->udata.clear();
+						//printing the position of ship one
 
-						if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 1 != pl1[i]->getPointPath(2369) && pl1[i]->tile_path.howMany() > 0)
+
+						for (int j = 0; j < pl1[i]->bullet_info.size(); j++)
 						{
-							// cout << "\n fuel " << i << " now=>" << pl1[i]->fuel;
-							pl1[i]->motion = 1;
 
-							pl1[i]->update_pointPath(pl1[i]->getPointPath(2369) + 1, 2369);
-
-							pl1[i]->rect.setPosition(::cx(l1[pl1[i]->getPointPath(2369)].x + origin_x), ::cy(l1[pl1[i]->getPointPath(2369)].y + origin_y));
-
-							pl1[i]->update_tile_pos(l1[pl1[i]->getPointPath(2369)].x, l1[pl1[i]->getPointPath(2369)].y);
-
-							if (prev[i] != pl1[i]->tile_pos_front)//updating the fuel here
+							if (pl1[i]->bullet_info[j].type == 0)
 							{
-								prev[i] = pl1[i]->tile_pos_front;
-								pl1[i]->fuel -= pl1[i]->globalMap[pl1[i]->tile_pos_front.r * columns + pl1[i]->tile_pos_front.c].b.cost;
-								if (pl1[i]->fuel <= 0)
+
+								if (pl1[i]->bullet_info[j].s_id >= 0 && pl1[i]->bullet_info[j].s_id < pl1.size() && pl1[i]->bullet_info[j].s_id != i && (int)pl1[i]->bullet_info[j].can >= 0 && (int)pl1[i]->bullet_info[j].can <= 1 && (int)pl1[i]->bullet_info[j].s >= 0 && (int)pl1[i]->bullet_info[j].s <= 2)
 								{
-									mutx->m[i].unlock();
-									pl1[i]->anchorShip();
-									mutx->m[i].lock();
+									pl1[i]->fireCannon(pl1[i]->bullet_info[j].can, pl1[i]->bullet_info[j].s_id, pl1[i]->bullet_info[j].s);
+									//cout << "\n in stage 2, fired by=>" << i;
+
+								}
+							}
+							else if (pl1[i]->bullet_info[j].type == 1)
+							{
+
+								if (pl1[i]->bullet_info[j].c_id >= 0 && pl1[i]->bullet_info[j].c_id < cannon_list.howMany() && (int)pl1[i]->bullet_info[j].c_id >= 0 && (int)pl1[i]->bullet_info[j].c_id <= 1)
+								{
+									pl1[i]->fireAtCannon(pl1[i]->bullet_info[j].c_id, pl1[i]->bullet_info[j].can);
+
+
+								}
+							}
+						}
+						pl1[i]->bullet_info.clear();
+						//updating the cost of the local map of the player
+						for (int j = 0; j < pl1[i]->map_cost_data.size(); j++)
+						{
+
+							pl1[i]->updateCost(pl1[i]->map_cost_data[j].ob, pl1[i]->map_cost_data[j].new_cost);
+						}
+						pl1[i]->map_cost_data.clear();
+					}
+					//till upgrade and fire
+					fire_upgrade += processing1.getElapsedTime().asSeconds();
+					sf::Clock processing2;
+					processing2.restart();
+					for (int i = 0; i < pl1.size(); i++)
+					{
+
+
+						//getPointPath has to be protected by a mutex
+						if (pl1[i]->died == 1)
+						{
+
+							continue;
+						}
+						//doing the navigation stuff
+
+						for (int j = 0; j < pl1.size(); j++)
+						{
+							if (i != j && pl1[j]->died == 0)
+							{
+
+								if (pl1[i]->collide(j, pl1[i]->tile_pos_front))
+								{
+
+									pl1[i]->collided_ships.push_back(j);
+
+									pl1[i]->anchorShip_collision();
+
+								}
+							}
+						}
+						if (mutx->m[i].try_lock())
+						{
+							List<Greed::abs_pos>& l1 = pl1[i]->getPathList(2369);
+
+							if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 1 != pl1[i]->getPointPath(2369) && pl1[i]->tile_path.howMany() > 0)
+							{
+								// cout << "\n fuel " << i << " now=>" << pl1[i]->fuel;
+								pl1[i]->motion = 1;
+
+								pl1[i]->update_pointPath(pl1[i]->getPointPath(2369) + 1, 2369);
+
+								pl1[i]->rect.setPosition(::cx(l1[pl1[i]->getPointPath(2369)].x + origin_x), ::cy(l1[pl1[i]->getPointPath(2369)].y + origin_y));
+
+								pl1[i]->update_tile_pos(l1[pl1[i]->getPointPath(2369)].x, l1[pl1[i]->getPointPath(2369)].y);
+
+								if (prev[i] != pl1[i]->tile_pos_front)//updating the fuel here
+								{
+									prev[i] = pl1[i]->tile_pos_front;
+									pl1[i]->fuel -= pl1[i]->globalMap[pl1[i]->tile_pos_front.r * columns + pl1[i]->tile_pos_front.c].b.cost;
+									if (pl1[i]->fuel <= 0)
+									{
+										mutx->m[i].unlock();
+										pl1[i]->anchorShip();
+										mutx->m[i].lock();
+
+									}
 
 								}
 
 							}
+							else
+							{
+								pl1[i]->motion = 0;
+							}
+
+							mutx->m[i].unlock();
+						}
+						//navigation part of the ship ends here
+						navigation_ship += processing2.getElapsedTime().asSeconds();
+
+						sf::Clock processing3;
+						processing3.restart();
+						if (pl1[i]->ammo > 0 && pl1[i]->cannon_ob.activeBullets.size() > 0 && frames % 30 == 0)
+						{
+							//cout << "\n stage 2.5 fired by=>" << i;
+							frames = 0;
+							int val1 = (pl1[i]->cannon_ob.activeBullets.size() - 1);
+							int val2 = pl1[i]->bullet_pointer;
+							if (val1 > val2)
+							{
+								pl1[i]->bullet_pointer++;
+								Greed::bullet& bull = pl1[i]->cannon_ob.activeBullets[pl1[i]->bullet_pointer];
+								if (bull.target_ship != -1)
+								{
+									pl1[i]->setBullet(bull, bull.can, bull.target_ship, bull.s);
+									//	cout << "\n stage 3 firing by=>" << i;
+								}
+								else if (bull.target_cannon != -1)
+								{
+									pl1[i]->setBullet_forCannon(bull);
+								}
+							}
+							pl1[i]->isFiring = true;
 
 						}
 						else
 						{
-							pl1[i]->motion = 0;
+							pl1[i]->isFiring = false;
 						}
-
-						mutx->m[i].unlock();
-					}
-					//navigation part of the ship ends here
-					navigation_ship += processing2.getElapsedTime().asSeconds();
-
-					sf::Clock processing3;
-					processing3.restart();
-					if (pl1[i]->ammo > 0 && pl1[i]->cannon_ob.activeBullets.size() > 0 && frames % 30 == 0)
-					{
-						frames = 0;
-						int val1 = (pl1[i]->cannon_ob.activeBullets.size() - 1);
-						int val2 = pl1[i]->bullet_pointer;
-						if (val1 > val2)
+						for (int j = 0; j <= pl1[i]->bullet_pointer; j++)
 						{
-							pl1[i]->bullet_pointer++;
-							Greed::bullet& bull = pl1[i]->cannon_ob.activeBullets[pl1[i]->bullet_pointer];
-							if (bull.target_ship != -1)
-								pl1[i]->setBullet(bull, bull.can, bull.target_ship, bull.s);
-							else if (bull.target_cannon != -1)
+
+
+							if (pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory.size() > 0)
 							{
-								pl1[i]->setBullet_forCannon(bull);
-							}
-						}
-						pl1[i]->isFiring = true;
-
-					}
-					else
-					{
-						pl1[i]->isFiring = false;
-					}
-					for (int j = 0; j <= pl1[i]->bullet_pointer; j++)
-					{
-
-
-						if (pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory.size() > 0)
-						{
-							pl1[i]->cannon_ob.activeBullets[j].absolute_position = Greed::abs_pos(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].x, pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].y);
-							pl1[i]->cannon_ob.activeBullets[j].bullet_entity.setPosition(sf::Vector2f(::cx(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].x + origin_x), ::cy(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].y + origin_y)));
-							for (int l = 1; l <= 3; l++)//this is speed of bullet. skipping 3 pixels per frame, speed is 180 frames(pixels) per sec
-							{
-								if (pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory.size() > 0)
+								pl1[i]->cannon_ob.activeBullets[j].absolute_position = Greed::abs_pos(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].x, pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].y);
+								pl1[i]->cannon_ob.activeBullets[j].bullet_entity.setPosition(sf::Vector2f(::cx(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].x + origin_x), ::cy(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].y + origin_y)));
+								for (int l = 1; l <= 3; l++)//this is speed of bullet. skipping 3 pixels per frame, speed is 180 frames(pixels) per sec
 								{
-									pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory.erase(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory.begin());
+									if (pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory.size() > 0)
+									{
+										pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory.erase(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory.begin());
+									}
 								}
 							}
-						}
-						else //when bullet's trajectory is over and nothing happend
-						{
-							//pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].set_after_data(0, -1, false);
-							auto it = pl1[i]->cannon_ob.activeBullets.begin();
-							advance(it, j);
-							pl1[i]->cannon_ob.activeBullets.erase(it);
-							j--;
-							pl1[i]->bullet_pointer--;
-							continue;
-						}
-						if (j >= 0)
-						{
-							int found = 0;
-							//checking if the bullet has hit an opaque tile in that case the bullet has to be deleted instantaniously
-							for (int k = 0; k < opaque.howMany(); k++)
+							else //when bullet's trajectory is over and nothing happend
 							{
-								//   cout << "\n1";
-								Greed::coords coord((int)(::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y) - origin_y) / len, (int)(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x - origin_x)) / len);
-								// cout << "\n2";
-
-								if (coord == opaque[k] && !find(cannon_list, coord))
-								{
-									//pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].set_after_data(0, -1, false);
-									auto it = pl1[i]->cannon_ob.activeBullets.begin();
-									advance(it, j);
-									pl1[i]->cannon_ob.activeBullets.erase(it);
-									j--;
-									found = 1;
-									pl1[i]->bullet_pointer--;
-									break;
-								}
-
-
-							}
-							if (found == 1)
-							{
+								//pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].set_after_data(0, -1, false);
+								auto it = pl1[i]->cannon_ob.activeBullets.begin();
+								advance(it, j);
+								pl1[i]->cannon_ob.activeBullets.erase(it);
+								j--;
+								pl1[i]->bullet_pointer--;
 								continue;
 							}
-
-							if (pl1[i]->cannon_ob.activeBullets.size() > 0)
+							if (j >= 0)
 							{
+								int found = 0;
+								//checking if the bullet has hit an opaque tile in that case the bullet has to be deleted instantaniously
+								for (int k = 0; k < opaque.howMany(); k++)
+								{
+									//   cout << "\n1";
+									Greed::coords coord((int)(::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y) - origin_y) / len, (int)(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x - origin_x)) / len);
+									// cout << "\n2";
 
-								//checking if bullet hit another ship
-								Greed::coords cor = Greed::coords((int)(::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y) - origin_y) / 80, (int)(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x) - origin_x) / 80);
+									if (coord == opaque[k] && !find(cannon_list, coord))
+									{
+										//pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].set_after_data(0, -1, false);
+										auto it = pl1[i]->cannon_ob.activeBullets.begin();
+										advance(it, j);
+										pl1[i]->cannon_ob.activeBullets.erase(it);
+										j--;
+										found = 1;
+										pl1[i]->bullet_pointer--;
+										break;
+									}
 
-								if (!pl1[i]->cannon_ob.activeBullets[j].hit_or_not)
+
+								}
+								if (found == 1)
+								{
+									continue;
+								}
+
+								if (pl1[i]->cannon_ob.activeBullets.size() > 0)
 								{
 
+									//checking if bullet hit another ship
+									Greed::coords cor = Greed::coords((int)(::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y) - origin_y) / 80, (int)(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x) - origin_x) / 80);
 
-									for (int u = 0; u < pl1.size(); u++)
+									if (!pl1[i]->cannon_ob.activeBullets[j].hit_or_not)
 									{
-										if (i != u && pl1[u]->died == 0)
+
+
+										for (int u = 0; u < pl1.size(); u++)
 										{
-											if (pl1[i]->checkCollision(u, pl1[i]->cannon_ob.activeBullets[j]))
+											if (i != u && pl1[u]->died == 0)
 											{
-												pl1[i]->cannon_ob.activeBullets[j].set_after_data(5, pl1[u]->ship_id, true);//the bullet is still active for animation
+												if (pl1[i]->checkCollision(u, pl1[i]->cannon_ob.activeBullets[j]))
+												{
+													pl1[i]->cannon_ob.activeBullets[j].set_after_data(5, pl1[u]->ship_id, true);//the bullet is still active for animation
+													pl1[i]->cannon_ob.activeBullets[j].hit_or_not = true;
+													// cout << "\n collision taken";
+
+													found = 1;
+													break;
+												}
+											}
+										}
+										if (found == 1)
+										{
+											continue;
+										}
+										//checking if the bullet hit a cannon
+
+										for (int k = 0; k < cannon_list.howMany(); k++)
+										{
+											if (cannon_list[k].isDead == true)
+											{
+												continue;
+											}
+											Greed::coords cor = Greed::coords((int)(::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y) - origin_y) / 80, (int)(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x) - origin_x) / 80);
+											if (cannon_list[k].tile == cor)
+											{
+												// pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].set_after_data_for_cannon(5, cannon_list[k].cannon_id, true);
+												pl1[i]->cannon_ob.activeBullets[j].set_after_data_for_cannon(5, cannon_list[k].cannon_id, true);
 												pl1[i]->cannon_ob.activeBullets[j].hit_or_not = true;
-												// cout << "\n collision taken";
 
 												found = 1;
 												break;
 											}
 										}
-									}
-									if (found == 1)
-									{
-										continue;
-									}
-									//checking if the bullet hit a cannon
-
-									for (int k = 0; k < cannon_list.howMany(); k++)
-									{
-										if (cannon_list[k].isDead == true)
+										if (found == 1)
 										{
 											continue;
 										}
-										Greed::coords cor = Greed::coords((int)(::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y) - origin_y) / 80, (int)(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x) - origin_x) / 80);
-										if (cannon_list[k].tile == cor)
-										{
-											// pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].set_after_data_for_cannon(5, cannon_list[k].cannon_id, true);
-											pl1[i]->cannon_ob.activeBullets[j].set_after_data_for_cannon(5, cannon_list[k].cannon_id, true);
-											pl1[i]->cannon_ob.activeBullets[j].hit_or_not = true;
 
-											found = 1;
-											break;
-										}
 									}
-									if (found == 1)
-									{
-										continue;
-									}
+
 
 								}
+								// cout << "\n end";
+
+								if (pl1[i]->cannon_ob.activeBullets[j].hit_ship != -1)
+								{
+									//add an animation everytime a bullet gets deleted by colliding with a ship
+
+										//pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].isActive = false;
+										//add the bullet in the list of the hit bullet of the victim ship
+									//increasing the score of the firing ship
+									pl1[i]->score += 2;
+									if (pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->health > 0)
+									{
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->health -= pl1[i]->cannon_ob.activeBullets[j].power;
+									}
+									if (pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->gold >= GOLD_OFF_A_BULLET)
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->gold -= GOLD_OFF_A_BULLET;
+									//
+									//
+									//here ships are killed like flies
+									//
+
+									if (pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->health <= 0)
+									{
+										//20% of money is taken from the victim ship
+										died.push_back(pl1[i]->cannon_ob.activeBullets[j].hit_ship);
+
+										dying_ships.push_back(pl1[i]->cannon_ob.activeBullets[j].hit_ship);
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->minutes = total_secs / 60;
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->seconds = (int)total_secs % 60;
+										int ch = (30 * pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->gold) / 100;
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->gold -= ch;
+										pl1[i]->gold += ch;
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->killer_ship_id = i;
+										//passing the fuel of the victim ship
+										pl1[i]->fuel += pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->fuel;
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->fuel = 0;
+										//passing the ammo to the victim ship
+										pl1[i]->ammo += pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->ammo;
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->ammo = 0;
+										pl1[i]->killed_ships.push_back(pl1[i]->cannon_ob.activeBullets[j].hit_ship);
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->died = 1;
+										//gui_renderer.player_panels[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->getRenderer()->setBackgroundColor(sf::Color::Red);
+										//the ship is dead turn off the autopilot mode now
+										mutx->mchase[pl1[i]->cannon_ob.activeBullets[j].hit_ship].lock();
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->autopilot = 0;
+										mutx->mchase[pl1[i]->cannon_ob.activeBullets[j].hit_ship].unlock();
+
+										mutx->timeMutex[i].lock();
+										timeline t;
+										t.eventype = timeline::EventType::DEFEATED_SHIP;
+										t.timestamp = total_secs;
+										t.d.id = pl1[i]->cannon_ob.activeBullets[j].hit_ship;
+										pl1[i]->time_line.push_back(t);
+										mutx->timeMutex[i].unlock();
+
+										timeline t1;
+										t1.eventype = timeline::EventType::SHIP_DIED;
+										t1.timestamp = total_secs;
+
+										pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->time_line.push_back(t1);
+										pl1[i]->score += 100;
 
 
+									}
+									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->bullet_hit.add_rear(pl1[i]->cannon_ob.activeBullets[j]);
+									//bullet hit tempo for finding the bullet_hit event
+									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->bullet_hit_tempo.push_back(pl1[i]->cannon_ob.activeBullets[j]);
+									animation_list.add_rear(animator(sf::Vector2f(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x), ::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y)), elapsed_time, ANIMATION_TYPE::EXPLOSION, sf::Vector2f(pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->absolutePosition.x + origin_x, pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->absolutePosition.y + origin_y), pl1[i]->cannon_ob.activeBullets[j].hit_ship));
+
+
+
+									auto it = pl1[i]->cannon_ob.activeBullets.begin();
+									advance(it, j);
+									pl1[i]->cannon_ob.activeBullets.erase(it);
+									j--;
+									pl1[i]->bullet_pointer--;
+									continue;
+
+								}
+								if (j >= 0 && pl1[i]->cannon_ob.activeBullets[j].hit_cannon != -1 && pl1[i]->cannon_ob.activeBullets[j].ttl == 15)//this condition is specially for the cannon
+								{
+
+									//here the cannon will suffer a  loss
+									if (cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].health >= pl1[i]->cannon_ob.activeBullets[j].power)
+									{
+										cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].health -= pl1[i]->cannon_ob.activeBullets[j].power;
+										pl1[i]->score += 2;
+									}
+									else
+									{
+										cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].health = 0;
+
+									}
+									//if the cannon is dead..give the 1000 money to the killer ship, and set dead status in cannon list
+									if (cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].health == 0)
+									{
+										cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].isDead = true;
+										pl1[i]->score += 100;
+										pl1[i]->gold += 1000;
+									}
+									//pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].isActive = false;
+									animation_list.add_rear(animator(sf::Vector2f(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x), ::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y)), elapsed_time, ANIMATION_TYPE::EXPLOSION));
+
+									auto it = pl1[i]->cannon_ob.activeBullets.begin();
+									advance(it, j);
+									pl1[i]->cannon_ob.activeBullets.erase(it);
+									j--;
+									pl1[i]->bullet_pointer--;
+									continue;
+								}
+								else if (j >= 0 && pl1[i]->cannon_ob.activeBullets[j].hit_or_not)
+								{
+									pl1[i]->cannon_ob.activeBullets[j].ttl++;
+								}
 							}
-							// cout << "\n end";
+						}
+						fire_ship += processing3.getElapsedTime().asSeconds();
+					}
+					//end of firing of the ship
 
-							if (pl1[i]->cannon_ob.activeBullets[j].hit_ship != -1)
+					sf::Clock processing4;
+					processing4.restart();
+					for (int j = 0; j < cannon_list.howMany(); j++)
+					{
+						if (cannon_list[j].isDead == true)
+						{
+							continue;
+						}
+						for (int k = 0; k < cannon_list[j].bullet_list.size(); k++)
+						{
+
+							if (cannon_list[j].bullet_list[k].bullet_trajectory.size() > 0)
+							{
+								cannon_list[j].bullet_list[k].absolute_position = Greed::abs_pos(cannon_list[j].bullet_list[k].bullet_trajectory[0].x, cannon_list[j].bullet_list[k].bullet_trajectory[0].y);
+								cannon_list[j].bullet_list[k].bullet_entity.setPosition(sf::Vector2f(cx(cannon_list[j].bullet_list[k].bullet_trajectory[0].x + origin_x), cy(cannon_list[j].bullet_list[k].bullet_trajectory[0].y + origin_y)));
+								for (int l = 1; l <= 3; l++)
+								{
+									if (cannon_list[j].bullet_list[k].bullet_trajectory.size() > 0)
+									{
+										cannon_list[j].bullet_list[k].bullet_trajectory.erase(cannon_list[j].bullet_list[k].bullet_trajectory.begin());
+									}
+								}
+							}
+							else //when bullet's trajectory is over and nothing happend
+							{
+								//  cannon_list[j].allBullets[pl1[i]->cannon_ob.activeBullets[j].id].set_after_data(0, -1, false);
+								cannon_list[j].bullet_list.erase(cannon_list[j].bullet_list.begin());
+								k--;
+								continue;
+							}
+
+							if (k >= 0)
+							{
+
+								if (cannon_list[j].bullet_list.size() > 0)
+								{
+									//cout << "\n reached";
+									//ship vs ship collision
+
+									// cout << "\n caught";
+									// cout << "\n cor has==>" << cor.r << " " << cor.c;
+									 //cout << "\n ship 0 has position==>" << pl1[0]->getCurrentTile().r << " " << pl1[0]->getCurrentTile().c;
+									for (int u = 0; u < pl1.size(); u++)
+									{
+										if (pl1[u]->died == 1)
+										{
+											continue;
+										}
+										if (checkCollision(u, cannon_list[j].bullet_list[k]))//collision is there
+										{
+											//cannon_list[j].allBullets[cannon_list[j].bullet_list[k].id].set_after_data(5, pl1[u]->ship_id, true);
+											cannon_list[j].bullet_list[k].set_after_data(5, pl1[u]->ship_id, true);
+											//pl1[i]->cannon_ob.activeBullets[j].set_after_data(5, pl1[u]->ship_id, true);//the bullet is still active for animation
+											cannon_list[j].bullet_list[k].hit_or_not = true;
+											// cout << "\n collision taken";
+										}
+
+									}
+								}
+								// cout << "\n end";
+							}
+							if (cannon_list[j].bullet_list[k].ttl == 1)//here cannon bullet strikes the ship
 							{
 								//add an animation everytime a bullet gets deleted by colliding with a ship
+								cannon_list[j].bullet_list[k].isActive = false;
+								//cannon_list[j].allBullets[cannon_list[j].bullet_list[k].id].isActive = false;
 
-									//pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].isActive = false;
-									//add the bullet in the list of the hit bullet of the victim ship
-								//increasing the score of the firing ship
-								pl1[i]->score += 2;
-								if (pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->health > 0)
+								//add the bullet in the list of the hit bullet of the victim ship
+								if (pl1[cannon_list[j].bullet_list[k].hit_ship]->health >= cannon_list[j].bullet_list[k].power)
 								{
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->health -= pl1[i]->cannon_ob.activeBullets[j].power;
+									pl1[cannon_list[j].bullet_list[k].hit_ship]->health -= cannon_list[j].bullet_list[k].power;//reducing the power of the ship
 								}
-								if (pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->gold >= GOLD_OFF_A_BULLET)
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->gold -= GOLD_OFF_A_BULLET;
-								//
-								//
-								//here ships are killed like flies
-								//
-
-								if (pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->health <= 0)
+								else
 								{
-									//20% of money is taken from the victim ship
-									died.push_back(pl1[i]->cannon_ob.activeBullets[j].hit_ship);
+									pl1[cannon_list[j].bullet_list[k].hit_ship]->health = 0;
+								}
+								if (pl1[cannon_list[j].bullet_list[k].hit_ship]->health <= 0)
+								{
+									died.push_back(cannon_list[j].bullet_list[k].hit_ship);
 
-									dying_ships.push_back(pl1[i]->cannon_ob.activeBullets[j].hit_ship);
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->minutes = total_secs / 60;
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->seconds = (int)total_secs % 60;
-									int ch = (30 * pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->gold) / 100;
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->gold -= ch;
-									pl1[i]->gold += ch;
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->killer_ship_id = i;
-									//passing the fuel of the victim ship
-									pl1[i]->fuel += pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->fuel;
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->fuel = 0;
-									//passing the ammo to the victim ship
-									pl1[i]->ammo += pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->ammo;
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->ammo = 0;
-									pl1[i]->killed_ships.push_back(pl1[i]->cannon_ob.activeBullets[j].hit_ship);
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->died = 1;
-									//gui_renderer.player_panels[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->getRenderer()->setBackgroundColor(sf::Color::Red);
-									//the ship is dead turn off the autopilot mode now
-									mutx->mchase[pl1[i]->cannon_ob.activeBullets[j].hit_ship].lock();
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->autopilot = 0;
-									mutx->mchase[pl1[i]->cannon_ob.activeBullets[j].hit_ship].unlock();
+									int id = cannon_list[j].bullet_list[k].hit_ship;
+									pl1[id]->died = 1;
 
-									mutx->timeMutex[i].lock();
-									timeline t;
-									t.eventype = timeline::EventType::DEFEATED_SHIP;
-									t.timestamp = total_secs;
-									t.d.id = pl1[i]->cannon_ob.activeBullets[j].hit_ship;
-									pl1[i]->time_line.push_back(t);
-									mutx->timeMutex[i].unlock();
+									mutx->mchase[id].lock();
+									pl1[id]->autopilot = 0;
+									mutx->mchase[id].unlock();
 
+									pl1[id]->minutes = total_secs / 60;
+									pl1[id]->seconds = (int)total_secs % 60;
+									int ch = (30 * pl1[id]->gold) / 100;
+									pl1[id]->gold -= ch;
+
+									pl1[id]->killer_cannon_id = j;
+									//mutx->timeMutex[id].lock();
 									timeline t1;
 									t1.eventype = timeline::EventType::SHIP_DIED;
 									t1.timestamp = total_secs;
 
-									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->time_line.push_back(t1);
-									pl1[i]->score += 100;
-
+									pl1[id]->time_line.push_back(t1);
+									//mutx->timeMutex[id].unlock();
 
 								}
-								pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->bullet_hit.add_rear(pl1[i]->cannon_ob.activeBullets[j]);
-								//bullet hit tempo for finding the bullet_hit event
-								pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->bullet_hit_tempo.push_back(pl1[i]->cannon_ob.activeBullets[j]);
-								animation_list.add_rear(animator(sf::Vector2f(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x), ::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y)), elapsed_time, ANIMATION_TYPE::EXPLOSION, sf::Vector2f(pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->absolutePosition.x + origin_x, pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->absolutePosition.y + origin_y), pl1[i]->cannon_ob.activeBullets[j].hit_ship));
 
+								pl1[cannon_list[j].bullet_list[k].hit_ship]->getBulletHitList().add_rear(cannon_list[j].bullet_list[k]);
+								pl1[cannon_list[j].bullet_list[k].hit_ship]->bullet_hit_tempo.push_back(cannon_list[j].bullet_list[k]);
 
-
-								auto it = pl1[i]->cannon_ob.activeBullets.begin();
-								advance(it, j);
-								pl1[i]->cannon_ob.activeBullets.erase(it);
-								j--;
-								pl1[i]->bullet_pointer--;
-								continue;
-
+								animation_list.add_rear(animator(sf::Vector2f(rx(cannon_list[j].bullet_list[k].bullet_entity.getPosition().x), ry(cannon_list[j].bullet_list[k].bullet_entity.getPosition().y)), elapsed_time, ANIMATION_TYPE::EXPLOSION, sf::Vector2f((pl1[cannon_list[j].bullet_list[k].hit_ship]->absolutePosition.x + origin_x), pl1[cannon_list[j].bullet_list[k].hit_ship]->absolutePosition.y + origin_y), cannon_list[j].bullet_list[k].hit_ship));
+								cannon_list[j].bullet_list.erase(cannon_list[j].bullet_list.begin());
+								k--;
 							}
-							if (j >= 0 && pl1[i]->cannon_ob.activeBullets[j].hit_cannon != -1 && pl1[i]->cannon_ob.activeBullets[j].ttl == 15)//this condition is specially for the cannon
+							else if (cannon_list[j].bullet_list[k].hit_or_not)
 							{
-
-								//here the cannon will suffer a  loss
-								if (cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].health >= pl1[i]->cannon_ob.activeBullets[j].power)
-								{
-									cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].health -= pl1[i]->cannon_ob.activeBullets[j].power;
-									pl1[i]->score += 2;
-								}
-								else
-								{
-									cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].health = 0;
-
-								}
-								//if the cannon is dead..give the 1000 money to the killer ship, and set dead status in cannon list
-								if (cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].health == 0)
-								{
-									cannon_list[pl1[i]->cannon_ob.activeBullets[j].hit_cannon].isDead = true;
-									pl1[i]->score += 100;
-									pl1[i]->gold += 1000;
-								}
-								//pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].isActive = false;
-								animation_list.add_rear(animator(sf::Vector2f(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x), ::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y)), elapsed_time, ANIMATION_TYPE::EXPLOSION));
-
-								auto it = pl1[i]->cannon_ob.activeBullets.begin();
-								advance(it, j);
-								pl1[i]->cannon_ob.activeBullets.erase(it);
-								j--;
-								pl1[i]->bullet_pointer--;
-								continue;
+								cannon_list[j].bullet_list[k].ttl++;
 							}
-							else if (j >= 0 && pl1[i]->cannon_ob.activeBullets[j].hit_or_not)
-							{
-								pl1[i]->cannon_ob.activeBullets[j].ttl++;
-							}
+
 						}
+
 					}
-					fire_ship += processing3.getElapsedTime().asSeconds();
 				}
-				//end of firing of the ship
+			
 
-				sf::Clock processing4;
-				processing4.restart();
-				for (int j = 0; j < cannon_list.howMany(); j++)
-				{
-					if (cannon_list[j].isDead == true)
-					{
-						continue;
-					}
-					for (int k = 0; k < cannon_list[j].bullet_list.size(); k++)
-					{
-
-						if (cannon_list[j].bullet_list[k].bullet_trajectory.size() > 0)
-						{
-							cannon_list[j].bullet_list[k].absolute_position = Greed::abs_pos(cannon_list[j].bullet_list[k].bullet_trajectory[0].x, cannon_list[j].bullet_list[k].bullet_trajectory[0].y);
-							cannon_list[j].bullet_list[k].bullet_entity.setPosition(sf::Vector2f(cx(cannon_list[j].bullet_list[k].bullet_trajectory[0].x + origin_x), cy(cannon_list[j].bullet_list[k].bullet_trajectory[0].y + origin_y)));
-							for (int l = 1; l <= 3; l++)
-							{
-								if (cannon_list[j].bullet_list[k].bullet_trajectory.size() > 0)
-								{
-									cannon_list[j].bullet_list[k].bullet_trajectory.erase(cannon_list[j].bullet_list[k].bullet_trajectory.begin());
-								}
-							}
-						}
-						else //when bullet's trajectory is over and nothing happend
-						{
-							//  cannon_list[j].allBullets[pl1[i]->cannon_ob.activeBullets[j].id].set_after_data(0, -1, false);
-							cannon_list[j].bullet_list.erase(cannon_list[j].bullet_list.begin());
-							k--;
-							continue;
-						}
-
-						if (k >= 0)
-						{
-
-							if (cannon_list[j].bullet_list.size() > 0)
-							{
-								//cout << "\n reached";
-								//ship vs ship collision
-
-								// cout << "\n caught";
-								// cout << "\n cor has==>" << cor.r << " " << cor.c;
-								 //cout << "\n ship 0 has position==>" << pl1[0]->getCurrentTile().r << " " << pl1[0]->getCurrentTile().c;
-								for (int u = 0; u < pl1.size(); u++)
-								{
-									if (pl1[u]->died == 1)
-									{
-										continue;
-									}
-									if (checkCollision(u, cannon_list[j].bullet_list[k]))//collision is there
-									{
-										//cannon_list[j].allBullets[cannon_list[j].bullet_list[k].id].set_after_data(5, pl1[u]->ship_id, true);
-										cannon_list[j].bullet_list[k].set_after_data(5, pl1[u]->ship_id, true);
-										//pl1[i]->cannon_ob.activeBullets[j].set_after_data(5, pl1[u]->ship_id, true);//the bullet is still active for animation
-										cannon_list[j].bullet_list[k].hit_or_not = true;
-										// cout << "\n collision taken";
-									}
-
-								}
-							}
-							// cout << "\n end";
-						}
-						if (cannon_list[j].bullet_list[k].ttl == 1)//here cannon bullet strikes the ship
-						{
-							//add an animation everytime a bullet gets deleted by colliding with a ship
-							cannon_list[j].bullet_list[k].isActive = false;
-							//cannon_list[j].allBullets[cannon_list[j].bullet_list[k].id].isActive = false;
-
-							//add the bullet in the list of the hit bullet of the victim ship
-							if (pl1[cannon_list[j].bullet_list[k].hit_ship]->health >= cannon_list[j].bullet_list[k].power)
-							{
-								pl1[cannon_list[j].bullet_list[k].hit_ship]->health -= cannon_list[j].bullet_list[k].power;//reducing the power of the ship
-							}
-							else
-							{
-								pl1[cannon_list[j].bullet_list[k].hit_ship]->health = 0;
-							}
-							if (pl1[cannon_list[j].bullet_list[k].hit_ship]->health <= 0)
-							{
-								died.push_back(cannon_list[j].bullet_list[k].hit_ship);
-
-								int id = cannon_list[j].bullet_list[k].hit_ship;
-								pl1[id]->died = 1;
-
-								mutx->mchase[id].lock();
-								pl1[id]->autopilot = 0;
-								mutx->mchase[id].unlock();
-
-								pl1[id]->minutes = total_secs / 60;
-								pl1[id]->seconds = (int)total_secs % 60;
-								int ch = (30 * pl1[id]->gold) / 100;
-								pl1[id]->gold -= ch;
-
-								pl1[id]->killer_cannon_id = j;
-								//mutx->timeMutex[id].lock();
-								timeline t1;
-								t1.eventype = timeline::EventType::SHIP_DIED;
-								t1.timestamp = total_secs;
-
-								pl1[id]->time_line.push_back(t1);
-								//mutx->timeMutex[id].unlock();
-
-							}
-
-							pl1[cannon_list[j].bullet_list[k].hit_ship]->getBulletHitList().add_rear(cannon_list[j].bullet_list[k]);
-							pl1[cannon_list[j].bullet_list[k].hit_ship]->bullet_hit_tempo.push_back(cannon_list[j].bullet_list[k]);
-
-							animation_list.add_rear(animator(sf::Vector2f(rx(cannon_list[j].bullet_list[k].bullet_entity.getPosition().x), ry(cannon_list[j].bullet_list[k].bullet_entity.getPosition().y)), elapsed_time, ANIMATION_TYPE::EXPLOSION, sf::Vector2f((pl1[cannon_list[j].bullet_list[k].hit_ship]->absolutePosition.x + origin_x), pl1[cannon_list[j].bullet_list[k].hit_ship]->absolutePosition.y + origin_y), cannon_list[j].bullet_list[k].hit_ship));
-							cannon_list[j].bullet_list.erase(cannon_list[j].bullet_list.begin());
-							k--;
-						}
-						else if (cannon_list[j].bullet_list[k].hit_or_not)
-						{
-							cannon_list[j].bullet_list[k].ttl++;
-						}
-
-					}
-
-				}
-				fire_cannon += processing4.getElapsedTime().asSeconds();
-
-		
+		//i have to check this out
 			top_layer ship_packet;
 			memset((void*)&ship_packet, 0, sizeof(ship_packet));
 			for (int i = 0; i < pl1.size(); i++)
@@ -1603,22 +1664,25 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				}
 			}
 			//adding the bullets of the cannons
-			for (int i = 0; i < cannon_list.howMany(); i++)
+			if (flag == 1)
 			{
-				for (int j = 0; j < cannon_list[i].bullet_list.size() && bullet_no < 50; j++)
+				for (int i = 0; i < cannon_list.howMany(); i++)
 				{
-					if (cannon_list[i].isDead == 0)
+					for (int j = 0; j < cannon_list[i].bullet_list.size() && bullet_no < 50; j++)
 					{
-						ship_packet.bullet_pos[bullet_no] = cannon_list[i].bullet_list[j].absolute_position;
-						bullet_no++;
-						if (cannon_list[i].bullet_list[j].absolute_position.x == 0 && cannon_list[i].bullet_list[j].absolute_position.y == 0)
+						if (cannon_list[i].isDead == 0)
 						{
-							cout << "\n problem caused by cannon=>" << i;
-							cout << "\n bullet information is=>\n target ship=>" << cannon_list[i].bullet_list[j].target_ship;
+							ship_packet.bullet_pos[bullet_no] = cannon_list[i].bullet_list[j].absolute_position;
+							bullet_no++;
+							if (cannon_list[i].bullet_list[j].absolute_position.x == 0 && cannon_list[i].bullet_list[j].absolute_position.y == 0)
+							{
+								cout << "\n problem caused by cannon=>" << i;
+								cout << "\n bullet information is=>\n target ship=>" << cannon_list[i].bullet_list[j].target_ship;
+							}
 						}
 					}
-				}
 
+				}
 			}
 
 
@@ -1629,202 +1693,212 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 			sf::Clock sending;
 			sending.restart();
+			
 			//sending the data over here to the client terminal
-			recv_data data1;
-			
-			
-			memset((void*)&data1, 0, sizeof(data1));
-			//preparing the packet for client terminal
-			strcpy(data1.token, my_token.c_str());
-			data1.packet_id = total_time;
-			data1.s1 = pl1.size();
-			data1.gameOver = gameOver;
-			shipData_exceptMe sdem[20];
-			control.pl_to_packet(data1.shipdata_exceptMe, pl1);
-			for(int sid=0;sid<max_player;sid++)
+			if (flag == 1 || first_send==1)
 			{
-				for (int i = 0; i < pl1[sid]->unlock.size(); i++)
+				//cout << "\n sending packet with the game tick==>" << game_tick;
+				//sending the data here to the client
+				for (int sid = 0; sid < max_player; sid++)
 				{
-					if (pl1[sid]->unlock[i] == 1)
+					recv_data data1;
+					memset((void*)&data1, 0, sizeof(data1));
+					//preparing the packet for client terminal
+					strcpy(data1.token, my_token.c_str());
+					data1.packet_id = game_tick;
+					data1.s1 = pl1.size();
+					data1.gameOver = gameOver;
+					shipData_exceptMe sdem[20];
+					control.pl_to_packet(data1.shipdata_exceptMe, pl1);
+					for (int i = 0; i < pl1[sid]->unlock.size(); i++)
 					{
-						cout << "\n unlocking health for=>" << sid << " packet id=>" << data1.packet_id;
+						if (pl1[sid]->unlock[i] == 1)
+						{
+							cout << "\n unlocking health for=>" << sid << " packet id=>" << data1.packet_id;
+						}
 					}
-				}
 					shipData_forMe sdfm;
 					control.me_to_packet(sdfm, sid, pl1);
 					data1.shipdata_forMe = sdfm;
 					//sending the data
-					data1.packet_id = total_time;
-					
+					data1.packet_id = game_tick;
 					unique_lock<mutex> lk(mutx->send_terminal);
 					terminal_data.push_back(pair<int, recv_data>(sid, data1));
+
+				}
+				mutx->cond_terminal.notify_one();//notify that the data is ready to be read from the queue.			
+
+				sf::Time time2 = sending.getElapsedTime();
+				avg_send1 += time2.asSeconds();
+				avg_send += time2.asSeconds();
+
+				tick_frame_rate++;
+					game_tick++;
+					game_tick_global++;
 					
+				first_send = 0;
+				//rendering starts from here
 			}
-			mutx->cond_terminal.notify_one();//notify that the data is ready to be read from the queue.			
-		
-			sf::Time time2 = sending.getElapsedTime();
-			avg_send1 += time2.asSeconds();
-			avg_send += time2.asSeconds();
-			//rendering starts from here
-			
 
 
-			//cannon_list[0].fireCannon(1, ShipSide::FRONT);
-			processing.restart();
-			for (int i = 0; i < cannon_list.howMany(); i++)
-			{
-				if (cannon_list[i].isDead == true)
+				//cannon_list[0].fireCannon(1, ShipSide::FRONT);
+				processing.restart();
+				for (int i = 0; i < cannon_list.howMany(); i++)
 				{
-					continue;
-				}
-
-				int si = cannon_list[i].getVictimShip();
-				double req_angle = cannon_list[i].get_required_angle();
-				double current_angle = cannon_list[i].current_angle;
-
-				if ((int)current_angle != (int)req_angle)
-				{
-					double diff = abs(req_angle - current_angle);
-
-					if (diff < 5)
+					if (cannon_list[i].isDead == true)
 					{
-						cannon_list[i].current_angle = req_angle;
-					//	cannon_list[i].cannon_sprite.setRotation(req_angle);
-
-					}
-					else if (current_angle > req_angle)
-					{
-						//cannon_list[i].cannon_sprite.rotate(-2.5);
-						cannon_list[i].current_angle -= 2.5;
-					}
-					else if (current_angle < req_angle)
-					{
-						//cannon_list[i].cannon_sprite.rotate(2.5);
-						cannon_list[i].current_angle += 2.5;
+						continue;
 					}
 
-				}
-				//cout << "\n current angle=>" << cannon_list[2].current_angle;
-				if ((int)req_angle == (int)current_angle)
-				{
+					int si = cannon_list[i].getVictimShip();
+					double req_angle = cannon_list[i].get_required_angle();
+					double current_angle = cannon_list[i].current_angle;
 
-					if (c % 20 == 0)
+					if ((int)current_angle != (int)req_angle)
 					{
-						int val = cannon_list[i].current_ship;
-						if (val >= 0 && pl1[val]->died == 0 && (cannon_list[i].isShipInMyRadius(cannon_list[i].current_ship, ShipSide::FRONT)))
+						double diff = abs(req_angle - current_angle);
+
+						if (diff < 5)
 						{
-							if (!gameOver && cannon_list[i].current_ship != -1 && pl1[cannon_list[i].current_ship]->died == 0)
-							{
-								cannon_list[i].fireCannon(cannon_list[i].current_ship);//this is the only place where we have to fire
+							cannon_list[i].current_angle = req_angle;
+							//	cannon_list[i].cannon_sprite.setRotation(req_angle);
 
-								animation_list.add_rear(animator(sf::Vector2f(cannon_list[i].absolute_position.x + origin_x, cannon_list[i].absolute_position.y + origin_y), elapsed_time, ANIMATION_TYPE::CANNON_FIRE, cannon_list[i].cannon_id));
+						}
+						else if (current_angle > req_angle)
+						{
+							//cannon_list[i].cannon_sprite.rotate(-2.5);
+							cannon_list[i].current_angle -= 2.5;
+						}
+						else if (current_angle < req_angle)
+						{
+							//cannon_list[i].cannon_sprite.rotate(2.5);
+							cannon_list[i].current_angle += 2.5;
+						}
+
+					}
+					//cout << "\n current angle=>" << cannon_list[2].current_angle;
+					if ((int)req_angle == (int)current_angle)
+					{
+
+						if (c % 20 == 0)
+						{
+							int val = cannon_list[i].current_ship;
+							if (val >= 0 && pl1[val]->died == 0 && (cannon_list[i].isShipInMyRadius(cannon_list[i].current_ship, ShipSide::FRONT)))
+							{
+								if (!gameOver && cannon_list[i].current_ship != -1 && pl1[cannon_list[i].current_ship]->died == 0)
+								{
+									cannon_list[i].fireCannon(cannon_list[i].current_ship);//this is the only place where we have to fire
+
+									animation_list.add_rear(animator(sf::Vector2f(cannon_list[i].absolute_position.x + origin_x, cannon_list[i].absolute_position.y + origin_y), elapsed_time, ANIMATION_TYPE::CANNON_FIRE, cannon_list[i].cannon_id));
+								}
 							}
 						}
 					}
+
 				}
 
-			}
-
-			//setting the base sprite on the cannon
-			for (int i = 0; i < cannon_list.howMany(); i++)
-			{
-				ship_packet.cannon_ob[i].cid = i;
-				ship_packet.cannon_ob[i].angle = cannon_list[i].current_angle;
-			
-				ship_packet.cannon_ob[i].picture = 0;
-				ship_packet.cannon_ob[i].cannon_health = cannon_list[i].health;
-				ship_packet.cannon_ob[i].is_cannon_dead = cannon_list[i].isDead;
-			}
-	
-			ship_packet.no_of_animation = animation_list.howMany();
-			for (int i = 0; i < animation_list.howMany() && i<50; i++)
-			{
-				//cout << "\n second";
-				   // cout << "\n bullet number==>" << i << " " << "ttl=>" << animation_list[i].ttl;
-				if (animation_list[i].type == graphics::ANIMATION_TYPE::EXPLOSION)
+				//setting the base sprite on the cannon
+				for (int i = 0; i < cannon_list.howMany(); i++)
 				{
-					if (animation_list[i].total_time <= animation_list[i].animation_time)
+					ship_packet.cannon_ob[i].cid = i;
+					ship_packet.cannon_ob[i].angle = cannon_list[i].current_angle;
+
+					ship_packet.cannon_ob[i].picture = 0;
+					ship_packet.cannon_ob[i].cannon_health = cannon_list[i].health;
+					ship_packet.cannon_ob[i].is_cannon_dead = cannon_list[i].isDead;
+				}
+
+				ship_packet.no_of_animation = animation_list.howMany();
+				for (int i = 0; i < animation_list.howMany() && i < 50; i++)
+				{
+					//cout << "\n second";
+					   // cout << "\n bullet number==>" << i << " " << "ttl=>" << animation_list[i].ttl;
+					if (animation_list[i].type == graphics::ANIMATION_TYPE::EXPLOSION)
 					{
-						sf::Sprite explosion_sprite;
-						//here i am using moving animations i.e the frame is changing along with the position of the sprite
-						if (animation_list[i].sid != -1)//this is for the ship
+						if (animation_list[i].total_time <= animation_list[i].animation_time)
 						{
-							sf::Vector2f pos((animation_list[i].animation_offset.x + pl1[animation_list[i].sid]->absolutePosition.x + origin_x), (animation_list[i].animation_offset.y + pl1[animation_list[i].sid]->absolutePosition.y + origin_y));
-							ship_packet.animation_ob[i].x = pos.x;
-							ship_packet.animation_ob[i].y = pos.y;
+							sf::Sprite explosion_sprite;
+							//here i am using moving animations i.e the frame is changing along with the position of the sprite
+							if (animation_list[i].sid != -1)//this is for the ship
+							{
+								sf::Vector2f pos((animation_list[i].animation_offset.x + pl1[animation_list[i].sid]->absolutePosition.x + origin_x), (animation_list[i].animation_offset.y + pl1[animation_list[i].sid]->absolutePosition.y + origin_y));
+								ship_packet.animation_ob[i].x = pos.x;
+								ship_packet.animation_ob[i].y = pos.y;
+							}
+							else
+							{
+								ship_packet.animation_ob[i].x = animation_list[i].animation_position.x;
+								ship_packet.animation_ob[i].y = animation_list[i].animation_position.y;
+							}
+
+							//cout << "\n--------------------------------";
+							//cout << "\n for i==>" << i;
+							int f = animation_list[i].frame(elapsed_time, explosion_sprite);
+							ship_packet.animation_ob[i].picture = f;
+							//cout << "\n----------------------------------";
 						}
 						else
 						{
-							ship_packet.animation_ob[i].x = animation_list[i].animation_position.x;
-							ship_packet.animation_ob[i].y = animation_list[i].animation_position.y;
+							animation_list.delAt(i);
+							i--;
+						}
+					}
+					else if (animation_list[i].type == graphics::ANIMATION_TYPE::CANNON_FIRE)
+					{
+
+
+						if (animation_list[i].total_time <= animation_list[i].animation_time)
+						{
+							int h = animation_list[i].frame(elapsed_time, cannon_list[animation_list[i].cid].cannon_sprite);
+
+							//ship_packet.cannon_ob[animation_list[i].cid].angle = cannon_list[animation_list[i].cid].current_angle;
+							ship_packet.cannon_ob[animation_list[i].cid].picture = h;
+						}
+						else
+						{
+
+							animation_list.delAt(i);
+							i--;
+						}
+					}
+
+
+				}
+				avg_processing2 += processing.getElapsedTime().asSeconds();
+				//send the data over here to the display unit of the client 
+				/* this has to be in a different set of sockets
+				* this is a connection to the display unit of the client
+				*
+				*/
+				sending.restart();
+			
+				if (flag == 1)
+				{
+					for (int i = 0; i < socket_id_display.size(); i++)
+					{
+						auto it = socket_id_display.begin();
+						advance(it, i);
+						ship_packet.packet_no = total_time;
+						ship_packet.total_secs = total_secs;
+						if (ship_packet.no_of_bullets > 0)
+						{
+							bullet_count++;
+							bullet_once += ship_packet.no_of_bullets;
+						}
+						if (ship_packet.no_of_animation > 0)
+						{
+							animation_count++;
+							animation_once += ship_packet.no_of_animation;
 						}
 
-						//cout << "\n--------------------------------";
-						//cout << "\n for i==>" << i;
-						int f=animation_list[i].frame(elapsed_time, explosion_sprite);
-						ship_packet.animation_ob[i].picture = f;
-						//cout << "\n----------------------------------";
-					}
-					else
-					{
-						animation_list.delAt(i);
-						i--;
+
+						prev_packet_display = ship_packet.packet_no;
+						unique_lock<mutex> lk(mutx->send_display);
+						display_data.push_back(pair<int, top_layer>(it->first, ship_packet));
+						//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
+
 					}
 				}
-				else if (animation_list[i].type == graphics::ANIMATION_TYPE::CANNON_FIRE)
-				{
-
-
-					if (animation_list[i].total_time <= animation_list[i].animation_time)
-					{
-						int h = animation_list[i].frame(elapsed_time, cannon_list[animation_list[i].cid].cannon_sprite);
-
-						//ship_packet.cannon_ob[animation_list[i].cid].angle = cannon_list[animation_list[i].cid].current_angle;
-						ship_packet.cannon_ob[animation_list[i].cid].picture = h;
-					}
-					else
-					{
-
-						animation_list.delAt(i);
-						i--;
-					}
-				}
-
-
-			}
-			avg_processing2 += processing.getElapsedTime().asSeconds();
-			//send the data over here to the display unit of the client 
-			/* this has to be in a different set of sockets
-			* this is a connection to the display unit of the client
-			* 
-			*/
-			sending.restart();
-			
-			
-			for(int i=0;i<socket_id_display.size();i++)
-			{
-				auto it = socket_id_display.begin();
-				advance(it, i);
-				ship_packet.packet_no = total_time;
-				ship_packet.total_secs = total_secs;
-				if (ship_packet.no_of_bullets > 0)
-				{
-					bullet_count++;
-					bullet_once += ship_packet.no_of_bullets;
-				}
-				if (ship_packet.no_of_animation > 0)
-				{
-					animation_count++;
-					animation_once += ship_packet.no_of_animation;
-				}
-				
-
-				prev_packet_display = ship_packet.packet_no;
-				unique_lock<mutex> lk(mutx->send_display);
-				display_data.push_back(pair<int, top_layer>(it->first, ship_packet));
-				//cout << ship_packet.packet_no << ": " << ship_packet.ob.absolutePosition.x << " " << ship_packet.ob.absolutePosition.y << endl;
-				
-			}
 			//notifying the vairable
 			mutx->cond_display.notify_one();//notified...
 			
@@ -1832,61 +1906,65 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
       		//recv the data here and update for the next frame
 			sf::Clock recv_data;
 			recv_data.restart();
-			
-			for(int j=0;j<n;j++)
+			if (flag == 1)
 			{
-				if (pl1[j]->died == 1)
+				for (int j = 0; j < n; j++)
 				{
-					
-					continue;
-				}
-				
-				unique_lock<mutex> lk(mutx->recv_terminal);
-				int gone = 0;
-				
-				if (input_data[j].size()>0)
-				{
-
-					input_size += input_data[j].size();
-					total_times++;
-
-					send_data data2;
-					memset((void*)&data2, 0, sizeof(data2));
-					data2 = input_data[j][0];
-					input_data[j].pop_front();
-					lk.unlock();
-					int sid = data2.shipdata_forServer.ship_id;
-					gone = 1;
-					//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
-					
-					control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
-					prev_packet_id[sid] = data2.packet_id;
-					if (sid == 1)//for 1 only
+					if (pl1[j]->died == 1)
 					{
-						auto now = std::chrono::system_clock::now();
-						auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-						auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-						auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-						auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-						//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
-						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+						continue;
 					}
-				}
-				if (gone == 0)
-				{
-					lk.unlock();
+
+					unique_lock<mutex> lk(mutx->recv_terminal);
+					int gone = 0;
+
+					if (input_data[j].size() > 0)
+					{
+
+						input_size += input_data[j].size();
+						total_times++;
+
+						send_data data2;
+						memset((void*)&data2, 0, sizeof(data2));
+						data2 = input_data[j][0];
+						input_data[j].pop_front();
+						lk.unlock();
+						int sid = data2.shipdata_forServer.ship_id;
+						gone = 1;
+						//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
+						if (data2.shipdata_forServer.size_navigation > 0)
+						{
+							cout << "\n navigation request came from=>" << j << " at the game tick==>" << game_tick;
+						}
+						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
+						prev_packet_id[sid] = data2.packet_id;
+						if (sid == 1)//for 1 only
+						{
+							auto now = std::chrono::system_clock::now();
+							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+							//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+						}
+					}
+					if (gone == 0)
+					{
+						lk.unlock();
+					}
+
 				}
 
+
+				std::time_t result = std::time(nullptr);
+
+				sf::Time time4 = recv_data.getElapsedTime();
+				avg_recv += time4.asSeconds();
 			}
-			  
-
-					std::time_t result = std::time(nullptr);
-			
-			sf::Time time4 = recv_data.getElapsedTime();
-			avg_recv += time4.asSeconds();
-
-			if (gameOver   &&  game_over_frame+4 == total_time)//so that the packet reaches to everyone.
+			if (gameOver && game_over_frame+4 == total_time)//so that the packet reaches to everyone.
 			{
 				break;//break the loop
 			} 
@@ -2548,6 +2626,17 @@ int main(int argc,char* argv[])
 		gameOver = 0;
 		graphics::total_secs = 0;
 		user_cred.clear();
+		input_data.clear();
+		deque<deque<send_data>> temp(10);
+		input_data = temp;
+		id_ip_port.clear();
+		memset((void*)&all_buffer, 0, sizeof(all_buffer));
+		vector<int> tempo(10, 0);
+		total_bytes.clear();
+		total_bytes = tempo;
+		user_found = false;
+
+
 		startup(max_player, socket_id, port);
 	
 		//all the sockets are closed before restarting the game'

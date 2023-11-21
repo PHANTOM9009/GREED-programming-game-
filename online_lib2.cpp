@@ -2023,7 +2023,7 @@ attribute ship::whatsHere(Greed::coords ob, int m)//pass the row and column of t
 
 	List<Greed::cannon> cannon = cont.getCannonList(2369);
 	deque<ship*> sh = cont.getShipList(2369);
-
+	att.entity = graph[index].b.tile_id;
 	//checking for the water first if its a water then checking for the storm
 	if (graph[index].b.tile_id == Entity::WATER)
 	{

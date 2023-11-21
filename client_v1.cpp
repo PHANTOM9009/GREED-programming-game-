@@ -37,7 +37,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "hawk.cpp"
+#include "testing.cpp"
 #include<ctime>
 #include<chrono>
 /*
@@ -69,6 +69,8 @@ SOCKET sending_socket;//socket to send data to the server
 
 deque<recv_data> input_data;//input data from the server to the client
 deque<send_data> terminal_data;
+
+long game_tick = 1;//this is the game tick of the server not the client
 
 bool SEND(SOCKET sock, char* buff, int length)
 {
@@ -211,7 +213,7 @@ SOCKET connect_to_server(int port)//first connection to the server
 	return socket_peer;
 
 }
-
+int prev_server_tick = 0;//this is to check the client does not accept any old packets from the server
 void data_recver(SOCKET socket_listen,Mutex *m)
 {
 	int found = 0;
@@ -224,7 +226,7 @@ void data_recver(SOCKET socket_listen,Mutex *m)
 		et+=clock.restart().asSeconds();
 		if (et > 1)
 		{
-			cout << "\n the count of packet is==>" << count;
+			//cout << "\n the count of packet is==>" << count;
 			et = 0;
 			count = 0;
 		}
@@ -277,7 +279,7 @@ void data_recver(SOCKET socket_listen,Mutex *m)
 			memcpy(&ob, comp, sizeof(ob));
 			if (ob.st == 100 && ob.end == 101)
 			{
-				
+				prev_server_tick = ob.packet_id;
 				unique_lock<mutex> lk(m->recv_terminal);
 				input_data.push_back(ob);
 				count++;
@@ -322,8 +324,20 @@ void data_send(Mutex* m,deque<ship*> &pl1)
 			//send the data to the client
 			data[i].st = 100;
 			data[i].end = 101;
+			/*
+			if (data[i].shipdata_forServer.size_navigation > 0)
+			{
+				auto now = std::chrono::system_clock::now();
+				auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+				auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+				auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+				auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+				cout << "\n from client sending part, sent for the set Path function==>" << hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 
+			}
+			*/
 			send_data ob = data[i];
+			//cout << "sending the packet==>" << ob.packet_id;
 			char buffer[sizeof(data[i])];
 			memcpy(buffer, &ob, sizeof(ob));
 
@@ -473,6 +487,8 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int current_ammo = pl1[ship_id]->getCurrentAmmo();
 	sf::Clock clock1;
 	double ep = 0;
+	int prev_tick = 0;
+	int effective_frame_rate = 0;
 	while (1)
 	{
 		/*NOTES:
@@ -498,8 +514,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		ep += tt.asSeconds();
 		if (ep > 1)
 		{
-			cout << "\nframe rate=>" << frame_rate;
+			cout << "\n effective frame rate=>" << effective_frame_rate;
 			frame_rate = 0;
+			effective_frame_rate = 0;
 			ep = 0;
 		}
 		//next_frame = ep * 60;
@@ -546,6 +563,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						recv_data data1 = input_data[0];
 						input_data.pop_front();
 						mutx->recv_terminal.unlock();
+						game_tick = data1.packet_id;
+						
+						prev_tick = game_tick;
 						if (data1.packet_id - prev_pack > 1)
 						{
 							//	cout<<"\n packet loss=>"<<data1.packet_id - prev_pack;
@@ -564,787 +584,787 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
 						auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 						auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+						//cout << "\n recved data from the server terminal =>" << data1.packet_id << " at the time==> " <<
+							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 					}
-
-					//cout << "\n recved data from the server terminal =>" <<data1.packet_id << " at the time==> " <<
-						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 					if (gone == 0)
 					{
 						mutx->recv_terminal.unlock();
 					}
-		
-					unique_lock<mutex> lk1(pl1[ship_id]->mutx->m[ship_id]);
-					if (current_health < pl1[ship_id]->health)
+					if (gone==1)
 					{
-						pl1[ship_id]->lock_health = 0;
-						cout << "\n lock unlocked manually";
-					}
-					if (current_ammo < pl1[ship_id]->ammo)
-					{
-						pl1[ship_id]->lock_ammo = 0;
-					}
-					if (current_fuel < pl1[ship_id]->fuel)
-					{
-						pl1[ship_id]->lock_fuel = 0;
-					}
-					current_health=pl1[ship_id]->health;
-					current_ammo = pl1[ship_id]->ammo;
-					current_fuel = pl1[ship_id]->fuel;
-
-					lk1.unlock();
-					
-				
-
-			
-			avg_recv += recvt.getElapsedTime().asSeconds();
-			
-			//std::time_t result = std::time(nullptr);
-		    //cout << "\n----------------------------------------------------------";
-			//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
-			if (gameOver||pl1[ship_id]->died==1)
-			{
-				//cout << "\n breaking because the game is over(as told by the server, or the ship has died)";
-				break;
-			}
-			if (!gameOver)
-			{
-				//using nav_data
-				sf::Clock process;
-				process.restart();
-				if (pl1[ship_id]->nav_data.size() > 0 && frame_no % 120 == 0)//once every two frame
-				{
-					total_frames++;
-					avg_nav_req += pl1[ship_id]->nav_data.size();
-					frame_no = 0;
-					pl1[ship_id]->nav_data_final.push_back(pl1[ship_id]->nav_data[0]);
-					pl1[ship_id]->nav_data.clear();
-				}
-				
-				//getPointPath has to be protected by a mutex
-								
-				//here we are starting to manage the events
-				//checking and deleting events from passive_event queue
-			    // /*
-			    // here we will delete all the events which are not happening
-			    //checking for event1
-				
-					if (mutx->event_mutex[ship_id].try_lock())
-					{
-						//deleting from the current_event
-
-						pl1[ship_id]->current_event_point = 0;
-						for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
+						unique_lock<mutex> lk1(pl1[ship_id]->mutx->m[ship_id]);
+						if (current_health < pl1[ship_id]->health)
 						{
+							pl1[ship_id]->lock_health = 0;
+							cout << "\n lock unlocked manually";
+						}
+						if (current_ammo < pl1[ship_id]->ammo)
+						{
+							pl1[ship_id]->lock_ammo = 0;
+						}
+						if (current_fuel < pl1[ship_id]->fuel)
+						{
+							pl1[ship_id]->lock_fuel = 0;
+						}
+						current_health = pl1[ship_id]->health;
+						current_ammo = pl1[ship_id]->ammo;
+						current_fuel = pl1[ship_id]->fuel;
+
+						lk1.unlock();
+
+
+
+
+						avg_recv += recvt.getElapsedTime().asSeconds();
+
+						//std::time_t result = std::time(nullptr);
+						//cout << "\n----------------------------------------------------------";
+						//cout << "\n time=>"<<std::localtime(&result)->tm_hour<<":"<< std::localtime(&result)->tm_min<<":"<< std::localtime(&result)->tm_sec << " client frame = >" << total_time << " " << " received frame = >" << data1.packet_id;
+						if (gameOver || pl1[ship_id]->died == 1)
+						{
+							//cout << "\n breaking because the game is over(as told by the server, or the ship has died)";
+							break;
+						}
+						if (!gameOver)
+						{
+							//using nav_data
+							sf::Clock process;
+							process.restart();
+							if (pl1[ship_id]->nav_data.size() > 0 && frame_no % 120 == 0)//once every two frame
+							{
+								total_frames++;
+								avg_nav_req += pl1[ship_id]->nav_data.size();
+								frame_no = 0;
+								pl1[ship_id]->nav_data_final.push_back(pl1[ship_id]->nav_data[0]);
+								pl1[ship_id]->nav_data.clear();
+							}
+
+							//getPointPath has to be protected by a mutex
+
+							//here we are starting to manage the events
+							//checking and deleting events from passive_event queue
+							// /*
+							// here we will delete all the events which are not happening
 							//checking for event1
-							if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::ShipsInMyRadius)
+
+							if (mutx->event_mutex[ship_id].try_lock())
 							{
-								//checking if this event is still happening, if not then delete this event
-								bool check = false;
-								vector<int> l = pl1[ship_id]->shipsInMyRadius();
-								if (l.size() == pl1[ship_id]->passive_event[j].radiusShip.sid.size())
+								//deleting from the current_event
+
+								pl1[ship_id]->current_event_point = 0;
+								for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
 								{
-									for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusShip.sid.size(); k++)
+									//checking for event1
+									if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::ShipsInMyRadius)
 									{
-										if (l[k] != pl1[ship_id]->passive_event[j].radiusShip.sid[k])
+										//checking if this event is still happening, if not then delete this event
+										bool check = false;
+										vector<int> l = pl1[ship_id]->shipsInMyRadius();
+										if (l.size() == pl1[ship_id]->passive_event[j].radiusShip.sid.size())
 										{
-											check = true;
-											break;
-
-
-										}
-									}
-									if (check == true)//event has to be deleted
-									{
-										auto it = pl1[ship_id]->passive_event.begin();
-										advance(it, j);
-										pl1[ship_id]->passive_event.erase(it);
-										j--;
-									}
-								}
-								else
-								{
-									auto it = pl1[ship_id]->passive_event.begin();
-									advance(it, j);
-									pl1[ship_id]->passive_event.erase(it);
-									j--;
-								}
-
-							}
-							//checking for next event
-							//event2
-							else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::IamInShipRadius)
-							{
-								bool check = false;
-								vector<int> l = pl1[ship_id]->shipsIamInRadiusOf();
-								if (l.size() == pl1[ship_id]->passive_event[j].radiusShip.sid.size())
-								{
-									for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusShip.sid.size(); k++)
-									{
-										if (l[k] != pl1[ship_id]->passive_event[j].radiusShip.sid[k])
-										{
-											check = true;
-											break;
-
-										}
-									}
-									if (check == true)//event has to be deleted
-									{
-										auto it = pl1[ship_id]->passive_event.begin();
-										advance(it, j);
-										pl1[ship_id]->passive_event.erase(it);
-										j--;
-									}
-								}
-								else
-								{
-									auto it = pl1[ship_id]->passive_event.begin();
-									advance(it, j);
-									pl1[ship_id]->passive_event.erase(it);
-									j--;
-								}
-
-							}
-							//checking for event3
-							else	if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::IamInCannonRadius)
-							{
-								bool check = false;
-								vector<int> l = pl1[ship_id]->cannonsIamInRadiusOf();
-								if (l.size() == pl1[ship_id]->passive_event[j].radiusCannon.cid.size())
-								{
-
-
-									for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusCannon.cid.size(); k++)
-									{
-
-										if (l[k] != pl1[ship_id]->passive_event[j].radiusCannon.cid[k])
-
-										{
-											check = true;
-											break;
-
-										}
-									}
-									if (check == true)//event has to be deleted
-									{
-										auto it = pl1[ship_id]->passive_event.begin();
-										advance(it, j);
-										pl1[ship_id]->passive_event.erase(it);
-										j--;
-									}
-								}
-								else
-								{
-									auto it = pl1[ship_id]->passive_event.begin();
-									advance(it, j);
-									pl1[ship_id]->passive_event.erase(it);
-									j--;
-								}
-							}
-							//checking for event4
-							else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::CannonsInMyRadius)
-							{
-								bool check = false;
-								vector<int> l = pl1[ship_id]->cannonsInMyRadius();
-								if (l.size() == pl1[ship_id]->passive_event[j].radiusCannon.cid.size())
-								{
-									for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusCannon.cid.size(); k++)
-									{
-										if (l[k] != pl1[ship_id]->passive_event[j].radiusCannon.cid[k])
-										{
-											check = true;
-											break;
-
-										}
-									}
-									if (check == true)//event has to be deleted
-									{
-										auto it = pl1[ship_id]->passive_event.begin();
-										advance(it, j);
-										pl1[ship_id]->passive_event.erase(it);
-										j--;
-									}
-								}
-								else
-								{
-									auto it = pl1[ship_id]->passive_event.begin();
-									advance(it, j);
-									pl1[ship_id]->passive_event.erase(it);
-									j--;
-								}
-							}
-							//checking for event7
-							else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowHealth)
-							{
-
-								if (pl1[ship_id]->getCurrentHealth() > pl1[ship_id]->threshold_health)
-								{
-									auto it = pl1[ship_id]->passive_event.begin();
-									advance(it, j);
-									pl1[ship_id]->passive_event.erase(it);
-									j--;
-								}
-							}
-							//checking for event8 
-							else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::NoAmmo)
-							{
-								if (pl1[ship_id]->getCurrentAmmo() > 0)
-								{
-									auto it = pl1[ship_id]->passive_event.begin();
-									advance(it, j);
-									pl1[ship_id]->passive_event.erase(it);
-									j--;
-								}
-							}
-							//checking for event9
-							else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowAmmo)
-							{
-								if (pl1[ship_id]->getCurrentAmmo() > pl1[ship_id]->threshold_ammo)
-
-								{
-									auto it = pl1[ship_id]->passive_event.begin();
-									advance(it, j);
-									pl1[ship_id]->passive_event.erase(it);
-									j--;
-								}
-							}
-							//checking for event10
-
-							else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::NoFuel)
-							{
-								if (pl1[ship_id]->getCurrentFuel() > 0)
-								{
-									auto it = pl1[ship_id]->passive_event.begin();
-									advance(it, j);
-									pl1[ship_id]->passive_event.erase(it);
-									j--;
-								}
-							}
-							//checking for event 11
-							else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowFuel)
-							{
-								if (pl1[ship_id]->getCurrentFuel() > pl1[ship_id]->threshold_fuel)
-
-								{
-									auto it = pl1[ship_id]->passive_event.begin();
-									advance(it, j);
-									pl1[ship_id]->passive_event.erase(it);
-									j--;
-								}
-							}
-
-						}
-						mutx->event_mutex[ship_id].unlock();
-
-					}
-				
-				//event handling starts here
-
-			
-					//handling events for all the ships
-					if (mutx->event_mutex[ship_id].try_lock())
-					{
-						//important info: here ids are not given to the events, they will be given only after their validation
-
-						//adding events in the queue of the respective ships..
-						//checking for shipsInMyRadius event first
-						vector<int> l1 = pl1[ship_id]->shipsInMyRadius();
-						Event e1;
-						//make all the events first then check it with passive_event in a single loop
-						if (l1.size() > 0)//it means that event has happened
-						{
-							e1.initialize(total_time, Event::EventType::ShipsInMyRadius, pl1[ship_id]->ship_id);
-
-							e1.radiusShip = Event::Radius_ship(l1);
-
-							int gotcha = 0;
-							for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
-							{
-								//chekcing for event1
-								if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::ShipsInMyRadius && e1.eventType == Event::EventType::ShipsInMyRadius)
-								{
-									//cout << "\n in event0==>" << abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp);
-									if (abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp) <= 5 && pl1[ship_id]->passive_event[j].radiusShip.sid.size() == e1.radiusShip.sid.size())//event occuring in intervals of three frames
-									{
-										//if these conditions are satisfied then only check equality operation between the events
-										gotcha = 1;
-										int found = 0;
-										for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusShip.sid.size(); k++)
-										{
-											if (!(pl1[ship_id]->passive_event[j].radiusShip.sid[k] == e1.radiusShip.sid[k]))
+											for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusShip.sid.size(); k++)
 											{
-												found = 1;
+												if (l[k] != pl1[ship_id]->passive_event[j].radiusShip.sid[k])
+												{
+													check = true;
+													break;
+
+
+												}
+											}
+											if (check == true)//event has to be deleted
+											{
+												auto it = pl1[ship_id]->passive_event.begin();
+												advance(it, j);
+												pl1[ship_id]->passive_event.erase(it);
+												j--;
+											}
+										}
+										else
+										{
+											auto it = pl1[ship_id]->passive_event.begin();
+											advance(it, j);
+											pl1[ship_id]->passive_event.erase(it);
+											j--;
+										}
+
+									}
+									//checking for next event
+									//event2
+									else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::IamInShipRadius)
+									{
+										bool check = false;
+										vector<int> l = pl1[ship_id]->shipsIamInRadiusOf();
+										if (l.size() == pl1[ship_id]->passive_event[j].radiusShip.sid.size())
+										{
+											for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusShip.sid.size(); k++)
+											{
+												if (l[k] != pl1[ship_id]->passive_event[j].radiusShip.sid[k])
+												{
+													check = true;
+													break;
+
+												}
+											}
+											if (check == true)//event has to be deleted
+											{
+												auto it = pl1[ship_id]->passive_event.begin();
+												advance(it, j);
+												pl1[ship_id]->passive_event.erase(it);
+												j--;
+											}
+										}
+										else
+										{
+											auto it = pl1[ship_id]->passive_event.begin();
+											advance(it, j);
+											pl1[ship_id]->passive_event.erase(it);
+											j--;
+										}
+
+									}
+									//checking for event3
+									else	if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::IamInCannonRadius)
+									{
+										bool check = false;
+										vector<int> l = pl1[ship_id]->cannonsIamInRadiusOf();
+										if (l.size() == pl1[ship_id]->passive_event[j].radiusCannon.cid.size())
+										{
+
+
+											for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusCannon.cid.size(); k++)
+											{
+
+												if (l[k] != pl1[ship_id]->passive_event[j].radiusCannon.cid[k])
+
+												{
+													check = true;
+													break;
+
+												}
+											}
+											if (check == true)//event has to be deleted
+											{
+												auto it = pl1[ship_id]->passive_event.begin();
+												advance(it, j);
+												pl1[ship_id]->passive_event.erase(it);
+												j--;
+											}
+										}
+										else
+										{
+											auto it = pl1[ship_id]->passive_event.begin();
+											advance(it, j);
+											pl1[ship_id]->passive_event.erase(it);
+											j--;
+										}
+									}
+									//checking for event4
+									else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::CannonsInMyRadius)
+									{
+										bool check = false;
+										vector<int> l = pl1[ship_id]->cannonsInMyRadius();
+										if (l.size() == pl1[ship_id]->passive_event[j].radiusCannon.cid.size())
+										{
+											for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusCannon.cid.size(); k++)
+											{
+												if (l[k] != pl1[ship_id]->passive_event[j].radiusCannon.cid[k])
+												{
+													check = true;
+													break;
+
+												}
+											}
+											if (check == true)//event has to be deleted
+											{
+												auto it = pl1[ship_id]->passive_event.begin();
+												advance(it, j);
+												pl1[ship_id]->passive_event.erase(it);
+												j--;
+											}
+										}
+										else
+										{
+											auto it = pl1[ship_id]->passive_event.begin();
+											advance(it, j);
+											pl1[ship_id]->passive_event.erase(it);
+											j--;
+										}
+									}
+									//checking for event7
+									else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowHealth)
+									{
+
+										if (pl1[ship_id]->getCurrentHealth() > pl1[ship_id]->threshold_health)
+										{
+											auto it = pl1[ship_id]->passive_event.begin();
+											advance(it, j);
+											pl1[ship_id]->passive_event.erase(it);
+											j--;
+										}
+									}
+									//checking for event8 
+									else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::NoAmmo)
+									{
+										if (pl1[ship_id]->getCurrentAmmo() > 0)
+										{
+											auto it = pl1[ship_id]->passive_event.begin();
+											advance(it, j);
+											pl1[ship_id]->passive_event.erase(it);
+											j--;
+										}
+									}
+									//checking for event9
+									else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowAmmo)
+									{
+										if (pl1[ship_id]->getCurrentAmmo() > pl1[ship_id]->threshold_ammo)
+
+										{
+											auto it = pl1[ship_id]->passive_event.begin();
+											advance(it, j);
+											pl1[ship_id]->passive_event.erase(it);
+											j--;
+										}
+									}
+									//checking for event10
+
+									else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::NoFuel)
+									{
+										if (pl1[ship_id]->getCurrentFuel() > 0)
+										{
+											auto it = pl1[ship_id]->passive_event.begin();
+											advance(it, j);
+											pl1[ship_id]->passive_event.erase(it);
+											j--;
+										}
+									}
+									//checking for event 11
+									else if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowFuel)
+									{
+										if (pl1[ship_id]->getCurrentFuel() > pl1[ship_id]->threshold_fuel)
+
+										{
+											auto it = pl1[ship_id]->passive_event.begin();
+											advance(it, j);
+											pl1[ship_id]->passive_event.erase(it);
+											j--;
+										}
+									}
+
+								}
+								mutx->event_mutex[ship_id].unlock();
+
+							}
+
+							//event handling starts here
+
+
+								//handling events for all the ships
+							if (mutx->event_mutex[ship_id].try_lock())
+							{
+								//important info: here ids are not given to the events, they will be given only after their validation
+
+								//adding events in the queue of the respective ships..
+								//checking for shipsInMyRadius event first
+								vector<int> l1 = pl1[ship_id]->shipsInMyRadius();
+								Event e1;
+								//make all the events first then check it with passive_event in a single loop
+								if (l1.size() > 0)//it means that event has happened
+								{
+									e1.initialize(total_time, Event::EventType::ShipsInMyRadius, pl1[ship_id]->ship_id);
+
+									e1.radiusShip = Event::Radius_ship(l1);
+
+									int gotcha = 0;
+									for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
+									{
+										//chekcing for event1
+										if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::ShipsInMyRadius && e1.eventType == Event::EventType::ShipsInMyRadius)
+										{
+											//cout << "\n in event0==>" << abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp);
+											if (abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp) <= 5 && pl1[ship_id]->passive_event[j].radiusShip.sid.size() == e1.radiusShip.sid.size())//event occuring in intervals of three frames
+											{
+												//if these conditions are satisfied then only check equality operation between the events
+												gotcha = 1;
+												int found = 0;
+												for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusShip.sid.size(); k++)
+												{
+													if (!(pl1[ship_id]->passive_event[j].radiusShip.sid[k] == e1.radiusShip.sid[k]))
+													{
+														found = 1;
+														break;
+													}
+												}
+												if (found == 0)//this means that events are same
+												{
+													pl1[ship_id]->passive_event[j].ttl = e1.timestamp;//updating the last occuring of the event in the passive event queue
+													break;
+												}
+												else if (found == 1)//this is a new event
+												{
+													e1.setEventId();
+													pl1[ship_id]->current_event.push_back(e1);//added the event in the current_event
+													pl1[ship_id]->passive_event.push_back(e1);//added the event in the passive_event
+													break;
+												}
+											}
+
+
+										}
+									}
+									if (gotcha == 0)
+									{
+
+										e1.setEventId();
+										pl1[ship_id]->current_event.push_back(e1);//added the event in the current_event
+										pl1[ship_id]->passive_event.push_back(e1);//added the event in the passive_event
+
+									}
+								}
+								//checking for IamInShipRadius
+
+								Event e2;
+								vector<int> l2 = pl1[ship_id]->shipsIamInRadiusOf();
+								if (l2.size() > 0)
+								{
+									e2.initialize(total_time, Event::EventType::IamInShipRadius, pl1[ship_id]->ship_id);
+									e2.radiusShip = Event::Radius_ship(l2);
+									int gotcha = 0;
+									for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
+									{
+										if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::IamInShipRadius && e2.eventType == Event::EventType::IamInShipRadius)
+										{
+											//cout << "\n in event1==>" << abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp);
+											if (abs(pl1[ship_id]->passive_event[j].ttl - e2.timestamp) <= 5 && pl1[ship_id]->passive_event[j].radiusShip.sid.size() == e2.radiusShip.sid.size())//event occuring in intervals of three frames
+											{
+												//if these conditions are satisfied then only check equality operation between the events
+												gotcha = 1;
+												int found = 0;
+												for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusShip.sid.size(); k++)
+												{
+													if (!(pl1[ship_id]->passive_event[j].radiusShip.sid[k] == e2.radiusShip.sid[k]))
+													{
+														found = 1;
+														break;
+													}
+												}
+												if (found == 0)//this means that events are same
+												{
+													//cout << "\n i worked";
+													pl1[ship_id]->passive_event[j].ttl = e2.timestamp;//updating the last occuring of the event in the passive event queue
+													break;
+												}
+												else if (found == 1)//this is a new event
+												{
+													e2.setEventId();
+													pl1[ship_id]->current_event.push_back(e2);//added the event in the current_event
+													pl1[ship_id]->passive_event.push_back(e2);//added the event in the passive_event
+													break;
+												}
+											}
+											else if (e2.eventType == Event::EventType::IamInShipRadius)
+											{
+												e2.setEventId();
+												pl1[ship_id]->current_event.push_back(e2);//added the event in the current_event
+												pl1[ship_id]->passive_event.push_back(e2);//added the event in the passive_event
 												break;
 											}
 										}
-										if (found == 0)//this means that events are same
-										{
-											pl1[ship_id]->passive_event[j].ttl = e1.timestamp;//updating the last occuring of the event in the passive event queue
-											break;
-										}
-										else if (found == 1)//this is a new event
-										{
-											e1.setEventId();
-											pl1[ship_id]->current_event.push_back(e1);//added the event in the current_event
-											pl1[ship_id]->passive_event.push_back(e1);//added the event in the passive_event
-											break;
-										}
 									}
-
-
-								}
-							}
-							if (gotcha == 0)
-							{
-
-								e1.setEventId();
-								pl1[ship_id]->current_event.push_back(e1);//added the event in the current_event
-								pl1[ship_id]->passive_event.push_back(e1);//added the event in the passive_event
-
-							}
-						}
-						//checking for IamInShipRadius
-
-						Event e2;
-						vector<int> l2 = pl1[ship_id]->shipsIamInRadiusOf();
-						if (l2.size() > 0)
-						{
-							e2.initialize(total_time, Event::EventType::IamInShipRadius, pl1[ship_id]->ship_id);
-							e2.radiusShip = Event::Radius_ship(l2);
-							int gotcha = 0;
-							for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
-							{
-								if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::IamInShipRadius && e2.eventType == Event::EventType::IamInShipRadius)
-								{
-									//cout << "\n in event1==>" << abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp);
-									if (abs(pl1[ship_id]->passive_event[j].ttl - e2.timestamp) <= 5 && pl1[ship_id]->passive_event[j].radiusShip.sid.size() == e2.radiusShip.sid.size())//event occuring in intervals of three frames
-									{
-										//if these conditions are satisfied then only check equality operation between the events
-										gotcha = 1;
-										int found = 0;
-										for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusShip.sid.size(); k++)
-										{
-											if (!(pl1[ship_id]->passive_event[j].radiusShip.sid[k] == e2.radiusShip.sid[k]))
-											{
-												found = 1;
-												break;
-											}
-										}
-										if (found == 0)//this means that events are same
-										{
-											//cout << "\n i worked";
-											pl1[ship_id]->passive_event[j].ttl = e2.timestamp;//updating the last occuring of the event in the passive event queue
-											break;
-										}
-										else if (found == 1)//this is a new event
-										{
-											e2.setEventId();
-											pl1[ship_id]->current_event.push_back(e2);//added the event in the current_event
-											pl1[ship_id]->passive_event.push_back(e2);//added the event in the passive_event
-											break;
-										}
-									}
-									else if (e2.eventType == Event::EventType::IamInShipRadius)
+									if (gotcha == 0)
 									{
 										e2.setEventId();
 										pl1[ship_id]->current_event.push_back(e2);//added the event in the current_event
 										pl1[ship_id]->passive_event.push_back(e2);//added the event in the passive_event
-										break;
 									}
+
 								}
-							}
-							if (gotcha == 0)
-							{
-								e2.setEventId();
-								pl1[ship_id]->current_event.push_back(e2);//added the event in the current_event
-								pl1[ship_id]->passive_event.push_back(e2);//added the event in the passive_event
-							}
-
-						}
-						//making for the event IamInCannonRadius
-						Event e3;
-						vector<int> l3 = pl1[ship_id]->cannonsIamInRadiusOf();
-						if (l3.size() > 0)
-						{
-							e3.initialize(total_time, Event::EventType::IamInCannonRadius, pl1[ship_id]->ship_id);
-
-							e3.radiusCannon = Event::Radius_cannon(l3);
-							int gotcha = 0;
-							for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
-							{
-								if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::IamInCannonRadius && e3.eventType == Event::EventType::IamInCannonRadius)
+								//making for the event IamInCannonRadius
+								Event e3;
+								vector<int> l3 = pl1[ship_id]->cannonsIamInRadiusOf();
+								if (l3.size() > 0)
 								{
-									//cout << "\n in event2==>" << abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp);
-									if (abs(pl1[ship_id]->passive_event[j].ttl - e3.timestamp) <= 3 && pl1[ship_id]->passive_event[j].radiusCannon.cid.size() == e3.radiusCannon.cid.size())
+									e3.initialize(total_time, Event::EventType::IamInCannonRadius, pl1[ship_id]->ship_id);
+
+									e3.radiusCannon = Event::Radius_cannon(l3);
+									int gotcha = 0;
+									for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
 									{
-										gotcha = 1;
-										int found = 0;
-										for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusCannon.cid.size(); k++)
+										if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::IamInCannonRadius && e3.eventType == Event::EventType::IamInCannonRadius)
 										{
-											if (!(pl1[ship_id]->passive_event[j].radiusCannon.cid[k] == e3.radiusCannon.cid[k]))
+											//cout << "\n in event2==>" << abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp);
+											if (abs(pl1[ship_id]->passive_event[j].ttl - e3.timestamp) <= 3 && pl1[ship_id]->passive_event[j].radiusCannon.cid.size() == e3.radiusCannon.cid.size())
 											{
-												found = 1;
+												gotcha = 1;
+												int found = 0;
+												for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusCannon.cid.size(); k++)
+												{
+													if (!(pl1[ship_id]->passive_event[j].radiusCannon.cid[k] == e3.radiusCannon.cid[k]))
+													{
+														found = 1;
+														break;
+													}
+												}
+												if (found == 1)//the events are not equal this is a new event
+												{
+													e3.setEventId();
+													pl1[ship_id]->current_event.push_back(e3);
+													pl1[ship_id]->passive_event.push_back(e3);
+													break;
+
+												}
+												else if (found == 0)//event is same
+												{
+													pl1[ship_id]->passive_event[j].ttl = e3.timestamp;
+													break;
+												}
+											}
+											else if (e3.eventType == Event::EventType::IamInCannonRadius)
+											{
+												e3.setEventId();
+												pl1[ship_id]->current_event.push_back(e3);
+												pl1[ship_id]->passive_event.push_back(e3);
 												break;
 											}
 										}
-										if (found == 1)//the events are not equal this is a new event
-										{
-											e3.setEventId();
-											pl1[ship_id]->current_event.push_back(e3);
-											pl1[ship_id]->passive_event.push_back(e3);
-											break;
-
-										}
-										else if (found == 0)//event is same
-										{
-											pl1[ship_id]->passive_event[j].ttl = e3.timestamp;
-											break;
-										}
 									}
-									else if (e3.eventType == Event::EventType::IamInCannonRadius)
+									if (gotcha == 0)
 									{
 										e3.setEventId();
 										pl1[ship_id]->current_event.push_back(e3);
 										pl1[ship_id]->passive_event.push_back(e3);
-										break;
 									}
-								}
-							}
-							if (gotcha == 0)
-							{
-								e3.setEventId();
-								pl1[ship_id]->current_event.push_back(e3);
-								pl1[ship_id]->passive_event.push_back(e3);
-							}
 
-						}
-						//making of the event CannonsInMyRadius
-						Event e4;
-						vector<int> l4 = pl1[ship_id]->cannonsInMyRadius();
-						if (l4.size() > 0)
-						{
-							e4.initialize(total_time, Event::EventType::CannonsInMyRadius, pl1[ship_id]->ship_id);
-							e4.radiusCannon = Event::Radius_cannon(l4);
-							int gotcha = 0;
-							for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
-							{
-								if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::CannonsInMyRadius && e4.eventType == Event::EventType::CannonsInMyRadius)
+								}
+								//making of the event CannonsInMyRadius
+								Event e4;
+								vector<int> l4 = pl1[ship_id]->cannonsInMyRadius();
+								if (l4.size() > 0)
 								{
-									//cout << "\n in event3==>" << abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp);
-									if (abs(pl1[ship_id]->passive_event[j].ttl - e4.timestamp) <= 3 && pl1[ship_id]->passive_event[j].radiusCannon.cid.size() == e4.radiusCannon.cid.size())
+									e4.initialize(total_time, Event::EventType::CannonsInMyRadius, pl1[ship_id]->ship_id);
+									e4.radiusCannon = Event::Radius_cannon(l4);
+									int gotcha = 0;
+									for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
 									{
-										int found = 0;
-										gotcha = 1;
-										for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusCannon.cid.size(); k++)
+										if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::CannonsInMyRadius && e4.eventType == Event::EventType::CannonsInMyRadius)
 										{
-											if (!(pl1[ship_id]->passive_event[j].radiusCannon.cid[k] == e4.radiusCannon.cid[k]))
+											//cout << "\n in event3==>" << abs(pl1[ship_id]->passive_event[j].ttl - e1.timestamp);
+											if (abs(pl1[ship_id]->passive_event[j].ttl - e4.timestamp) <= 3 && pl1[ship_id]->passive_event[j].radiusCannon.cid.size() == e4.radiusCannon.cid.size())
 											{
-												found = 1;
+												int found = 0;
+												gotcha = 1;
+												for (int k = 0; k < pl1[ship_id]->passive_event[j].radiusCannon.cid.size(); k++)
+												{
+													if (!(pl1[ship_id]->passive_event[j].radiusCannon.cid[k] == e4.radiusCannon.cid[k]))
+													{
+														found = 1;
+														break;
+													}
+												}
+												if (found == 1)//the events are not equal this is a new event
+												{
+													e4.setEventId();
+													pl1[ship_id]->current_event.push_back(e4);
+													pl1[ship_id]->passive_event.push_back(e4);
+													break;
+
+												}
+												else if (found == 0)//event is same
+												{
+													pl1[ship_id]->passive_event[j].ttl = e4.timestamp;
+													break;
+												}
+											}
+											else if (e4.eventType == Event::EventType::CannonsInMyRadius)
+											{
+												e4.setEventId();
+												pl1[ship_id]->current_event.push_back(e4);
+												pl1[ship_id]->passive_event.push_back(e4);
 												break;
 											}
 										}
-										if (found == 1)//the events are not equal this is a new event
-										{
-											e4.setEventId();
-											pl1[ship_id]->current_event.push_back(e4);
-											pl1[ship_id]->passive_event.push_back(e4);
-											break;
-
-										}
-										else if (found == 0)//event is same
-										{
-											pl1[ship_id]->passive_event[j].ttl = e4.timestamp;
-											break;
-										}
 									}
-									else if (e4.eventType == Event::EventType::CannonsInMyRadius)
+									if (gotcha == 0)
 									{
 										e4.setEventId();
 										pl1[ship_id]->current_event.push_back(e4);
 										pl1[ship_id]->passive_event.push_back(e4);
-										break;
 									}
 								}
-							}
-							if (gotcha == 0)
-							{
-								e4.setEventId();
-								pl1[ship_id]->current_event.push_back(e4);
-								pl1[ship_id]->passive_event.push_back(e4);
-							}
-						}
-						//making of the event ShipFire
+								//making of the event ShipFire
 
-						Event e5;
-						unordered_map<int, Greed::bullet> l5;
-						for (int j = 0; j < pl1[ship_id]->bullet_hit_tempo.size(); j++)
-						{
-							if (pl1[ship_id]->bullet_hit_tempo[j].launch_ship != -1)
-							{
-
-								l5.insert(pair<int, Greed::bullet>(pl1[ship_id]->bullet_hit_tempo[j].launch_ship, pl1[ship_id]->bullet_hit_tempo[j]));
-								auto it = pl1[ship_id]->bullet_hit_tempo.begin();
-								advance(it, j);
-								pl1[ship_id]->bullet_hit_tempo.erase(it);
-								j--;
-
-
-							}
-						}
-						if (l5.size() > 0)//this event is set here
-						{
-							e5.initialize(total_time, Event::EventType::ShipFire, pl1[ship_id]->ship_id);
-							e5.setEventId();
-							e5.shipFire = Event::ShipFire(l5);
-							pl1[ship_id]->current_event.push_back(e5);
-						}
-
-						//making of the event cannonFire
-						Event e6;
-						unordered_map<int, Greed::bullet> l6;
-						for (int j = 0; j < pl1[ship_id]->bullet_hit_tempo.size(); j++)
-						{
-							if (pl1[ship_id]->bullet_hit_tempo[j].launch_cannon != -1)
-							{
-								l6.insert(pair<int, Greed::bullet>(pl1[ship_id]->bullet_hit_tempo[j].launch_cannon, pl1[ship_id]->bullet_hit_tempo[j]));
-								auto it = pl1[ship_id]->bullet_hit_tempo.begin();
-								advance(it, j);
-								pl1[ship_id]->bullet_hit_tempo.erase(it);
-								j--;
-
-							}
-
-						}
-						if (l6.size() > 0)
-						{
-							e6.initialize(total_time, Event::EventType::CannonFire, pl1[ship_id]->ship_id);
-							e6.setEventId();
-
-							e6.cannonFire = Event::CannonFire(l6);
-							pl1[ship_id]->current_event.push_back(e6);
-							//hey
-						}
-						//making of the event LowHealth
-						Event e7;
-
-						if (pl1[ship_id]->getCurrentHealth() < pl1[ship_id]->threshold_health)//there will be a health threshold that can be set by every player
-						{
-							e7.initialize(total_time, Event::EventType::LowHealth, pl1[ship_id]->ship_id);
-							e7.lowHealth = Event::LowHealth(pl1[ship_id]->getCurrentHealth());
-							int gotcha = 0;
-							for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
-							{
-								if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowHealth && e7.eventType == Event::EventType::LowHealth)
+								Event e5;
+								unordered_map<int, Greed::bullet> l5;
+								for (int j = 0; j < pl1[ship_id]->bullet_hit_tempo.size(); j++)
 								{
-									gotcha = 1;
-									if (abs(pl1[ship_id]->passive_event[j].ttl - e7.timestamp) <= 3)//the event need not be repeated
+									if (pl1[ship_id]->bullet_hit_tempo[j].launch_ship != -1)
 									{
-										pl1[ship_id]->passive_event[j].ttl = e7.timestamp;//updating the timestamp
-										pl1[ship_id]->passive_event[j].lowHealth.health = e7.lowHealth.health;//updating the new health
+
+										l5.insert(pair<int, Greed::bullet>(pl1[ship_id]->bullet_hit_tempo[j].launch_ship, pl1[ship_id]->bullet_hit_tempo[j]));
+										auto it = pl1[ship_id]->bullet_hit_tempo.begin();
+										advance(it, j);
+										pl1[ship_id]->bullet_hit_tempo.erase(it);
+										j--;
+
+
 									}
-									else
+								}
+								if (l5.size() > 0)//this event is set here
+								{
+									e5.initialize(total_time, Event::EventType::ShipFire, pl1[ship_id]->ship_id);
+									e5.setEventId();
+									e5.shipFire = Event::ShipFire(l5);
+									pl1[ship_id]->current_event.push_back(e5);
+								}
+
+								//making of the event cannonFire
+								Event e6;
+								unordered_map<int, Greed::bullet> l6;
+								for (int j = 0; j < pl1[ship_id]->bullet_hit_tempo.size(); j++)
+								{
+									if (pl1[ship_id]->bullet_hit_tempo[j].launch_cannon != -1)
+									{
+										l6.insert(pair<int, Greed::bullet>(pl1[ship_id]->bullet_hit_tempo[j].launch_cannon, pl1[ship_id]->bullet_hit_tempo[j]));
+										auto it = pl1[ship_id]->bullet_hit_tempo.begin();
+										advance(it, j);
+										pl1[ship_id]->bullet_hit_tempo.erase(it);
+										j--;
+
+									}
+
+								}
+								if (l6.size() > 0)
+								{
+									e6.initialize(total_time, Event::EventType::CannonFire, pl1[ship_id]->ship_id);
+									e6.setEventId();
+
+									e6.cannonFire = Event::CannonFire(l6);
+									pl1[ship_id]->current_event.push_back(e6);
+									//hey
+								}
+								//making of the event LowHealth
+								Event e7;
+
+								if (pl1[ship_id]->getCurrentHealth() < pl1[ship_id]->threshold_health)//there will be a health threshold that can be set by every player
+								{
+									e7.initialize(total_time, Event::EventType::LowHealth, pl1[ship_id]->ship_id);
+									e7.lowHealth = Event::LowHealth(pl1[ship_id]->getCurrentHealth());
+									int gotcha = 0;
+									for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
+									{
+										if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowHealth && e7.eventType == Event::EventType::LowHealth)
+										{
+											gotcha = 1;
+											if (abs(pl1[ship_id]->passive_event[j].ttl - e7.timestamp) <= 3)//the event need not be repeated
+											{
+												pl1[ship_id]->passive_event[j].ttl = e7.timestamp;//updating the timestamp
+												pl1[ship_id]->passive_event[j].lowHealth.health = e7.lowHealth.health;//updating the new health
+											}
+											else
+											{
+												e7.setEventId();
+												pl1[ship_id]->passive_event.push_back(e7);
+												pl1[ship_id]->current_event.push_back(e7);
+												break;
+
+
+											}
+										}
+									}
+									if (gotcha == 0)
 									{
 										e7.setEventId();
 										pl1[ship_id]->passive_event.push_back(e7);
 										pl1[ship_id]->current_event.push_back(e7);
-										break;
-
-
 									}
 								}
-							}
-							if (gotcha == 0)
-							{
-								e7.setEventId();
-								pl1[ship_id]->passive_event.push_back(e7);
-								pl1[ship_id]->current_event.push_back(e7);
-							}
-						}
-						//making of event NoAmmo
-						Event e8;
-						if (pl1[ship_id]->getCurrentAmmo() <= 0)
-						{
-							e8.initialize(total_time, Event::EventType::NoAmmo, pl1[ship_id]->ship_id);
-							int gotcha = 0;
-							for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
-							{
-								if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::NoAmmo)
+								//making of event NoAmmo
+								Event e8;
+								if (pl1[ship_id]->getCurrentAmmo() <= 0)
 								{
-									if (abs(pl1[ship_id]->passive_event[j].ttl - e8.timestamp) <= 5)
+									e8.initialize(total_time, Event::EventType::NoAmmo, pl1[ship_id]->ship_id);
+									int gotcha = 0;
+									for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
 									{
-										pl1[ship_id]->passive_event[j].ttl = e8.timestamp;
-										gotcha = 1;
-										break;
+										if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::NoAmmo)
+										{
+											if (abs(pl1[ship_id]->passive_event[j].ttl - e8.timestamp) <= 5)
+											{
+												pl1[ship_id]->passive_event[j].ttl = e8.timestamp;
+												gotcha = 1;
+												break;
+											}
+										}
 									}
+									if (gotcha == 0)//this is a new event
+									{
+										e8.setEventId();
+										pl1[ship_id]->passive_event.push_back(e8);
+										pl1[ship_id]->current_event.push_back(e8);
+
+									}
+
 								}
-							}
-							if (gotcha == 0)//this is a new event
-							{
-								e8.setEventId();
-								pl1[ship_id]->passive_event.push_back(e8);
-								pl1[ship_id]->current_event.push_back(e8);
-
-							}
-
-						}
-						//making of the event LowAmmo
-						Event e9;
-						if (pl1[ship_id]->getCurrentAmmo() < pl1[ship_id]->threshold_ammo)
-						{
-							e9.initialize(total_time, Event::EventType::LowAmmo, pl1[ship_id]->ship_id);
-							e9.lowAmmo = Event::LowAmmo(pl1[ship_id]->getCurrentAmmo());
-							int gotcha = 0;
-							for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
-							{
-								if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowAmmo)
-
+								//making of the event LowAmmo
+								Event e9;
+								if (pl1[ship_id]->getCurrentAmmo() < pl1[ship_id]->threshold_ammo)
 								{
-									if (abs(pl1[ship_id]->passive_event[j].ttl - e9.timestamp) <= 5)
+									e9.initialize(total_time, Event::EventType::LowAmmo, pl1[ship_id]->ship_id);
+									e9.lowAmmo = Event::LowAmmo(pl1[ship_id]->getCurrentAmmo());
+									int gotcha = 0;
+									for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
 									{
-										gotcha = 1;
-										pl1[ship_id]->passive_event[j].ttl = e9.timestamp;
-										break;
+										if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowAmmo)
+
+										{
+											if (abs(pl1[ship_id]->passive_event[j].ttl - e9.timestamp) <= 5)
+											{
+												gotcha = 1;
+												pl1[ship_id]->passive_event[j].ttl = e9.timestamp;
+												break;
+											}
+										}
+									}
+									if (gotcha == 0)
+									{
+										e9.setEventId();
+										pl1[ship_id]->passive_event.push_back(e9);
+										pl1[ship_id]->current_event.push_back(e9);
 									}
 								}
-							}
-							if (gotcha == 0)
-							{
-								e9.setEventId();
-								pl1[ship_id]->passive_event.push_back(e9);
-								pl1[ship_id]->current_event.push_back(e9);
-							}
-						}
 
-						//making of the event NoFuel
-						Event e10;
-						if (pl1[ship_id]->getCurrentFuel() <= 0)
-						{
-							e10.initialize(total_time, Event::EventType::NoFuel, pl1[ship_id]->getShipId());
-							int gotcha = 0;
-							for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
-							{
-								if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::NoFuel)
-
+								//making of the event NoFuel
+								Event e10;
+								if (pl1[ship_id]->getCurrentFuel() <= 0)
 								{
-									if (abs(pl1[ship_id]->passive_event[j].ttl - e10.timestamp) <= 5)
+									e10.initialize(total_time, Event::EventType::NoFuel, pl1[ship_id]->getShipId());
+									int gotcha = 0;
+									for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
 									{
-										gotcha = 1;
-										pl1[ship_id]->passive_event[j].ttl = e10.timestamp;
-										break;
+										if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::NoFuel)
+
+										{
+											if (abs(pl1[ship_id]->passive_event[j].ttl - e10.timestamp) <= 5)
+											{
+												gotcha = 1;
+												pl1[ship_id]->passive_event[j].ttl = e10.timestamp;
+												break;
+											}
+										}
 									}
+									if (gotcha == 0)
+									{
+										e10.setEventId();
+										pl1[ship_id]->passive_event.push_back(e10);
+										pl1[ship_id]->current_event.push_back(e10);
+									}
+
 								}
-							}
-							if (gotcha == 0)
-							{
-								e10.setEventId();
-								pl1[ship_id]->passive_event.push_back(e10);
-								pl1[ship_id]->current_event.push_back(e10);
-							}
-
-						}
-						//making of the event LowFuel
-						Event e11;
-						if (pl1[ship_id]->getCurrentFuel() < pl1[ship_id]->threshold_fuel)
-						{
-							e11.initialize(total_time, Event::EventType::LowFuel, pl1[ship_id]->getShipId());
-							e11.lowFuel = Event::LowFuel(pl1[ship_id]->getCurrentFuel());
-							int gotcha = 0;
-							for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
-							{
-								if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowFuel)
-
+								//making of the event LowFuel
+								Event e11;
+								if (pl1[ship_id]->getCurrentFuel() < pl1[ship_id]->threshold_fuel)
 								{
-									if (abs(pl1[ship_id]->passive_event[j].ttl - e11.timestamp) <= 5)
+									e11.initialize(total_time, Event::EventType::LowFuel, pl1[ship_id]->getShipId());
+									e11.lowFuel = Event::LowFuel(pl1[ship_id]->getCurrentFuel());
+									int gotcha = 0;
+									for (int j = 0; j < pl1[ship_id]->passive_event.size(); j++)
 									{
-										gotcha = 1;
-										pl1[ship_id]->passive_event[j].ttl = e11.timestamp;
-										break;
+										if (pl1[ship_id]->passive_event[j].eventType == Event::EventType::LowFuel)
+
+										{
+											if (abs(pl1[ship_id]->passive_event[j].ttl - e11.timestamp) <= 5)
+											{
+												gotcha = 1;
+												pl1[ship_id]->passive_event[j].ttl = e11.timestamp;
+												break;
+											}
+										}
+									}
+									if (gotcha == 0)
+									{
+										e11.setEventId();
+										pl1[ship_id]->passive_event.push_back(e11);
+										pl1[ship_id]->current_event.push_back(e11);
 									}
 								}
-							}
-							if (gotcha == 0)
-							{
-								e11.setEventId();
-								pl1[ship_id]->passive_event.push_back(e11);
-								pl1[ship_id]->current_event.push_back(e11);
-							}
-						}
-						//now checking which ones of them are in passive_event queue and new events will be added in both the queues
+								//now checking which ones of them are in passive_event queue and new events will be added in both the queues
 
-						//adding the event of colliding of ships
-						Event e12;
-						
-						if (pl1[ship_id]->collided_ships.size() > 0)//if the event of collision has happend
+								//adding the event of colliding of ships
+								Event e12;
+
+								if (pl1[ship_id]->collided_ships.size() > 0)//if the event of collision has happend
+								{
+									//cout << "\n adding to the event";
+									e12.initialize(total_time, Event::EventType::ShipCollision, pl1[ship_id]->ship_id);
+									e12.setEventId();
+									e12.shipCollision = Event::ShipCollision(pl1[ship_id]->collided_ships);
+									pl1[ship_id]->current_event.push_back(e12);
+									pl1[ship_id]->collided_ships.clear();
+
+								}
+
+
+
+
+								mutx->event_mutex[ship_id].unlock();
+							}
+
+
+							/*event handling is over here*/
+
+							avg_processing += process.getElapsedTime().asSeconds();
+						}
+
+						//send the data over here
+						sf::Clock sending;
+						sending.restart();
+
+						if (pl1[ship_id]->died == 0)//send the data only if the ship is alive
 						{
-							//cout << "\n adding to the event";
-							e12.initialize(total_time, Event::EventType::ShipCollision, pl1[ship_id]->ship_id);
-							e12.setEventId();
-							e12.shipCollision = Event::ShipCollision(pl1[ship_id]->collided_ships);
-							pl1[ship_id]->current_event.push_back(e12);
-							pl1[ship_id]->collided_ships.clear();
-
-						}
-						
+							send_data data2;
+							shipData_forServer shipdata;
+							std::memset((void*)&shipdata, 0, sizeof(shipdata));
+							std::memset((void*)&data2, 0, sizeof(data2));
 
 
+							//if (threshold_health==pl1[ship_id]->threshold_health&&threshold_ammo==pl1[ship_id]->threshold_ammo&&threshold_fuel==pl1[ship_id]->threshold_fuel&& pl1[ship_id]->nav_data_final.size() == 0 && pl1[ship_id]->bullet_info.size() == 0 && pl1[ship_id]->udata.size() == 0 && pl1[ship_id]->map_cost_data.size() == 0)
 
-						mutx->event_mutex[ship_id].unlock();
-					}
+							threshold_ammo = pl1[ship_id]->threshold_ammo;
+							threshold_fuel = pl1[ship_id]->threshold_fuel;
+							threshold_health = pl1[ship_id]->threshold_health;
 
-				
-				/*event handling is over here*/
 
-					avg_processing += process.getElapsedTime().asSeconds();
-			}
-			
-			//send the data over here
-			sf::Clock sending;
-			sending.restart();
-			
-			if (pl1[ship_id]->died == 0)//send the data only if the ship is alive
-			{
-				send_data data2;
-				shipData_forServer shipdata;
-				std::memset((void*)&shipdata, 0, sizeof(shipdata));
-				std::memset((void*)&data2, 0, sizeof(data2));
-				
-				
-				if (threshold_health==pl1[ship_id]->threshold_health&&threshold_ammo==pl1[ship_id]->threshold_ammo&&threshold_fuel==pl1[ship_id]->threshold_fuel&& pl1[ship_id]->nav_data_final.size() == 0 && pl1[ship_id]->bullet_info.size() == 0 && pl1[ship_id]->udata.size() == 0 && pl1[ship_id]->map_cost_data.size() == 0)
-				{
-					
-				}//sending the data only when there is any update from the client..
-				else
-				{
-					threshold_ammo = pl1[ship_id]->threshold_ammo;
-					threshold_fuel = pl1[ship_id]->threshold_fuel;
-					threshold_health = pl1[ship_id]->threshold_health;
-					
-						
-						control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
-						frame_number++;
-						data2.packet_id = frame_number;
-						data2.shipdata_forServer = shipdata;
-						data2.user_cred = user_credentials(username, password);
-						for (int i = 0; i < data2.shipdata_forServer.size_upgrade_data; i++)
-						{
-							if (data2.shipdata_forServer.udata[i].type == 1)
+							control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
+							frame_number++;
+							game_tick++;
+							effective_frame_rate++;
+							//cout << "\n in callable sending the packet==>" << game_tick;
+							data2.packet_id = game_tick;
+							data2.shipdata_forServer = shipdata;
+							data2.user_cred = user_credentials(username, password);
+							for (int i = 0; i < data2.shipdata_forServer.size_upgrade_data; i++)
 							{
-								cout << "\n sending for health to the sever at the health level=>" << pl1[ship_id]->getCurrentHealth();
+								if (data2.shipdata_forServer.udata[i].type == 1)
+								{
+									cout << "\n sending for health to the sever at the health level=>" << pl1[ship_id]->getCurrentHealth();
+								}
 							}
-						}
 							if (data2.shipdata_forServer.size_navigation > 0)
 							{
-								cout << "\n sent navigation request to the server";
+								cout << "\n sent navigation request to the server==>"<<game_tick;
 							}
 							send_count++;
 							unique_lock<mutex> lk(mutx->send_terminal);
 							terminal_data.push_back(data2);
 							lk.unlock();
 							mutx->cond_terminal.notify_one();
-					
-				}
-			}
-			avg_send += sending.getElapsedTime().asSeconds();
-			total_count++;
+
+
+						}
+						avg_send += sending.getElapsedTime().asSeconds();
+						total_count++;
+					}
 		}
 		
 		chrono::steady_clock::time_point end = chrono::steady_clock::now();
@@ -1358,7 +1378,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			total_frames1++;
 		}
 		
-		next_frame = elapsed_time * 110;
+		next_frame = elapsed_time * 150;
 		
 			
 	}

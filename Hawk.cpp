@@ -8,7 +8,7 @@
 		int index = -1;
 		for (int i = 0; i < shipList.size(); i++)
 		{
-			if (shipList[i].getDiedStatus() == 0 && i != myid && i!=hate_id)
+			if (shipList[i].getDiedStatus() == 0 && i != myid)
 			{
 				int score = 0.6 * shipList[i].getCurrentHealth() + 0.4 * ob.getDistance(i);
 				if (score < mini)
@@ -21,11 +21,39 @@
 		return index;
 
 	}
+	Greed::coords runAway(vector<int> ship_id,ship &ob)
+	{
+		Greed::coords address(0,0);
+		int distance = 0;
+		deque<shipInfo> shipList = ob.getShipList();
+		for (int i = 0; i < 12; i++)
+		{
+			for (int j = 0; j < 24; j++)
+			{
+				if (ob.whatsHere(Greed::coords(i, j)).getEntity() == Entity::WATER)
+				{
+					for (int k = 0; k < ship_id.size(); k++)
+					{
+						if (!ob.isInShipRadius(ship_id[k],Greed::coords(i,j)))
+						{
+							int temp = abs(i - shipList[ship_id[k]].getCurrentTile().r) + abs(j - shipList[ship_id[k]].getCurrentTile().c);
+							if (distance < temp)
+							{
+								distance = temp;
+								address = Greed::coords(i, j);
+							}
+						}
+					}
+				}
+			}
+		}
+		return address;
+	}
 
 	void GreedMain(ship& ob)
 	{
 		//setting the aim
-		/*
+		
 		vector <Greed::cannon> cannonList = ob.getCannonList();
 		for (int j = 0; j < cannonList.size(); j++)
 		{
@@ -37,12 +65,10 @@
 				ob.Greed_updateCost(arr[i], 50);
 			}
 		}
-		*/
+		
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
-		if (index >= 0)
 		ob.Greed_chaseShip(index);
-		cout << "\n chasing the ship==>" << index;
 		int frame_rate = 0;
 		
 		double elapsed_time = 0;
@@ -67,61 +93,49 @@
 				//cout << "\n position of alternate ship==>" << shipList[0].getCurrentTile().r << " " << shipList[0].getCurrentTile().c;
 				//cout << "\n position of my ship==>" <<ob.getCurrentTile().r<<" "<<ob.getCurrentTile().c;//anchit rana is the greatest man in the whole wold and we all know that cheers
 				ob.getNextCurrentEvent(e);
-				if (index >= 0 && shipList[index].getDiedStatus() == 1)
-				{
-					index = find_ship_to_kill(shipList, ob.getShipId(), ob,ob.getShipId());
-					if(index!=-1)
-					ob.Greed_chaseShip(index);
-					
-				}
-			
+				
 				if (ob.getCurrentHealth() <= 50)
 				{
 					
-					ob.Greed_upgradeHealth(20);
+					ob.Greed_upgradeHealth(30);
 				}
 				
 				if (e.eventType == Event::EventType::ShipFire)
 				{
 					
-					for (auto it : e.shipFire.getShipId())
-					{
-						ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::REAR);
-					}
+					
 				}
 				//ob.Greed_fireCannon(cannon::FRONT, 0, ShipSide::REAR);
 				if (e.eventType == Event::EventType::LowAmmo)
 				{
 					//ob.Greed_upgradeAmmo(20);
 				}
-				if (e.eventType == Event::EventType::ShipCollision)
+			
+				if (e.eventType == Event::EventType::ShipsInMyRadius)
 				{
-					cout << "\n my ship collided,"<<e.shipCollision.getShipId()[0]<<" finding new hunt..";
-					index = find_ship_to_kill(shipList, ob.getShipId(), ob,e.shipCollision.getShipId()[0]);
-					if (index != -1)
-					{
-						cout << "\n new hunt is==>" << index;
-						ob.Greed_chaseShip(index);
-					}
+					/*
+					//finding a place to run away from all the ships in my radius
+					//Greed::coords address = runAway(e.radiusShip.getShipId(), ob);
+					cout << "\n running away to==>" ;
+					ob.Greed_setPath(Greed::coords(0,0));
+					//this is the moment when the event is first discovered
+					auto now = std::chrono::system_clock::now();
+					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+					cout << "\n from hawk, sent for the set Path function==>" << hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 
+					// cout << "\n sent data to the client at==> " <<
+					  //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					*/
 				}
+				
 				deque<Event> q = ob.getPassiveEvent();
 
 				for (int i = 0; i < q.size(); i++)
 				{
-					if (q[i].eventType == Event::EventType::ShipsInMyRadius)
-					{
-						//cout << "\n ship is in my radius...";
-						for (int j = 0; j < q[i].radiusShip.getShipId().size(); j++)                                                     
-						{
-							
-							if (q[i].radiusShip.getShipId()[j] == -1)
-							{
-								continue;
-							}
-							ob.Greed_fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[j], ShipSide::FRONT);
-						}
-					}
+					
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
 						
@@ -129,6 +143,13 @@
 						if (ls[q[i].radiusCannon.getCannonId()[0]].isCannonDead() == 0)
 						{
 							ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
+						}
+					}
+					if (q[i].eventType == Event::EventType::ShipsInMyRadius)
+					{
+						for (auto it : q[i].radiusShip.getShipId())
+						{
+							ob.Greed_fireCannon(cannon::FRONT, it, ShipSide::REAR);
 						}
 					}
 

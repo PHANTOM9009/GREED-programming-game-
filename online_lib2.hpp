@@ -126,7 +126,7 @@ enum  class Bonus
 class attribute//attribute of the tile i.e what does the tile have: storm, bonus,land,cannons,ship ///  a list of the objects of this class will be returned.
 {
 protected:
-
+	Entity entity;//type
 	double cost;//in case of a water or storm only
 	int ship_id;// if its a ship
 	int cannon_id;//if its a cannon
@@ -180,6 +180,10 @@ public:
 	int getCannonId()
 	{
 		return cannon_id;
+	}
+	Entity getEntity()
+	{
+		return entity;
 	}
 	friend ship;
 
@@ -420,7 +424,7 @@ public:
 	mutex recv_terminal;//to recv the data from the client terminal side
 	mutex recv_display;//to recv the data from the display client side
 	
-
+	mutex game_tick_mutex;//mutex used to protect the game tick of the server
 
 
 	Mutex()
@@ -1204,6 +1208,9 @@ class bullet_data_client
 };
 class bullet_data//new bullet data
 {
+
+
+public:
 	int type;
 	/*
 	* 0 for fireCannon or fire at ship
@@ -1213,7 +1220,7 @@ class bullet_data//new bullet data
 	int s_id;
 	ShipSide s;
 	int c_id;
-public:
+
 	bullet_data()
 	{
 
@@ -1920,7 +1927,6 @@ public:
 	//functions for updating some values of the game
 
 	//starting of the API
-	
 	attribute whatsHere(Greed::coords ob, int m = 0);//leave this for now
 	// List<attribute> whatsHere(Map::abs_pos ob);
 
@@ -2242,7 +2248,7 @@ class control1
 			else if (ob.unlock[i] == 1)
 			{
 				pl1[id]->lock_health = 0;
-				cout << "\n health unlocked by the user..";
+				
 			}
 			else if (ob.unlock[i] == 2)
 			{
@@ -2353,7 +2359,7 @@ class control1
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (pl1[ship_id]->nav_data_final.size() == 0 && pl1[ship_id]->bullet_info.size() == 0 && pl1[ship_id]->udata.size() == 0 && pl1[ship_id]->map_cost_data.size() == 0)
 		{
-			cout << "\n packet is going empty..";
+			
 		}
 		if (pl1[ship_id]->nav_data_final.size() > 0)
 		{
@@ -2464,6 +2470,7 @@ class control1
 			
 		for (int i = 0; i < ob.size_bulletData; i++)
 		{
+			//cout << "\n in convertor, fired by=>" << ob.ship_id;
 			pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
 			//cout << "\n firing";
 		}
@@ -2471,10 +2478,7 @@ class control1
 		for (int i = 0; i < ob.size_upgrade_data; i++)
 		{
 			pl1[ship_id]->udata.push_back(ob.udata[i]);
-			if (ob.udata[i].type == 1)
-			{
-				cout << "\n asked for health by=>" << ship_id << " at the health level=>" << pl1[ship_id]->health;
-			}
+			
 			
 			found = 1;
 		}
