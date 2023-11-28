@@ -756,6 +756,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 							input_data[id].push_back(ob);
 							packet_id[id] = ob.packet_id;
 						}
+						m->cond_input_terminal.notify_all();
 					}
 					else
 					{
@@ -918,6 +919,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	int first_send = 1;
 
 	int tick_frame_rate = 0;
+	int probe1 = 0;
+	int probe2 = 0;
+	double avg_one = 0;
+	double avg_two = 0;
+	int wait_tick = 0;//this is the number of times that the server will wait for the clients to send the packet, if the threshold is crossed, the server will just continue the process with what he has
 	while (1)
 	{
 		int flag = 1;//to check if the latest packets are here from the client, so that they get the same shit everytime
@@ -928,7 +934,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		{
 			ep = 0;
 		}
-		next_frame = ep * 80;
+		next_frame = ep * 60;
 
 	
 		if (next_frame != current_frame)
@@ -1012,29 +1018,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 			sf::Clock processing1;
 			processing1.restart();
-			for (int i = 0; i < pl1.size(); i++)//checking here if the tick is ready to be executed or not
-			{
-				if (pl1[i]->died == 1)
-				{
-					continue;
-				}
-				unique_lock<mutex> lk(mutx->recv_terminal);
-				if (input_data[i].size() == 0)
-				{
-					flag = 0;
-					//cout << "\n one of the input buffer is empty==>" << i;
-					break;
-				}
-				if (input_data[i].size() > 0 && input_data[i][0].packet_id != game_tick)
-				{
-					flag = 0;
-					//cout << "\n" << i << "  has the input buffer packet number==>" << input_data[i][0].packet_id << " and the game tick is==>" << game_tick;
-					break;
-				}
-
-			}
-			
-			if (check_game_over(pl1) || (total_secs/60) >= 10)//if game is over/if time of the game is 10 minutes, then the game will be over.
+			//this shit won't pass until two conditions get okay
+			if (check_game_over(pl1) || (total_secs / 60) >= 10)//if game is over/if time of the game is 10 minutes, then the game will be over.
 			{
 				if (!checked)
 				{
@@ -1057,8 +1042,61 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				unique_lock<mutex> lk(mutx->gameOver_check);
 				gameOver = true;
 				lk.unlock();
-				
+
 			}
+			if (first_send == 0)
+			{
+				unique_lock<mutex> lk(mutx->recv_terminal);
+				mutx->cond_input_terminal.wait(lk, [&] {
+					int flag = 1;
+					for (int i = 0; i < pl1.size(); i++)//checking here if the tick is ready to be executed or not
+					{
+						if (pl1[i]->died == 1)
+						{
+							continue;
+						}
+
+						if (input_data[i].size() == 0)
+						{
+							flag = 0;
+							if (i == 0)
+							{
+								probe1++;
+							}
+							if (i == 1)
+							{
+								probe2++;
+							}
+							wait_tick++;
+							if (wait_tick > 300)
+							{
+								flag=1;
+								cout << "\n used";
+								wait_tick = 0;
+							}
+							//cout << "\n one of the input buffer is empty==>" << i;
+							break;
+						}
+						//&& input_data[i][0].packet_id != game_tick
+						if (input_data[i].size() > 0 )
+						{
+							flag = 1;
+							//cout << "\n" << i << "  has the input buffer packet number==>" << input_data[i][0].packet_id << " and the game tick is==>" << game_tick;
+							break;
+						}
+
+					}
+					if (flag == 0)
+					{
+						return false;
+					}
+					return true;
+					});
+				lk.unlock();
+			}
+			avg_one = max(probe1, (int)avg_one);
+			avg_two = max(probe2, (int)avg_two);
+			
 			
 
 				/*code to update the timer*/
@@ -1067,7 +1105,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 				/*code to update the timer ends*/
 
-				if (flag == 1)
+				if (1)
 				{
 
 					for (int i = 0; i < pl1.size(); i++)
@@ -1123,12 +1161,24 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						}
 						pl1[i]->bullet_info.clear();
 						//updating the cost of the local map of the player
+						if (pl1[i]->map_cost_data.size() > 0)
+						{
+							cout << "\n updated the cost of the tiles for=>" << i;
+						}
 						for (int j = 0; j < pl1[i]->map_cost_data.size(); j++)
 						{
 
 							pl1[i]->updateCost(pl1[i]->map_cost_data[j].ob, pl1[i]->map_cost_data[j].new_cost);
+							//cout << "\n the coords are==>" << pl1[i]->map_cost_data[j].ob.r << " " << pl1[i]->map_cost_data[j].ob.c << " cost is=>" << pl1[i]->map_cost_data[j].new_cost;
 						}
 						pl1[i]->map_cost_data.clear();
+						//now after updating the cost we will update the nav_data data
+						unique_lock<mutex> lk(mutx->updating_data);
+						for (int j = 0; j < pl1[i]->nav_data_temp.size(); j++)
+						{
+							pl1[i]->nav_data.push_back(pl1[i]->nav_data_temp[j]);
+						}
+						pl1[i]->nav_data_temp.clear();
 					}
 					//till upgrade and fire
 					fire_upgrade += processing1.getElapsedTime().asSeconds();
@@ -1203,7 +1253,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 						sf::Clock processing3;
 						processing3.restart();
-						if (pl1[i]->ammo > 0 && pl1[i]->cannon_ob.activeBullets.size() > 0 && frames % 30 == 0)
+						if (pl1[i]->ammo > 0 && pl1[i]->cannon_ob.activeBullets.size() > 0 && game_tick%30==0)
 						{
 							//cout << "\n stage 2.5 fired by=>" << i;
 							frames = 0;
@@ -1706,7 +1756,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					//preparing the packet for client terminal
 					strcpy(data1.token, my_token.c_str());
 					data1.packet_id = game_tick;
-					data1.s1 = pl1.size();
+					data1.s1 = pl1.size(); 
 					data1.gameOver = gameOver;
 					shipData_exceptMe sdem[20];
 					control.pl_to_packet(data1.shipdata_exceptMe, pl1);
@@ -1906,7 +1956,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
       		//recv the data here and update for the next frame
 			sf::Clock recv_data;
 			recv_data.restart();
-			if (flag == 1)
+			if (flag == 1)//remove this condition and everything is fucked, i don't know why its happening
 			{
 				for (int j = 0; j < n; j++)
 				{
@@ -1918,7 +1968,19 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 					unique_lock<mutex> lk(mutx->recv_terminal);
 					int gone = 0;
+					if (pl1[1]->isShipInMyRadius(0))
+					{
+					
+						auto now = std::chrono::system_clock::now();
+						auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+						auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+						auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+						auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
+						//cout << "\n at the time==> " <<
+						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+
+					}
 					if (input_data[j].size() > 0)
 					{
 
@@ -1933,23 +1995,28 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						int sid = data2.shipdata_forServer.ship_id;
 						gone = 1;
 						//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
-						if (data2.shipdata_forServer.size_navigation > 0)
+						if ( j==1 && data2.shipdata_forServer.size_navigation > 0)
 						{
 							cout << "\n navigation request came from=>" << j << " at the game tick==>" << game_tick;
+							cout << "\n tile of the fist ship is==>" << pl1[0]->getCurrentTile().r << " " << pl1[0]->getCurrentTile().c;
+							cout << "\n location of the first ship is==>" << pl1[0]->getAbsolutePosition().x << " " << pl1[0]->getAbsolutePosition().y;
 						}
+						
 						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
 						prev_packet_id[sid] = data2.packet_id;
-						if (sid == 1)//for 1 only
-						{
+						
+						
 							auto now = std::chrono::system_clock::now();
 							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
 							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-							//cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
-							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-						}
+					//	cout << "\n client tick=>" << data2.packet_id << " server tick==>" << game_tick;
+
+					//	cout << "\n recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+						
 					}
 					if (gone == 0)
 					{
@@ -1964,7 +2031,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				sf::Time time4 = recv_data.getElapsedTime();
 				avg_recv += time4.asSeconds();
 			}
-			if (gameOver && game_over_frame+4 == total_time)//so that the packet reaches to everyone.
+			if (gameOver)//so that the packet reaches to everyone.
 			{
 				break;//break the loop
 			} 
@@ -2023,6 +2090,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	
 	}
 	cout << "\n total input buffer size=>" << input_size / (2 * total_times);
+	cout << "\n avg wait for one=>" << avg_one;
+	cout << "\navg wait for two is==>" << avg_two;
 }
 
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player

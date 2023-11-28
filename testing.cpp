@@ -63,7 +63,10 @@ void GreedMain(ship& ob)
 					ob.Greed_chaseShip(index);
 
 			}
-
+			if (e.eventType == Event::EventType::ShipsInMyRadius)
+			{
+				ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[0], ShipSide::FRONT);
+			}
 
 			if (e.eventType == Event::EventType::LowHealth)
 			{
@@ -103,15 +106,6 @@ void GreedMain(ship& ob)
 				if (q[i].eventType == Event::EventType::ShipsInMyRadius)
 				{
 
-					for (int j = 0; j < q[i].radiusShip.getShipId().size(); j++)
-					{
-
-						if (q[i].radiusShip.getShipId()[j] == -1)
-						{
-							continue;
-						}
-						ob.Greed_fireCannon(cannon::FRONT, q[i].radiusShip.getShipId()[j], ShipSide::FRONT);
-					}
 				}
 				if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 				{

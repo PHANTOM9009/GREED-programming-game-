@@ -68,7 +68,7 @@
 		
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
-		ob.Greed_chaseShip(index);
+		//ob.Greed_chaseShip(index);
 		int frame_rate = 0;
 		
 		double elapsed_time = 0;
@@ -113,7 +113,7 @@
 			
 				if (e.eventType == Event::EventType::ShipsInMyRadius)
 				{
-					/*
+					
 					//finding a place to run away from all the ships in my radius
 					//Greed::coords address = runAway(e.radiusShip.getShipId(), ob);
 					cout << "\n running away to==>" ;
@@ -128,7 +128,7 @@
 
 					// cout << "\n sent data to the client at==> " <<
 					  //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-					*/
+					
 				}
 				
 				deque<Event> q = ob.getPassiveEvent();

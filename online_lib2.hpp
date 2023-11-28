@@ -420,6 +420,7 @@ public:
 	mutex send_display;//for sending the data to the client display unit
 	condition_variable cond_terminal;//to check if terminal is ready to recv the data
 	condition_variable cond_display;//to check if the display is ready to recv the data
+	condition_variable cond_input_terminal;//to check if the input queue has the correct data to process
 
 	mutex recv_terminal;//to recv the data from the client terminal side
 	mutex recv_display;//to recv the data from the display client side
@@ -1490,6 +1491,7 @@ private:
 	string name;
 	int current_event_point;//pointer to current_event
 	deque<navigation> nav_data;
+	deque<navigation> nav_data_temp;//to store the nav_data temorarily
 	deque<navigation> nav_data_final;//data that will be sent
 	List<Greed::bullet> bullet_hit;//the list of the bullets that had ever hit the ship
 	deque<Greed::bullet> bullet_hit_tempo;//made solely for the purpose of events, here the objects will be deleted as they are inserted into the events
@@ -2445,16 +2447,13 @@ class control1
 
 	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
 	{
-		unique_lock<mutex> lk(mutx->updating_data);
+		
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
-			pl1[ship_id]->nav_data.push_back(ob.nav_data[i]);
-			if (pl1[ship_id]->nav_data[i].type == 0)
-			{
-				cout << "\n 0 is received by =>" << ship_id;
-			}
+			pl1[ship_id]->nav_data_temp.push_back(ob.nav_data[i]);
+			
 		}
-	
+		
 		pl1[ship_id]->ship_id = ob.ship_id;
 		pl1[ship_id]->threshold_health = ob.threshold_health;
 		pl1[ship_id]->threshold_ammo = ob.threshold_ammo;

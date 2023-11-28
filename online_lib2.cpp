@@ -2210,6 +2210,7 @@ Greed::path_attribute ship::setTarget(int s_id)
 
 bool ship::updateCost(Greed::coords ob, double new_cost)//update the cost of the local map // no need for locking the mutex
 {
+	unique_lock<mutex> lk(this->mutx->m[ship_id]);
 	if (new_cost >= 0 && map_ob.isValidCoords(ob))
 	{
 		// int ind=map_ob.Map::find_index(ob,ship::localMap);//index of the coord given for the cost to be updated

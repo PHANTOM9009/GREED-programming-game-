@@ -283,6 +283,7 @@ void data_recver(SOCKET socket_listen,Mutex *m)
 				unique_lock<mutex> lk(m->recv_terminal);
 				input_data.push_back(ob);
 				count++;
+				m->cond_input_terminal.notify_all();
 			}
 			else
 			{
@@ -489,6 +490,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	double ep = 0;
 	int prev_tick = 0;
 	int effective_frame_rate = 0;
+	int wait_tick = 0;
 	while (1)
 	{
 		/*NOTES:
@@ -524,16 +526,13 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		{
 			
 			frame_rate++;
-			
 			cc++;
-		
-
 			reads = master_read;
 			writes = master_write;
 			
 			cur_frame = next_frame;
 			//for handling the ship
-			total_time++;
+			total_time=game_tick;
 			
 			frames++;
 			frame_no++;//for nav data
@@ -554,15 +553,31 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			recvt.restart();
 			
 			
-			mutx->recv_terminal.lock();
+			unique_lock<mutex> lock(mutx->recv_terminal);
 			int gone = 0;
+			mutx->cond_input_terminal.wait(lock, [&] { 
+				if (input_data.size() == 0)
+				{
+					wait_tick++;
+					if (wait_tick == 100)
+					{
+						wait_tick = 0;
+						//game_tick++;
+						cout << "\n used";
+						return true;
+					}
+					
+					return false;
+				}
+				return true;
+				});
 					if (input_data.size() > 0)
 					{
 						avg_input += input_data.size();
 						gone = 1;
 						recv_data data1 = input_data[0];
 						input_data.pop_front();
-						mutx->recv_terminal.unlock();
+						lock.unlock();
 						game_tick = data1.packet_id;
 						
 						prev_tick = game_tick;
@@ -584,12 +599,13 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
 						auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 						auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+						
 						//cout << "\n recved data from the server terminal =>" << data1.packet_id << " at the time==> " <<
 							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 					}
 					if (gone == 0)
 					{
-						mutx->recv_terminal.unlock();
+						lock.unlock();
 					}
 					if (gone==1)
 					{
@@ -631,7 +647,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							//using nav_data
 							sf::Clock process;
 							process.restart();
-							if (pl1[ship_id]->nav_data.size() > 0 && frame_no % 120 == 0)//once every two frame
+							if (pl1[ship_id]->nav_data.size() > 0)//once every two frame
 							{
 								total_frames++;
 								avg_nav_req += pl1[ship_id]->nav_data.size();
@@ -906,6 +922,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 													e1.setEventId();
 													pl1[ship_id]->current_event.push_back(e1);//added the event in the current_event
 													pl1[ship_id]->passive_event.push_back(e1);//added the event in the passive_event
+													cout << "\n pushing the event that a ship is in my radius...";
 													break;
 												}
 											}
@@ -1319,6 +1336,18 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						//send the data over here
 						sf::Clock sending;
 						sending.restart();
+						if (pl1[1]->isShipInMyRadius(0))
+						{
+							//cout << "\n the ship is in my radius at the game tick==>" << game_tick;
+							auto now = std::chrono::system_clock::now();
+							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+							//cout <<  " at the time==> " <<
+							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+						}
 
 						if (pl1[ship_id]->died == 0)//send the data only if the ship is alive
 						{
@@ -1350,9 +1379,17 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 									cout << "\n sending for health to the sever at the health level=>" << pl1[ship_id]->getCurrentHealth();
 								}
 							}
-							if (data2.shipdata_forServer.size_navigation > 0)
+							if (data2.shipdata_forServer.size_navigation > 0 && my_id==1)
 							{
-								cout << "\n sent navigation request to the server==>"<<game_tick;
+								//cout << "\n sent navigation request to the server==>"<<game_tick;
+								auto now = std::chrono::system_clock::now();
+								auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+								auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+								auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+								auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+								//cout << "\n at the time==> " <<
+								//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 							}
 							send_count++;
 							unique_lock<mutex> lk(mutx->send_terminal);
