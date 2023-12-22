@@ -370,26 +370,20 @@ void data_send(Mutex* m,deque<ship*> &pl1)
 					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-					// cout << "\n sent data to the client at==> " <<
-					  //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					 //cout << "\n sent data to the client at==> " <<
+					   // hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 				}
 			}
-			//cout << "\n sent bytes to==>" <<data[i].first;
-			for (int j = 0; j < data[i].shipdata_forServer.size_upgrade_data; j++)
-			{
-				if (data[i].shipdata_forServer.udata[j].type == 1)
-				{
-					cout << "\n at send: sending for health at health==>" << pl1[data[i].shipdata_forServer.ship_id]->getCurrentHealth();
-					auto now = std::chrono::system_clock::now();
-					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+			auto now = std::chrono::system_clock::now();
+			auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+			auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+			auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+			auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-					cout << "\n this packet =>" << ob.packet_id << " sent at the time==> " <<
-					hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-				}
-			}
+			cout << "\n sent data to the server packet id==>" <<ob.packet_id<<" at=>"<<
+			  hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+			//cout << "\n sent bytes to==>" <<data[i].first;
+			
 			count++;
 		}
 	}
@@ -558,6 +552,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			mutx->cond_input_terminal.wait(lock, [&] { 
 				if (input_data.size() == 0)
 				{
+					/*
 					wait_tick++;
 					if (wait_tick == 100)
 					{
@@ -566,6 +561,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						cout << "\n used";
 						return true;
 					}
+					*/
 					
 					return false;
 				}
