@@ -93,41 +93,27 @@
 				//cout << "\n position of alternate ship==>" << shipList[0].getCurrentTile().r << " " << shipList[0].getCurrentTile().c;
 				//cout << "\n position of my ship==>" <<ob.getCurrentTile().r<<" "<<ob.getCurrentTile().c;//anchit rana is the greatest man in the whole wold and we all know that cheers
 				ob.getNextCurrentEvent(e);
-				
-				if (ob.getCurrentHealth() <= 50)
-				{
-					
-					ob.Greed_upgradeHealth(30);
-				}
-				
+												
 				if (e.eventType == Event::EventType::ShipFire)
 				{
-					
-					
+					for (auto it : e.shipFire.getShipId())
+					{
+						ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::FRONT);
+					}
 				}
 				//ob.Greed_fireCannon(cannon::FRONT, 0, ShipSide::REAR);
 				if (e.eventType == Event::EventType::LowAmmo)
 				{
-					//ob.Greed_upgradeAmmo(20);
+					ob.Greed_upgradeAmmo(20);
+				}
+				if (e.eventType == Event::EventType::LowHealth)
+				{
+					ob.Greed_upgradeHealth(5);
 				}
 			
 				if (e.eventType == Event::EventType::ShipsInMyRadius)
 				{
 					
-					//finding a place to run away from all the ships in my radius
-					//Greed::coords address = runAway(e.radiusShip.getShipId(), ob);
-					cout << "\n running away to==>" ;
-					ob.Greed_setPath(Greed::coords(0,0));
-					//this is the moment when the event is first discovered
-					auto now = std::chrono::system_clock::now();
-					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-					cout << "\n from hawk, sent for the set Path function==>" << hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-
-					// cout << "\n sent data to the client at==> " <<
-					  //   hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 					
 				}
 				
@@ -147,20 +133,11 @@
 					}
 					if (q[i].eventType == Event::EventType::ShipsInMyRadius)
 					{
-						for (auto it : q[i].radiusShip.getShipId())
-						{
-							ob.Greed_fireCannon(cannon::FRONT, it, ShipSide::REAR);
-						}
+						
 					}
 
 				}
-
-				
-				if (ob.getCurrentAmmo() < 10)
-				{
-					
-					ob.Greed_upgradeAmmo(10);
-				}
+							
 				
 
 

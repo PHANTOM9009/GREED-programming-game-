@@ -37,7 +37,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "testing.cpp"
+#include "Hawk.cpp"
 #include<ctime>
 #include<chrono>
 /*
@@ -380,8 +380,8 @@ void data_send(Mutex* m,deque<ship*> &pl1)
 			auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 			auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
 
-			cout << "\n sent data to the server packet id==>" <<ob.packet_id<<" at=>"<<
-			  hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+			//cout << "\n sent data to the server packet id==>" <<ob.packet_id<<" at=>"<<
+			 // hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 			//cout << "\n sent bytes to==>" <<data[i].first;
 			
 			count++;
@@ -469,10 +469,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int u_data_once = 0;
 	int u_data_count = 0;
 	
-	thread t1(&data_recver, peer_socket, mutx);
+	thread t1(&data_recver, peer_socket, mutx);//starting the thread which will receive the data from the server
 	t1.detach();
 
-	thread t3(data_send, mutx,std::ref(pl1));
+	thread t3(data_send, mutx,std::ref(pl1));//starting the thread which will send the data to the server
 	t3.detach();
 	int avg_input = 0;
 	int total_count = 0;
@@ -485,6 +485,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int prev_tick = 0;
 	int effective_frame_rate = 0;
 	int wait_tick = 0;
+	control1 cont;//object of control1 class
 	while (1)
 	{
 		/*NOTES:
@@ -567,21 +568,17 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				}
 				return true;
 				});
-					if (input_data.size() > 0)
+					if (input_data.size() == 1)//case when only one packet is there from the server
 					{
+						
 						avg_input += input_data.size();
 						gone = 1;
 						recv_data data1 = input_data[0];
 						input_data.pop_front();
 						lock.unlock();
-						game_tick = data1.packet_id;
 						
-						prev_tick = game_tick;
-						if (data1.packet_id - prev_pack > 1)
-						{
-							//	cout<<"\n packet loss=>"<<data1.packet_id - prev_pack;
-						}
-						prev_pack = data1.packet_id;
+						game_tick = data1.packet_id;
+						cout << "\n recved packet with id=>" << data1.packet_id;
 						//cout << "\n packet id==>" << data1.packet_id;
 						//cout << "\n packet id=>" << data1.packet_id;
 						control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);
@@ -599,17 +596,42 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						//cout << "\n recved data from the server terminal =>" << data1.packet_id << " at the time==> " <<
 							//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 					}
-					if (gone == 0)
+					else//enters here only when the size of input data is more than one, then merging is needed
 					{
+						//taking down all the packets and starting the merging
+						deque<recv_data> temp_recv;
+						for (int i = 0; i < input_data.size(); i++)
+						{
+							temp_recv.push_back(input_data[i]);
+						}
+						input_data.clear();
 						lock.unlock();
+						
+						game_tick = temp_recv[temp_recv.size() - 1].packet_id;//setting the packet id to the latest packet in the queue
+						//starting to unfolding the packet
+						control_ob.packet_to_pl(temp_recv[temp_recv.size()-1].shipdata_exceptMe, temp_recv[temp_recv.size() - 1].s1, ship_id, pl1);//for this just send the latest packet that we have
+
+						control_ob.packet_to_me(temp_recv[temp_recv.size() - 1].shipdata_forMe, ship_id, pl1);//here we have to merge some data
+						//adding the previous data only in hit_bullet
+						for (int i = temp_recv.size() - 2; i >= 0; i--)
+						{
+							for (int j = 0; j < temp_recv[i].shipdata_forMe.size_hit_bullet; j++)
+							{
+								Greed::bullet b;
+								cont.data_to_bullet(b, temp_recv[i].shipdata_forMe.hit_bullet[i]);
+								
+								pl1[ship_id]->hit_bullet.push_front(b);
+							}
+						}
 					}
-					if (gone==1)
-					{
+					
+					
+					
 						unique_lock<mutex> lk1(pl1[ship_id]->mutx->m[ship_id]);
 						if (current_health < pl1[ship_id]->health)
 						{
 							pl1[ship_id]->lock_health = 0;
-							cout << "\n lock unlocked manually";
+							
 						}
 						if (current_ammo < pl1[ship_id]->ammo)
 						{
@@ -643,12 +665,12 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							//using nav_data
 							sf::Clock process;
 							process.restart();
-							if (pl1[ship_id]->nav_data.size() > 0)//once every two frame
+							if (pl1[ship_id]->nav_data.size() > 0)
 							{
-								total_frames++;
-								avg_nav_req += pl1[ship_id]->nav_data.size();
-								frame_no = 0;
-								pl1[ship_id]->nav_data_final.push_back(pl1[ship_id]->nav_data[0]);
+								for (int i = 0; i < pl1[ship_id]->nav_data.size(); i++)
+								{
+									pl1[ship_id]->nav_data_final.push_back(pl1[ship_id]->nav_data[i]);
+								}
 								pl1[ship_id]->nav_data.clear();
 							}
 
@@ -1397,7 +1419,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						}
 						avg_send += sending.getElapsedTime().asSeconds();
 						total_count++;
-					}
+					
 		}
 		
 		chrono::steady_clock::time_point end = chrono::steady_clock::now();

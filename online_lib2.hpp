@@ -421,6 +421,7 @@ public:
 	condition_variable cond_terminal;//to check if terminal is ready to recv the data
 	condition_variable cond_display;//to check if the display is ready to recv the data
 	condition_variable cond_input_terminal;//to check if the input queue has the correct data to process
+	condition_variable cond_updating_data;//updating data for
 
 	mutex recv_terminal;//to recv the data from the client terminal side
 	mutex recv_display;//to recv the data from the display client side
@@ -1284,17 +1285,17 @@ public:
 	int radius;//square radius
 
 	int size_navigation;
-	navigation nav_data[2];
+	navigation nav_data[2];//to be merged
 
 	int size_bulletData;
-	bullet_data b_data[10];
+	bullet_data b_data[10];//to be merged
 
 	int size_upgrade_data;
-	upgrade_data udata[10];
+	upgrade_data udata[10];//to be merged
 
 	int size_update_cost;//to update the cost of the local map of the user
 	map_cost cdata[80];//to update the data
-
+	//to be merged
 
 	shipData_forServer()
 	{
@@ -1316,7 +1317,7 @@ public:
 
 	int killer_ship_id;
 	int killed_ships_size;
-	int killed_ships[10];
+	int killed_ships[10];//to be merged.
 	int score;
 	int radius;//square radius
 
@@ -1435,7 +1436,7 @@ private:
 	vector<int> collided_ships;
 
 	deque<upgrade_data> udata;
-	vector<map_cost> map_cost_data;//only to be used at the client side;
+	deque<map_cost> map_cost_data;//only to be used at the client side;
 
 	vector<int> unlock;
 	void update_pos_collision();//function to update tile_pos and abs_pos of the ship after the collision occured
@@ -1462,6 +1463,14 @@ public: //this will be public the user will be able to access this object freely
 	int isShipInMotion()
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
+		if (tile_path.howMany() > 0)
+		{
+			motion = 1;
+		}
+		else
+		{
+			motion = 0;
+		}
 		return motion;
 	}
 	List<Greed::abs_pos> path;
@@ -1482,7 +1491,7 @@ public: //this will be public the user will be able to access this object freely
 private:
 	int seconds;//seconds lived
 	
-	vector<Greed::bullet> hit_bullet;//stores the hit bullets on the ship for that frame
+	deque<Greed::bullet> hit_bullet;//stores the hit bullets on the ship for that frame
 	int minutes;//minutes lived
 	int killer_ship_id;//the ship that killed you if that is the case
 	int killer_cannon_id;//the cannon that killed you if that is the case
@@ -2102,6 +2111,7 @@ double avg_bullet = 0;
 int no_of_times = 0;
 class control1
 {
+public:
 	void bullet_to_data(Greed::bullet& ob, bullet_data_client& ob1)
 	{
 		ob1.id = ob.id;
@@ -2359,20 +2369,18 @@ class control1
 
 			
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (pl1[ship_id]->nav_data_final.size() == 0 && pl1[ship_id]->bullet_info.size() == 0 && pl1[ship_id]->udata.size() == 0 && pl1[ship_id]->map_cost_data.size() == 0)
-		{
-			
-		}
 		if (pl1[ship_id]->nav_data_final.size() > 0)
 		{
-			int a;
+			cout << "\n size of navigation is==>" << pl1[ship_id]->nav_data_final.size();
 		}
 		if (pl1[ship_id]->nav_data_final.size() <= 2)
 		{
 			ob.size_navigation = pl1[ship_id]->nav_data_final.size();
+
 		}
 		else 
 		{
+			
 			ob.size_navigation = 2;
 		}
 		
@@ -2380,10 +2388,15 @@ class control1
 		{
 			ob.nav_data[i] = pl1[ship_id]->nav_data_final[i];
 			//cout << "\n type is=>" << pl1[ship_id]->nav_data[i].type;
+			cout << "\n sending nav_data==>" << pl1[ship_id]->nav_data_final[i].type;
 			
 		}
 
-		pl1[ship_id]->nav_data_final.clear();
+		//clearing the first ob.size_navigation entries from the queue
+		for (int i = 1; i <= ob.size_navigation; i++)
+		{
+			pl1[ship_id]->nav_data_final.pop_front();
+		}
 		
 		//ob.size_bulletData = pl1[ship_id]->bullet_info.size();
 		if (pl1[ship_id]->bullet_info.size() <= 10)
@@ -2467,7 +2480,7 @@ class control1
 			no_of_times++;
 		}
 			
-		for (int i = 0; i < ob.size_bulletData; i++)
+		for (int i = 0; i < ob.size_bulletData; i++)//it has to be merged
 		{
 			//cout << "\n in convertor, fired by=>" << ob.ship_id;
 			pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);

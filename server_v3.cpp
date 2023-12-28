@@ -262,6 +262,7 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 	double elapsed_time = 0;
 	sf::Clock clock;
 	deque<deque<navigation>> temp(pl1.size());
+
 	while (1)
 	{
 		
@@ -273,6 +274,14 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 			lk.unlock();
 			
 			unique_lock<mutex> lk1(mutx->updating_data);
+			mutx->cond_updating_data.wait(lk1,[&] {
+				bool cond = false;
+				for (int i = 0; i < pl1.size(); i++)
+				{
+					cond = cond || !(pl1[i]->nav_data.empty());
+				}
+				return cond;
+				});
 			for (int i = 0; i < pl1.size(); i++)
 			{
 				for (int j = 0; j < pl1[i]->nav_data.size(); j++)
@@ -293,7 +302,7 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 					
 					if (temp[i].size() > 0)
 					{
-						cout << "\n navigation req came from==>" << i;
+						cout << "\n resolving navigation in nav_processor function for==>" << i;
 						if (temp[i][0].type == 0)//for target type
 						{
 							if (temp[i][0].target.r != -1 && temp[i][0].target.c != -1)
@@ -306,14 +315,14 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 							{
 								Greed::path_attribute path = pl1[i]->setTarget(temp[i][0].s_id);
 								pl1[i]->setPath(path.getPath());
-								cout << "\n in type 0 for ship_id=>" << temp[i][0].s_id;
+								//cout << "\n in type 0 for ship_id=>" << temp[i][0].s_id;
 							}
 
 						}
 						else if (temp[i][0].type == 1 && temp[i][0].n > 0 && temp[i][0].dir != Direction::NA)
 						{
 							pl1[i]->sail(temp[i][0].dir, temp[i][0].n);
-							cout << "\n in sail";
+							//cout << "\n in sail";
 						}
 						else if (temp[i][0].type == 2 && temp[i][0].s_id >= 0 && pl1[temp[i][0].s_id]->getDiedStatus()==0)
 						{
@@ -323,19 +332,10 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 						}
 						else if (temp[i][0].type == 3)
 						{
+							cout << "\n anchor ship is called by==>" << i;
 							pl1[i]->anchorShip();
 						}
-						if (i == 1)
-						{
-							/*
-							auto now = std::chrono::system_clock::now();
-							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-							cout << "\n from server nav_data_processor, sent for the set Path function==>" << hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-							*/
-						}
+						
 						temp[i].pop_front();
 
 					}
@@ -454,6 +454,7 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 		if (gameOver)
 		{
 			cout << "\n breaking from the send_data_terminal..";
+			lk1.unlock();
 			break;
 		}
 		lk1.unlock();
@@ -666,7 +667,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 					}
 					else
 					{
-						cout << "\n wrong data came in first part..";
+						//cout << "\n wrong data came in first part..";
 					}
 					
 				}
@@ -760,7 +761,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 					}
 					else
 					{
-						cout << "\n wrong data came in first part..";
+						//cout << "\n wrong data came in first part..";
 					}
 					memset(all_buffer[id], 0, sizeof(all_buffer[id]));
 					total_bytes[id] = 0;
@@ -1050,53 +1051,33 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				
 				
 				int flag = 1;
-					while (1)
+			while (1)
+			{
+				flag = 1;
+				unique_lock<mutex> lk(mutx->recv_terminal);
+				for (int i = 0; i < pl1.size(); i++)//checking here if the tick is ready to be executed or not
+				{
+					if (pl1[i]->died == 1)
 					{
-						flag = 1;
-						unique_lock<mutex> lk(mutx->recv_terminal);
-						for (int i = 0; i < pl1.size(); i++)//checking here if the tick is ready to be executed or not
-						{
-							if (pl1[i]->died == 1)
-							{
 								continue;
-							}
+					}
 
-							if (input_data[i].size() == 0)
-							{
-								flag = 0;
+									if (input_data[i].size() == 0)//as soon as the data arrives process it, merge packets within range of +-10 packets
+									{
+										flag = 0;
 								
-								wait_tick++;
-								if (wait_tick > 10000 * pl1.size())
-								{
-									flag = 1;
-								//	cout << "\n used-------------------------------------------------------------";
-									wait_tick = 0;
-									break;
-								}
-								//cout << "\n one of the input buffer is empty==>" << i;
+										wait_tick++;
+										if (wait_tick > 10000 * pl1.size())
+										{
+											flag = 1;
+										//	cout << "\n used-------------------------------------------------------------";
+											wait_tick = 0;
+											break;
+										}
+										//cout << "\n one of the input buffer is empty==>" << i;
 							
-							}
-							if (input_data[i].size() > 0 && input_data[i][0].packet_id != game_tick)
-							{
-								flag = 0;
-								wait_tick1++;
-								if (i == 0)
-								{
-									probe1++;
-								}
-								if (i == 1)
-								{
-									probe2++;
-								}
-								if (wait_tick1 > 10000 * pl1.size())
-								{
-									flag = 1;
-									//cout << "\n used===========================";
-									wait_tick1 = 0;
-									break;
-								}
-								
-							}
+									}
+							
 							
 						}
 						if (flag == 1)
@@ -1112,7 +1093,83 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			avg_one = max(probe1, (int)avg_one);
 			avg_two = max(probe2, (int)avg_two);
 			
-			
+			for (int j = 0; j < n; j++)
+			{
+				if (pl1[j]->died == 1)
+				{
+
+					continue;
+				}
+
+				unique_lock<mutex> lk(mutx->recv_terminal);
+				int gone = 0;
+				
+				if (input_data[j].size() > 0)
+				{
+
+					input_size += input_data[j].size();
+					total_times++;
+
+					deque<send_data> data2;
+					//memset((void*)&data2, 0, sizeof(data2));
+					int ind = max(0, (int)input_data[j].size() - 10);
+					for (int i = ind; i < input_data[j].size(); i++)
+					{
+						data2.push_back(input_data[j][i]);
+					}
+
+					
+					input_data[j].clear();
+					lk.unlock();
+					int sid = data2[0].shipdata_forServer.ship_id;
+					gone = 1;
+					//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
+
+				  /*
+					while merging two or more packets we have to consider the following things:
+					1. which navigation requests are repeated or spammed
+					2. all bullets requests have to be added in the fire queue
+					3. all upgrading requests have to be added in the upgrade queue.
+				  */
+					cout << "\n recved the packet with the id==>" << data2[data2.size() - 1].packet_id;
+					cout << "\n my tick is==>" << game_tick;
+					control.server_to_myData(data2[data2.size()-1].shipdata_forServer, pl1, sid, mutx);
+					//merging the left over part
+					for (int i = data2.size() - 2; i >= 0; i--)
+					{
+						for (int k = 0; k < data2[i].shipdata_forServer.size_bulletData; k++)
+						{
+							pl1[j]->bullet_info.push_front(data2[i].shipdata_forServer.b_data[k]);
+						}
+						for (int k = 0; k < data2[i].shipdata_forServer.size_upgrade_data; k++)
+						{
+							pl1[j]->udata.push_front(data2[i].shipdata_forServer.udata[k]);
+						}
+						for (int k = 0; k < data2[i].shipdata_forServer.size_update_cost; k++)
+						{
+							pl1[j]->map_cost_data.push_front(data2[i].shipdata_forServer.cdata[k]);
+						}
+
+					}
+					//merging done;
+					auto now = std::chrono::system_clock::now();
+					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+					//cout << "\n client tick=>" << data2.packet_id << " server tick==>" << game_tick;
+
+					//cout <<"\n"<< j << "  recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
+					//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+
+				}
+				if (gone == 0)
+				{
+					lk.unlock();
+				}
+
+			}
 
 				/*code to update the timer*/
 				int min = total_secs / 60;
@@ -1191,8 +1248,16 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						unique_lock<mutex> lk(mutx->updating_data);
 						for (int j = 0; j < pl1[i]->nav_data_temp.size(); j++)
 						{
-							pl1[i]->nav_data.push_back(pl1[i]->nav_data_temp[j]);
+
+							if (pl1[i]->motion == 0 || pl1[i]->nav_data_temp[i].type == 3)//add only in the queue if the ship is in motion..
+							{
+								cout << "\n in game loop recved value==>" << pl1[i]->nav_data_temp[j].type;
+								pl1[i]->nav_data.push_back(pl1[i]->nav_data_temp[j]);
+
+							}
 						}
+						lk.unlock();
+						mutx->cond_updating_data.notify_all();
 						pl1[i]->nav_data_temp.clear();
 					}
 					//till upgrade and fire
@@ -1218,10 +1283,16 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 								if (pl1[i]->collide(j, pl1[i]->tile_pos_front))
 								{
+									//if the collision happens call anchorShip_collision on both the ships because of two reasons.
+									//1. if first ship has collided with the second ship then both deserves to be stopped
+									//2. if we only stop the first ship, then by the time the iteration comes to the second ship the first ship's location
+									// is changed which leads to a biased stopping
 
 									pl1[i]->collided_ships.push_back(j);
-
+									pl1[j]->collided_ships.push_back(i);
 									pl1[i]->anchorShip_collision();
+									pl1[j]->anchorShip_collision();//collision is called on both the objects...
+
 
 								}
 							}
@@ -1971,81 +2042,14 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
       		//recv the data here and update for the next frame
 			sf::Clock recv_data;
 			recv_data.restart();
-			if (flag == 1)//remove this condition and everything is fucked, i don't know why its happening
-			{
-				for (int j = 0; j < n; j++)
-				{
-					if (pl1[j]->died == 1)
-					{
-
-						continue;
-					}
-
-					unique_lock<mutex> lk(mutx->recv_terminal);
-					int gone = 0;
-					if (pl1[1]->isShipInMyRadius(0))
-					{
-					
-						auto now = std::chrono::system_clock::now();
-						auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-						auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-						auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-						auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-
-						//cout << "\n at the time==> " <<
-						//hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-
-					}
-					if (input_data[j].size() > 0)
-					{
-
-						input_size += input_data[j].size();
-						total_times++;
-
-						send_data data2;
-						memset((void*)&data2, 0, sizeof(data2));
-						data2 = input_data[j][0];
-						input_data[j].pop_front();
-						lk.unlock();
-						int sid = data2.shipdata_forServer.ship_id;
-						gone = 1;
-						//cout << "\n received data from the client=>" << data2.shipdata_forServer.ship_id;
-						if (j == 1 && input_data[j][0].shipdata_forServer.size_navigation > 0)
-						{
-							cout << "\n nav req came when ship is at=>" << game_tick;
-							cout << "\n secon ship is at=>" << pl1[0]->absolutePosition.x << " " << pl1[0]->absolutePosition.y;
-
-						}
-						
-						control.server_to_myData(data2.shipdata_forServer, pl1, sid, mutx);
-						prev_packet_id[sid] = data2.packet_id;
-						
-						
-							auto now = std::chrono::system_clock::now();
-							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-
-						//cout << "\n client tick=>" << data2.packet_id << " server tick==>" << game_tick;
-
-						cout <<"\n"<< j << "  recved data from client terminal=>" << data2.packet_id << " at the time==> " <<
-						hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-						
-					}
-					if (gone == 0)
-					{
-						lk.unlock();
-					}
-
-				}
+		
 
 
 				std::time_t result = std::time(nullptr);
 
 				sf::Time time4 = recv_data.getElapsedTime();
 				avg_recv += time4.asSeconds();
-			}
+			
 			if (gameOver)//so that the packet reaches to everyone.
 			{
 				break;//break the loop

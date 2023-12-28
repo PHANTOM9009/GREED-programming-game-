@@ -839,30 +839,7 @@ bool ship::collide(int s, Greed::coords& pos)//function to check if this->ship_i
 	return false;
 
 
-	/*
-	if (my.c1.x < opp.c1.x + 1 && opp.c1.x + 1 < my.c2.x && my.c1.y < opp.c1.y + 1 && opp.c1.y + 1 < my.c4.y)//checking for c1 of opp
-	{
-
-		return true;
-	}
-	else if (my.c1.x < opp.c2.x - 1 && opp.c2.x - 1 < my.c2.x && my.c1.y < opp.c2.y + 1 && opp.c2.y + 1 < my.c4.y)//checking for c1 of opp
-	{
-
-		return true;
-	}
-	else if (my.c1.x < opp.c3.x - 1 && opp.c3.x - 1 < my.c2.x && my.c1.y < opp.c3.y - 1 && opp.c3.y - 1 < my.c4.y)//checking for c1 of opp
-	{
-
-		return true;
-	}
-	else if (my.c1.x < opp.c4.x + 1 && opp.c4.x + 1 < my.c2.x && my.c1.y < opp.c4.y - 1 && opp.c4.y - 1 < my.c4.y)//checking for c1 of opp
-	{
-
-		return true;
-	}
-	return false;
-	*/
-
+	
 }
 bool ship::checkCollision(int sid, const Greed::bullet& ob)//sid is the ship id of  the victim ship.
 {
@@ -1818,7 +1795,7 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 			else if (ob.autopilot == 0)
 			{
 				ob.mutx->mchase[ob.ship_id].unlock();
-				cout << "\n breaking because autopilot is true";
+				cout << "\n breaking because autopilot is false";
 				break;
 			}
 			ob.mutx->mchase[ob.ship_id].unlock();

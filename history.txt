@@ -224,3 +224,22 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
   the server sent the environment information to the client at its tick 1 but it is not recving the client response at game tick 2, every client
   is running at its own tick the drawback is that the clients are observing the environment differently, and not same, they are taking actions
   for their own realities, not their interpretation of the reality.
+  ----------------------------------------------------------------------------
+  27th DEC 2023:
+
+ 1. some changes in client_v1:
+  1. input data from the server is being processed one by one, only the latest data should be processed, rest everything should be discarded.
+  according to the policy that the algorithm should see the most fresh version.
+  although some stuff has to be merged:
+ 
+ [killed_ships]
+ [hit_bullet]
+ [unlock]
+
+ there are some assumptions in the sizes of upgrade data and upgrade cost, we are sending a max size, it can cause problem in unforeseen scenarios
+
+ 2. some changes in the server_v3 file:
+
+ merge only +-10 incoming packets.
+ merge only nav part and bullet part, and see whatever can be merged
+
