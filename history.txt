@@ -241,5 +241,26 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  2. some changes in the server_v3 file:
 
  merge only +-10 incoming packets.
- merge only nav part and bullet part, and see whatever can be merged
 
+ merge only nav part and bullet part, and see whatever can be merged
+ ----------------------------------------------------------------------------------------------------------
+ entered in the playground of internet,found some problems:
+ 
+ each packet has to be sent atmost twice, to cover for the packet loss, packet loss is harmful as it may concede important navigation and
+ firing commands.
+
+ another thing is get a check in the client side in all the navigation systems at the client side, else it will fill the entire buffer to be sent to the server
+ also we have to do one more thing, the object from which i tried to take the data for firing was wrong.
+
+ before checking it on the web, check it locally, because it will save you a lot of money....
+ --------------------------------------------------------------------------------------
+ 30th Dec 2023:
+ i have tried a lot to cut the packet loss, but using UDP, there has to be a packet loss, which i just cannot solve for now:
+ I will now first try to send the same packet atleast 5 times, but even it does not give me the result, because suddenly all the packets are getting
+ dropped hence it takes just one packet to not to tell the server to fire, i have to look into this that why did it not work closely.
+
+ if this does not work then i will keep a tab on status ships motion and firing, if the command to move or fire has been issued, and the ship still
+ does not move in the next packet of the server then i will redo the delivery of that very packet, so a buffer has to be maintained for that...k
+ ----------------------------------------------------------------------------
+ 4 jan 2024
+ this concept of persisting information in further packets needs to be extended to upgrade costs and upgrade ammo, health etc. 

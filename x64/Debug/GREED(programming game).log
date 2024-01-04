@@ -1,534 +1,367 @@
-﻿  server_v3.cpp
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(532,15): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+﻿  client_v1.cpp
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(537,15): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(536,15): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(541,15): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(547,16): warning C4305: '=': truncation from 'int' to 'bool'
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(552,16): warning C4305: '=': truncation from 'int' to 'bool'
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(548,55): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(553,55): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(640,37): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(645,37): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(640,29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(645,29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1630,62): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1641,62): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1630,22): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1641,22): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2278,53): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2310,53): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2310,58): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2342,58): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2323,55): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2355,55): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2339,41): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2371,41): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2376,58): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2408,58): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2402,55): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2434,55): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2421,51): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2456,51): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2446,58): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2481,58): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(132,14): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+  (compiling source file 'client_v1.cpp')
   
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(136,14): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+  (compiling source file 'client_v1.cpp')
   
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(140,14): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+  (compiling source file 'client_v1.cpp')
   
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(144,14): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+  (compiling source file 'client_v1.cpp')
   
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(447,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,38): warning C4244: 'argument': conversion from 'T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,38): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,38): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,38): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,38): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,38): warning C4244: 'argument': conversion from 'T' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,38): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,38): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,38): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,38): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,72): warning C4244: 'argument': conversion from 'T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,72): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,72): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,72): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(872,72): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,72): warning C4244: 'argument': conversion from 'T' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,72): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,72): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,72): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(849,72): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2218,32): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2197,32): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2249,26): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2228,26): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2263,27): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2242,27): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2279,28): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2258,28): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2562,55): warning C4244: 'argument': conversion from 'long double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2541,55): warning C4244: 'argument': conversion from 'long double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2773,56): warning C4244: 'argument': conversion from 'long double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2752,56): warning C4244: 'argument': conversion from 'long double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2895,24): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2874,24): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2885,6): warning C4101: 's_id': unreferenced local variable
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2864,6): warning C4101: 's_id': unreferenced local variable
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3287,38): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3266,38): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3287,64): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3266,64): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3287,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3266,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3287,27): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3266,27): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3342,35): warning C4305: 'argument': truncation from 'double' to 'float'
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3321,35): warning C4305: 'argument': truncation from 'double' to 'float'
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3345,64): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3324,64): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3351,51): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3330,51): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3352,58): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3331,58): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3353,52): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3332,52): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3354,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3333,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3355,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3334,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3368,42): warning C4305: 'argument': truncation from 'double' to 'float'
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3347,42): warning C4305: 'argument': truncation from 'double' to 'float'
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3381,33): warning C4305: 'argument': truncation from 'double' to 'float'
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3360,33): warning C4305: 'argument': truncation from 'double' to 'float'
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3394,34): warning C4305: 'argument': truncation from 'double' to 'float'
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3373,34): warning C4305: 'argument': truncation from 'double' to 'float'
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3489,28): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3468,28): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3557,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3536,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3557,27): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3536,27): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3566,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3545,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3566,23): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3545,23): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3575,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3554,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3575,30): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3554,30): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3647,39): warning C4305: 'argument': truncation from 'double' to 'float'
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3626,39): warning C4305: 'argument': truncation from 'double' to 'float'
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3656,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3635,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3657,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3636,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3672,40): warning C4305: 'argument': truncation from 'double' to 'float'
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3651,40): warning C4305: 'argument': truncation from 'double' to 'float'
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3676,55): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3655,55): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3677,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3656,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3678,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3657,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3696,46): warning C4305: 'argument': truncation from 'double' to 'float'
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3675,46): warning C4305: 'argument': truncation from 'double' to 'float'
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3872,8): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3851,8): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3873,8): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3852,8): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,49): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,49): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,49): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,49): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,49): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,49): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,49): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,49): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,49): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,49): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,40): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,40): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,40): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,40): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4038,40): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,40): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,40): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,40): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,40): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4017,40): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,59): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,59): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,59): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,59): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,59): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,59): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,59): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,59): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,59): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,59): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,44): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,44): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,44): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,44): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4039,44): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,44): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,44): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,44): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,44): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4018,44): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,55): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,55): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,55): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,55): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,55): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,55): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,55): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,55): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,55): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,55): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,40): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,40): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,40): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,40): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4040,40): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,40): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,40): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,40): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,40): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4019,40): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,49): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,49): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,49): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,49): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,49): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,49): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,49): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,49): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,49): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,49): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,40): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,40): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,40): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,40): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4041,40): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,40): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,40): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,40): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,40): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4020,40): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4043,57): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4043,57): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4043,57): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4043,57): warning C4244:             T=unsigned int
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4043,57): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4043,57): warning C4244:         and
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4043,57): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4043,57): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4043,57): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4022,57): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4022,57): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4022,57): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4022,57): warning C4244:             T=unsigned int
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4022,57): warning C4244:         ]
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4022,57): warning C4244:         and
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4022,57): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4022,57): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4022,57): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4044,70): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4044,70): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4044,70): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4044,70): warning C4244:             T=unsigned int
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4044,70): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4044,70): warning C4244:         and
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4044,70): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4044,70): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4044,70): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4023,70): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4023,70): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4023,70): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4023,70): warning C4244:             T=unsigned int
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4023,70): warning C4244:         ]
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4023,70): warning C4244:         and
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4023,70): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4023,70): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4023,70): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,106): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,106): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,106): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,106): warning C4244:             T=unsigned int
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,106): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,106): warning C4244:         and
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,106): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,106): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,106): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,106): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,106): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,106): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,106): warning C4244:             T=unsigned int
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,106): warning C4244:         ]
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,106): warning C4244:         and
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,106): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,106): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,106): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,70): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,70): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,70): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,70): warning C4244:             T=unsigned int
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,70): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,70): warning C4244:         and
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,70): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,70): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4045,70): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,70): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,70): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,70): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,70): warning C4244:             T=unsigned int
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,70): warning C4244:         ]
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,70): warning C4244:         and
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,70): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,70): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4024,70): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,84): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,84): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,84): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,84): warning C4244:             T=unsigned int
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,84): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,84): warning C4244:         and
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,84): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,84): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,84): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,84): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,84): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,84): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,84): warning C4244:             T=unsigned int
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,84): warning C4244:         ]
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,84): warning C4244:         and
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,84): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,84): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,84): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,57): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,57): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,57): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,57): warning C4244:             T=unsigned int
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,57): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,57): warning C4244:         and
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,57): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,57): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4046,57): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,57): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,57): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,57): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,57): warning C4244:             T=unsigned int
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,57): warning C4244:         ]
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,57): warning C4244:         and
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,57): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,57): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4025,57): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,38): warning C4244: 'argument': conversion from 'T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,38): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,38): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,38): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,38): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,38): warning C4244: 'argument': conversion from 'T' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,38): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,38): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,38): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,38): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,72): warning C4244: 'argument': conversion from 'T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,72): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,72): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,72): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4089,72): warning C4244:         ]
-  (compiling source file 'server_v3.cpp')
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,72): warning C4244: 'argument': conversion from 'T' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,72): warning C4244:         with
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,72): warning C4244:         [
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,72): warning C4244:             T=float
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(4068,72): warning C4244:         ]
+  (compiling source file 'client_v1.cpp')
   
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(160,15): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(402,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(409,20): warning C4244: 'argument': conversion from 'SOCKET' to '_Ty', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(409,20): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(409,20): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(409,20): warning C4244:             _Ty=int
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(409,20): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(410,15): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(433,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(584,6): warning C4101: 'bytes': unreferenced local variable
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(941,19): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1160,13): warning C4244: 'initializing': conversion from 'long double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1287,72): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1287,123): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1287,89): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1287,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1322,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,146): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,222): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,163): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,163): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,163): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,163): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,163): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,87): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,87): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,87): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,87): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1352,87): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,103): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,103): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,103): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,103): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,103): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,202): warning C4244: 'argument': conversion from 'T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,202): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,202): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,202): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1378,202): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,117): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,117): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,117): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,117): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,117): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,212): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,212): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,212): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,212): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1404,212): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,119): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,119): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,119): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,119): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,119): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,214): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,214): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,214): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,214): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1437,214): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1484,82): warning C4244: '=': conversion from 'long double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1486,18): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,123): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,123): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,123): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,123): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,123): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,195): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,195): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,195): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,195): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,195): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,132): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,132): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,132): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,132): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,132): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,60): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,60): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,60): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,60): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,60): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,405): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,405): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,405): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,405): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,405): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,324): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,324): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,324): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,324): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1524,324): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,123): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,123): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,123): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,123): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,123): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,195): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,195): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,195): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,195): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,195): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,132): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,132): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,132): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,132): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,132): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,60): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,60): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,60): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,60): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1558,60): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,134): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,203): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,149): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,149): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,149): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,149): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,149): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,80): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,80): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,80): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,80): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1591,80): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1664,40): warning C4244: '=': conversion from 'long double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1666,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,115): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,115): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,115): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,115): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,115): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,180): warning C4244: 'argument': conversion from 'const T' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,180): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,180): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,180): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,180): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,122): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,122): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,122): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,122): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,122): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,57): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,57): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,57): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,57): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,57): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,382): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,382): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,382): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,382): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,382): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,305): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,305): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,305): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,305): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1683,305): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1714,40): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1729,69): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1820,24): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1821,25): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1836,24): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,138): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,138): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,138): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,138): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,138): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,91): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,91): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,91): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,91): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1905,91): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,213): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,213): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,213): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,213): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,213): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,113): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,113): warning C4244:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,113): warning C4244:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,113): warning C4244:             T=float
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(1937,113): warning C4244:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(2008,40): warning C4244: '=': conversion from 'long double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(970,14): warning C4101: 'event': unreferenced local variable
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(2169,38): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(2174,40): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(2179,40): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(2215,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(2448,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(2511,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\server_v3.cpp(2644,66): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\hawk.cpp(13,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  (compiling source file 'client_v1.cpp')
+  
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(100,15): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(204,62): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(209,67): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(492,20): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(493,18): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(590,35): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(632,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(720,36): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1456,37): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1457,37): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1458,39): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1529,29): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(428,12): warning C4101: 'data': unreferenced local variable
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1587,66): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1676,66): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1684,48): warning C4267: 'argument': conversion from 'size_t' to 'socklen_t', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1770,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1933,59): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
+F:\current projects\GREED(programming game)\GREED(programming game)\client_v1.cpp(1733,8): warning C4101: 'cwd': unreferenced local variable
 F:\Visual Studio setup\VC\Tools\MSVC\14.38.33130\include\type_traits(1747,77): warning C4244: 'argument': conversion from 'const float' to 'int', possible loss of data
-  (compiling source file 'server_v3.cpp')
+  (compiling source file 'client_v1.cpp')
   F:\Visual Studio setup\VC\Tools\MSVC\14.38.33130\include\type_traits(1747,77):
   the template instantiation context (the oldest one first) is
-  	F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3495,17):
+  	F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3474,17):
   	see reference to function template instantiation 'unsigned int tgui::SignalTyped<float>::operator ()<void(__cdecl graphics::GuiRenderer::* )(int),graphics::GuiRenderer*>(const Func &,graphics::GuiRenderer *const &)' being compiled
           with
           [
               Func=void (__cdecl graphics::GuiRenderer::* )(int)
           ]
-  		F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3495,32):
+  		F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(3474,32):
   		see the first reference to 'tgui::SignalTyped<float>::operator ()' in 'graphics::GuiRenderer::frameRateSlider_renderer'
   	C:\TGUI-1.0-nightly\include\TGUI\Signal.hpp(310,20):
   	see reference to function template instantiation 'unsigned int tgui::SignalTyped<float>::connect<Func,graphics::GuiRenderer*,0x0>(const Func &,graphics::GuiRenderer *const &)' being compiled
@@ -552,24 +385,21 @@ F:\Visual Studio setup\VC\Tools\MSVC\14.38.33130\include\type_traits(1747,77): w
           ]
   
 F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(705): warning C4715: 'ship::isAuthenticPath': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(1018): warning C4715: 'ship::getRadiusCoords_cannon': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2371): warning C4715: 'ship::isInShipRadius': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2286): warning C4715: 'ship::updateCost': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2442): warning C4715: 'ship::isShipInMyRadius_forFire': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2485): warning C4715: 'ship::isShipInMyRadius': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(995): warning C4715: 'ship::getRadiusCoords_cannon': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2265): warning C4715: 'ship::updateCost': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2350): warning C4715: 'ship::isInShipRadius': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2421): warning C4715: 'ship::isShipInMyRadius_forFire': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.cpp(2464): warning C4715: 'ship::isShipInMyRadius': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::abs_pos>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::A>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::vertex>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::coords>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::point>::operator[]': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2552): warning C4715: 'Control::getCannonList': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::cannon>::operator[]': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2542): warning C4715: 'Control::getShipList': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1640): warning C4715: 'ship::getGlobalMapref': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1565): warning C4715: 'ship::getAbsolutePosition1': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1685): warning C4715: 'ship::getPathList': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1655): warning C4715: 'ship::getPointPath': not all control paths return a value
-F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<graphics::animator>::operator[]': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2589): warning C4715: 'Control::getCannonList': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(2579): warning C4715: 'Control::getShipList': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1651): warning C4715: 'ship::getGlobalMapref': not all control paths return a value
+F:\current projects\GREED(programming game)\GREED(programming game)\online_lib2.hpp(1576): warning C4715: 'ship::getAbsolutePosition1': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<int>::operator[]': not all control paths return a value
 F:\current projects\GREED(programming game)\GREED(programming game)\List.h(254): warning C4715: 'List<Greed::bullet>::operator[]': not all control paths return a value
   GREED(programming game).vcxproj -> F:\current projects\GREED(programming game)\x64\Debug\GREED(programming game).exe

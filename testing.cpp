@@ -39,16 +39,17 @@ void GreedMain(ship& ob)
 	int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
 	if (index >= 0)
 		//ob.Greed_chaseShip(index);
-	cout << "\n chasing the ship==>" << index;
+
 	int frame_rate = 0;
-	ob.Greed_setPath(Greed::coords(10, 23));
+	
 	double elapsed_time = 0;
+	ob.Greed_setPath(Greed::coords(10, 23));
 	while (1)
 	{
 
 		if (ob.frame_rate_limiter())
 		{//this is anchit rana talking to the world and i want ot know the difference between
-
+			
 			Event e;
 			ob.getNextCurrentEvent(e);
 			if (e.eventType == Event::EventType::ShipsInMyRadius)

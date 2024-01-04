@@ -35,15 +35,16 @@
 #endif
 #define MAX_LENGTH 1000
 
+
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "Hawk.cpp"
+#include "hawk.cpp"
 #include<ctime>
 #include<chrono>
 /*
-* what am i doing here?
+* what am i doing here?sssssssssssssssss
 * the entire template is in lib2.hpp and its cpp counterpart
-* so everytime we need to make a new version of the pre-existing game, just import the Game API with all implementations
+* so everytime we need to make a new version of the pre-existing game, just import the Gassssssssssssssssssssssssssssssssssssssssme API with all implementations
 * and write your own graphics::callable function and a handler function void main() to complete it
 * this way we can create any variant of the game using only the pre-built template.
 * PS: any extra classes required can be written here
@@ -69,6 +70,8 @@ SOCKET sending_socket;//socket to send data to the server
 
 deque<recv_data> input_data;//input data from the server to the client
 deque<send_data> terminal_data;
+
+
 
 long game_tick = 1;//this is the game tick of the server not the client
 
@@ -249,6 +252,7 @@ void data_recver(SOCKET socket_listen,Mutex *m)
 				if (bytes < 1)
 				{
 					cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
+					continue;
 				}
 				if (bytes == 4)
 				{
@@ -304,7 +308,7 @@ void data_send(Mutex* m,deque<ship*> &pl1)
 		if (ep > 1)
 		{
 			ep = 0;
-			cout << "\n packets sent are==>" << count << endl;
+			//cout << "\n packets sent are==>" << count << endl;
 			count = 0;
 		}
 		
@@ -337,41 +341,49 @@ void data_send(Mutex* m,deque<ship*> &pl1)
 
 			}
 			*/
-			send_data ob = data[i];
-			//cout << "sending the packet==>" << ob.packet_id;
-			char buffer[sizeof(data[i])];
-			memcpy(buffer, &ob, sizeof(ob));
-
-			int sent_bytes = 0;
-			//sending that starting a new packet
-			int sending_new = my_id;//sending my id to the person
-			
-			send(sending_socket, (char*)&sending_new, sizeof(sending_new), 0);
-			while (sent_bytes < sizeof(ob))
+			int limit = 1;//default number of times the pcket will be sent 
+			if (data[i].shipdata_forServer.size_bulletData > 0 || data[i].shipdata_forServer.size_navigation > 0 || data[i].shipdata_forServer.size_update_cost > 0 || data[i].shipdata_forServer.size_upgrade_data > 0)
 			{
-				int fuck = sizeof(ob) - sent_bytes;
-				int bytesToSend = min(MAX_LENGTH, fuck);
-				if (ob.st != 100 || ob.end != 101)
-				{
-					cout << "\n sending the wrong data from the client side";
-				}
-				int bytes = send(sending_socket, buffer + sent_bytes, bytesToSend, 0);
-				if (bytes < 1)
-				{
-					cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
-				}
-				else
-				{
-					sent_bytes += bytes;
-					
-					auto now = std::chrono::system_clock::now();
-					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+				limit = 5;
+			}
+			for (int k = 1; k <= limit; k++)
+			{
+				send_data ob = data[i];
+				//cout << "sending the packet==>" << ob.packet_id;
+				char buffer[sizeof(data[i])];
+				memcpy(buffer, &ob, sizeof(ob));
 
-					 //cout << "\n sent data to the client at==> " <<
-					   // hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+				int sent_bytes = 0;
+				//sending that starting a new packet
+				int sending_new = my_id;//sending my id to the person
+
+				send(sending_socket, (char*)&sending_new, sizeof(sending_new), 0);
+				while (sent_bytes < sizeof(ob))
+				{
+					int fuck = sizeof(ob) - sent_bytes;
+					int bytesToSend = min(MAX_LENGTH, fuck);
+					if (ob.st != 100 || ob.end != 101)
+					{
+						cout << "\n sending the wrong data from the client side";
+					}
+					int bytes = send(sending_socket, buffer + sent_bytes, bytesToSend, 0);
+					if (bytes < 1)
+					{
+						cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+					}
+					else
+					{
+						sent_bytes += bytes;
+
+						auto now = std::chrono::system_clock::now();
+						auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+						auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+						auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+						auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+						//cout << "\n sent data to the client at==> " <<
+						  // hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					}
 				}
 			}
 			auto now = std::chrono::system_clock::now();
@@ -486,6 +498,11 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int effective_frame_rate = 0;
 	int wait_tick = 0;
 	control1 cont;//object of control1 class
+
+	int nav_res_count = 1;//to keep the count in order to wait before resending anything.
+	int bullet_res_count = 1;
+
+	int no_bullet_resend = 0;//to keep a count on number of bullets that were resent
 	while (1)
 	{
 		/*NOTES:
@@ -511,7 +528,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		ep += tt.asSeconds();
 		if (ep > 1)
 		{
-			cout << "\n effective frame rate=>" << effective_frame_rate;
+		//	cout << "\n effective frame rate=>" << effective_frame_rate;
 			frame_rate = 0;
 			effective_frame_rate = 0;
 			ep = 0;
@@ -568,6 +585,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 				}
 				return true;
 				});
+			//recving the data from the server here
 					if (input_data.size() == 1)//case when only one packet is there from the server
 					{
 						
@@ -578,7 +596,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						lock.unlock();
 						
 						game_tick = data1.packet_id;
-						cout << "\n recved packet with id=>" << data1.packet_id;
+						//cout << "\n recved packet with id=>" << data1.packet_id;
 						//cout << "\n packet id==>" << data1.packet_id;
 						//cout << "\n packet id=>" << data1.packet_id;
 						control_ob.packet_to_pl(data1.shipdata_exceptMe, data1.s1, ship_id, pl1);
@@ -624,9 +642,73 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							}
 						}
 					}
-					
-					
-					
+				//check if navigation and firing commands reached the server properly, if not then resend them
+					if (resend_navigation.size() > 0 && nav_res_count%4==0)//this has be run only after alternate frames after sending the navigation request8
+					{
+						if (resend_navigation[0].type != 3 && pl1[ship_id]->motion==0)
+						{
+							//resend the navigation command again
+							pl1[ship_id]->nav_data_final.push_front(resend_navigation[0]);
+							cout << "\n reattemting navigation command to move==>" << game_tick;
+							nav_res_count = 1;
+							//cout << "\n navigation has started at frame rate==>" << game_tick;
+							//resend_navigation.pop_front();
+
+						}
+						else if (resend_navigation[0].type != 3 && pl1[ship_id]->motion == 1)
+						{
+							resend_navigation.pop_front();
+							nav_res_count = 3;
+
+						}
+						
+						else if (resend_navigation[0].type == 3 && pl1[ship_id]->motion == 1)
+						{
+							pl1[ship_id]->nav_data_final.push_front(resend_navigation[0]);
+							cout << "\n reattempting navigation command to halt==>" << game_tick;
+							nav_res_count = 1;
+						}
+						else if(resend_navigation[0].type==3 && pl1[ship_id]->motion==0)
+						{
+							resend_navigation.pop_front();
+							nav_res_count = 3;
+						}
+					}
+					if (bullet_res_count % 4 == 0)
+					{
+						for (int i = 0; i < resend_bullet.size() && i < 5; i++)
+						{
+							unique_lock<mutex> lk(mutx->m[ship_id]);
+
+							if (pl1[ship_id]->client_fire > pl1[ship_id]->server_fire)
+							{
+								///cout << "\n reattempting fire command at=>" << game_tick;
+
+								pl1[ship_id]->bullet_info.push_front(resend_bullet[i]);
+								bullet_res_count = 1;
+								no_bullet_resend++;
+
+							}
+							else if (pl1[ship_id]->client_fire == pl1[ship_id]->server_fire)
+							{
+								resend_bullet.pop_front();
+								bullet_res_count = 2;
+							}
+							else if (pl1[ship_id]->client_fire < pl1[ship_id]->server_fire)
+							{
+								cout << "\n server fire=>" << pl1[ship_id]->server_fire << " " << " client fire=>" << pl1[ship_id]->client_fire;
+							}
+						}
+					}
+					if (resend_navigation.size() > 0)
+					{
+						nav_res_count++;
+					}
+					if (resend_bullet.size() > 0)
+					{
+						bullet_res_count++;
+					}
+
 						unique_lock<mutex> lk1(pl1[ship_id]->mutx->m[ship_id]);
 						if (current_health < pl1[ship_id]->health)
 						{
@@ -648,8 +730,6 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						lk1.unlock();
 
 
-
-
 						avg_recv += recvt.getElapsedTime().asSeconds();
 
 						//std::time_t result = std::time(nullptr);
@@ -665,6 +745,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							//using nav_data
 							sf::Clock process;
 							process.restart();
+							unique_lock<mutex> sigma(mutx->m[ship_id]);
 							if (pl1[ship_id]->nav_data.size() > 0)
 							{
 								for (int i = 0; i < pl1[ship_id]->nav_data.size(); i++)
@@ -673,6 +754,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 								}
 								pl1[ship_id]->nav_data.clear();
 							}
+							sigma.unlock();
 
 							//getPointPath has to be protected by a mutex
 
@@ -1380,9 +1462,18 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							threshold_ammo = pl1[ship_id]->threshold_ammo;
 							threshold_fuel = pl1[ship_id]->threshold_fuel;
 							threshold_health = pl1[ship_id]->threshold_health;
-
-
-							control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx);
+							for (int i = 0; i < pl1[ship_id]->bullet_info.size() && i<15; i++)
+							{
+								//cout << "\n sending firing data at==>" << game_tick;
+							}
+							for (int i = 0; i < pl1[ship_id]->nav_data_final.size(); i++)
+							{
+								cout << "\n sending navigation data at==>" << game_tick;
+							}
+							control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx,nav_res_count,bullet_res_count,no_bullet_resend);
+							
+						
+							
 							frame_number++;
 							game_tick++;
 							effective_frame_rate++;
@@ -1394,7 +1485,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							{
 								if (data2.shipdata_forServer.udata[i].type == 1)
 								{
-									cout << "\n sending for health to the sever at the health level=>" << pl1[ship_id]->getCurrentHealth();
+									//cout << "\n sending for health to the sever at the health level=>" << pl1[ship_id]->getCurrentHealth();
 								}
 							}
 							if (data2.shipdata_forServer.size_navigation > 0 && my_id==1)

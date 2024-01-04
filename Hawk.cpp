@@ -53,7 +53,7 @@
 	void GreedMain(ship& ob)
 	{
 		//setting the aim
-		
+		/*
 		vector <Greed::cannon> cannonList = ob.getCannonList();
 		for (int j = 0; j < cannonList.size(); j++)
 		{
@@ -65,10 +65,11 @@
 				ob.Greed_updateCost(arr[i], 50);
 			}
 		}
+		*/
 		
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
-		//ob.Greed_chaseShip(index);
+		ob.Greed_chaseShip(index);
 		int frame_rate = 0;
 		
 		double elapsed_time = 0;
@@ -102,18 +103,17 @@
 					}
 				}
 				//ob.Greed_fireCannon(cannon::FRONT, 0, ShipSide::REAR);
-				if (e.eventType == Event::EventType::LowAmmo)
+				if (ob.getCurrentHealth() < 20)
+				{
+					ob.Greed_upgradeHealth(20);
+				}
+				if (ob.getCurrentAmmo() < 40)
 				{
 					ob.Greed_upgradeAmmo(20);
 				}
-				if (e.eventType == Event::EventType::LowHealth)
-				{
-					ob.Greed_upgradeHealth(5);
-				}
-			
 				if (e.eventType == Event::EventType::ShipsInMyRadius)
 				{
-					
+					ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[0], ShipSide::FRONT);
 					
 				}
 				
@@ -133,7 +133,12 @@
 					}
 					if (q[i].eventType == Event::EventType::ShipsInMyRadius)
 					{
-						
+						//cout << "\n firing";
+						for (auto it : q[i].shipFire.getShipId())
+						{
+							cout << "\n firing at=>" << it.first;
+							ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::FRONT);
+						}
 					}
 
 				}

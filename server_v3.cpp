@@ -49,11 +49,17 @@ starting client_v1 will automatically start the client_v2 unit so no need to sta
 #include<stdlib.h>
 #include<math.h>
 #include<stdio.h>
+#include<map>
+
 
 #define MAX_LENGTH 1000
 int max_player=0;
 string my_token;//token of the current game instance
 
+
+//using some variables for tab keeping
+std::map<int, int> incoming_all;
+std::map<int, int> incoming_selected;
 /*
 * 1. a function which connects the server with the clients and assign each client's ship an id
 * 2. after all required clients are connected properly or the time of connection is up, send all the connected clients initial configuration of the game
@@ -302,7 +308,7 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 					
 					if (temp[i].size() > 0)
 					{
-						cout << "\n resolving navigation in nav_processor function for==>" << i;
+						//cout << "\n resolving navigation in nav_processor function for==>" << i;
 						if (temp[i][0].type == 0)//for target type
 						{
 							if (temp[i][0].target.r != -1 && temp[i][0].target.c != -1)
@@ -332,7 +338,7 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 						}
 						else if (temp[i][0].type == 3)
 						{
-							cout << "\n anchor ship is called by==>" << i;
+							//cout << "\n anchor ship is called by==>" << i;
 							pl1[i]->anchorShip();
 						}
 						
@@ -585,6 +591,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 	int count = 0;//for id=0
 	int count1 = 0;//for id=1;
 	unordered_map<int, string> id_port;//for mapping of id and port
+	int wrong = 0;//if something wrong has happened then wait for the 4 byte packet
 	while (1)
 	{
 		
@@ -671,6 +678,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 					}
 					
 				}
+				wrong = 0;
 				memset(all_buffer[id], 0, sizeof(all_buffer[id]));
 				total_bytes[id] = 0;
 
@@ -751,10 +759,38 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 						}
 						*/
 					//	cout << "\n packet id==>" << ob.packet_id << " previous packet is==>" << packet_id[id];
+						//cout << "\n packet recved from==>" << ob.shipdata_forServer.ship_id << " is=>" << ob.packet_id;
 						unique_lock<mutex> lk(m->recv_terminal);
+						if (id == 0)
+						{
+							if (incoming_all.find(ob.packet_id) == incoming_all.end())
+							{
+								incoming_all[ob.packet_id] = 1;
+							}
+							else
+							{
+								incoming_all[ob.packet_id]++;
+							}
+						}
 						if (ob.packet_id > packet_id[id])
 						{
 							input_data[id].push_back(ob);
+							//cout << "\n inside packet recved from==>" << ob.shipdata_forServer.ship_id << " is=>" << ob.packet_id;
+							if (ob.packet_id - packet_id[id] > 1)
+							{
+								//cout << "\n packet missing for=>"<<id<<" by ==> " << (ob.packet_id - packet_id[id]);
+							}
+							if (id == 0)
+							{
+								if (incoming_selected.find(ob.packet_id) == incoming_selected.end())
+								{
+									incoming_selected[ob.packet_id] = 1;
+								}
+								else
+								{
+									incoming_selected[ob.packet_id]++;
+								}
+							}
 							packet_id[id] = ob.packet_id;
 						}
 						m->cond_input_terminal.notify_all();
@@ -926,6 +962,21 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	double avg_two = 0;
 	int wait_tick = 0;//this is the number of times that the server will wait for the clients to send the packet, if the threshold is crossed, the server will just continue the process with what he has
 	int wait_tick1 = 0;
+
+	//checking the size of the recving buffer now..
+	int recv_size;
+	int lenght = sizeof(recv_size);
+	if (getsockopt(recver, SOL_SOCKET, SO_RCVBUF, (char*)&recv_size, &lenght) == -1)
+	{
+		// deal with failure
+		cout << "\n cannot fetch the size of the recv buffer..";
+	}
+	else
+	{
+		// print or use the buffer size
+		cout << "\n size of the recv buffer is==>" << recv_size;
+	}
+
 	while (1)
 	{
 		int flag = 1;//to check if the latest packets are here from the client, so that they get the same shit everytime
@@ -943,6 +994,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 			{
+				gameOver = true;
 				break;
 			}
 			
@@ -1093,6 +1145,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			avg_one = max(probe1, (int)avg_one);
 			avg_two = max(probe2, (int)avg_two);
 			
+
+			///////////////////////    RECVING DATA    //////////////////////////////////////////
 			for (int j = 0; j < n; j++)
 			{
 				if (pl1[j]->died == 1)
@@ -1131,15 +1185,35 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					2. all bullets requests have to be added in the fire queue
 					3. all upgrading requests have to be added in the upgrade queue.
 				  */
-					cout << "\n recved the packet with the id==>" << data2[data2.size() - 1].packet_id;
-					cout << "\n my tick is==>" << game_tick;
+					//cout << "\n recved the packet from=>"<<j<<" with the id ==> " << data2[data2.size() - 1].packet_id;
+					//cout << "\n my tick is==>" << game_tick;
+
+					
+					if (sid == 0)
+					{
+						for (int i = 0; i < data2.size(); i++)
+						{
+							for (int k = 0; k < data2[i].shipdata_forServer.size_bulletData; k++)
+							{
+								//cout << "\n ship fire command recved successfully==>" << data2[i].packet_id << " my game tick=>" << game_tick;
+							}
+							for (int k = 0; k < data2[i].shipdata_forServer.size_navigation; k++)
+							{
+								//cout << "\n ship navigation command recved successfully==>" << data2[i].packet_id << " my game tick==>" << game_tick;
+							}
+						}
+					}
 					control.server_to_myData(data2[data2.size()-1].shipdata_forServer, pl1, sid, mutx);
 					//merging the left over part
 					for (int i = data2.size() - 2; i >= 0; i--)
 					{
 						for (int k = 0; k < data2[i].shipdata_forServer.size_bulletData; k++)
 						{
-							pl1[j]->bullet_info.push_front(data2[i].shipdata_forServer.b_data[k]);
+							if (pl1[j]->server_fire < pl1[j]->client_fire)
+							{
+								pl1[j]->bullet_info.push_front(data2[i].shipdata_forServer.b_data[k]);
+								pl1[j]->server_fire++;
+							}
 						}
 						for (int k = 0; k < data2[i].shipdata_forServer.size_upgrade_data; k++)
 						{
@@ -1191,12 +1265,14 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						{
 							if (pl1[i]->udata[j].type == 0)
 							{
+								cout << "\n ammo bought by the ship==>" << i;
 								pl1[i]->upgradeAmmo(pl1[i]->udata[j].n);//when the user buys something
 							}
 							else if (pl1[i]->udata[j].type == 1)
 							{
-								cout << "health upgrade came by==>" << i << " at the health level=>" << pl1[i]->health;
+								//cout << "health upgrade came by==>" << i << " at the health level=>" << pl1[i]->health;
 								pl1[i]->upgradeHealth(pl1[i]->udata[j].n);
+								cout << "\n health bought by the ship==>" << i;
 							}
 							else if (pl1[i]->udata[j].type == 2)
 							{
@@ -1209,7 +1285,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 						for (int j = 0; j < pl1[i]->bullet_info.size(); j++)
 						{
-
+							
 							if (pl1[i]->bullet_info[j].type == 0)
 							{
 
@@ -1249,9 +1325,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						for (int j = 0; j < pl1[i]->nav_data_temp.size(); j++)
 						{
 
-							if (pl1[i]->motion == 0 || pl1[i]->nav_data_temp[i].type == 3)//add only in the queue if the ship is in motion..
+							if (pl1[i]->motion==0|| pl1[i]->nav_data_temp[i].type == 3)//add only in the queue if the ship is in motion..
 							{
-								cout << "\n in game loop recved value==>" << pl1[i]->nav_data_temp[j].type;
+								//cout << "\n in game loop recved value==>" << pl1[i]->nav_data_temp[j].type;
 								pl1[i]->nav_data.push_back(pl1[i]->nav_data_temp[j]);
 
 							}
@@ -1297,8 +1373,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 								}
 							}
 						}
-						if (mutx->m[i].try_lock())
-						{
+					
+						mutx->m[i].lock();
 							List<Greed::abs_pos>& l1 = pl1[i]->getPathList(2369);
 
 							if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 1 != pl1[i]->getPointPath(2369) && pl1[i]->tile_path.howMany() > 0)
@@ -1333,13 +1409,13 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							}
 
 							mutx->m[i].unlock();
-						}
+						
 						//navigation part of the ship ends here
 						navigation_ship += processing2.getElapsedTime().asSeconds();
 
 						sf::Clock processing3;
 						processing3.restart();
-						if (pl1[i]->ammo > 0 && pl1[i]->cannon_ob.activeBullets.size() > 0 && game_tick%30==0)
+						if (pl1[i]->ammo > 0 && pl1[i]->cannon_ob.activeBullets.size() > 0 )
 						{
 							//cout << "\n stage 2.5 fired by=>" << i;
 							frames = 0;
@@ -1839,7 +1915,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				{
 					recv_data data1;
 					memset((void*)&data1, 0, sizeof(data1));
-					//preparing the packet for client terminal
+					//preparing the packet for client terminalG
 					strcpy(data1.token, my_token.c_str());
 					data1.packet_id = game_tick;
 					data1.s1 = pl1.size(); 
@@ -2081,7 +2157,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	
 	//CLOSESOCKET(socket_display[0]);
 
-	cout << "\n average times are==>";
+	
 	double sending0 = 0;
 	double sending1 = 0;
 	double sending2 = 0;
@@ -2108,9 +2184,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		sending2 += de[i].avg_send2;
 	
 	}
-	cout << "\n total input buffer size=>" << input_size / (2 * total_times);
-	cout << "\n avg wait for one=>" << avg_one;
-	cout << "\navg wait for two is==>" << avg_two;
+	cout << "\n printing some important information from here======================================================";
+	//doing some calculations here to predict some shit
+	
+
+
 }
 
 void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//here n is the max player
@@ -2208,6 +2286,13 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	freeaddrinfo(bind_address1);
 	freeaddrinfo(bind_address2);
 	
+	int new_size = 5*1024 * 1024; // 1 MB
+	if (setsockopt(recver, SOL_SOCKET, SO_RCVBUF, (char*)&new_size, sizeof(new_size)) == -1) {
+		// deal with failure, or ignore if you can live with the default size
+		cout << "\n cannot set the size of the recv buffer to 2MB...";
+	}
+	
+
 	fd_set master;
 	FD_ZERO(&master);
 	FD_SET(tcp_socket, &master);

@@ -49,6 +49,10 @@
 * Origin is (17,19)
 */
 
+
+
+
+
 class user_credentials
 {
 public:
@@ -1238,6 +1242,9 @@ public:
 	friend class graphics;
 	friend class control1;
 };
+
+deque<navigation> resend_navigation;//to store the navigation requests that has be resent
+deque<bullet_data> resend_bullet;//firing data that has to be resent
 class map_cost//class to send updateCost of the map tile data to the server over the network
 {
 public:
@@ -1282,13 +1289,15 @@ public:
 	double threshold_ammo;
 	double threshold_fuel;
 	
+	int client_fire;
+
 	int radius;//square radius
 
 	int size_navigation;
-	navigation nav_data[2];//to be merged
+	navigation nav_data[4];//to be merged
 
 	int size_bulletData;
-	bullet_data b_data[10];//to be merged
+	bullet_data b_data[15];//to be merged
 
 	int size_upgrade_data;
 	upgrade_data udata[10];//to be merged
@@ -1327,7 +1336,8 @@ public:
 	int ammo;
 	int fuel;//fuel is used for moving the ship around, once its over the ship cant move
 	int invisible;//to be changed
-	
+	int server_fire;
+
 	Greed::coords front_tile;
 	Greed::coords rear_tile;
 	Greed::abs_pos front_abs_pos;
@@ -1458,9 +1468,11 @@ private:
 
 public: //this will be public the user will be able to access this object freely
 	//object 
+	int client_fire;
+	int server_fire;
 	bool gameOver;
 	bool isFiring;
-	int isShipInMotion()
+	int isShipInMotion()//this function has to be used
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (tile_path.howMany() > 0)
@@ -1985,7 +1997,7 @@ public:
 		return index;
 
 	}
-	bool isShipMoving(int s_id)// tells if another player's ship is moving
+	[[deprecated("use isShipInMotion() instead")]] bool isShipMoving(int s_id)// tells if another player's ship is moving
 	{
 		ship* ob = shipInfoList[s_id].ob; //assuming that no ship entry is deleted and every ship is in increasing order of their ship_id
 		if (ob->motion == 1)
@@ -2001,8 +2013,8 @@ public:
 	{
 		//return isShipMoving(this->ship_id);
 		 //current mechanism is to check if the list of absolute coords is >0
-
-		if (path.howMany() - 1 == pointPath)
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		if (path.howMany() - 1 == pointPath || path.howMany()==0)
 			return false;
 		else
 			return true;
@@ -2017,47 +2029,66 @@ public:
 	//introducing the new functions
 	void Greed_sail(Direction d, int tiles = 1)
 	{
+		
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		navigation nav(1, Greed::coords(-1, -1), -1, tiles, d);
-		nav_data.push_back(nav);
+		if (motion == 0)
+		{
+			navigation nav(1, Greed::coords(-1, -1), -1, tiles, d);
+			nav_data.push_back(nav);
+		}
 	}
 	void Greed_setPath(int s_id)
 	{
+		
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		navigation nav(0, Greed::coords(-1, -1), s_id, -1, Direction::NA);
-		nav_data.push_back(nav);
+		if (motion == 0)
+		{
+			navigation nav(0, Greed::coords(-1, -1), s_id, -1, Direction::NA);
+			nav_data.push_back(nav);
+		}
 	}
 	void Greed_setPath(Greed::coords ob)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		navigation nav(0, ob, -1, -1, Direction::NA);
-		nav_data.push_back(nav);
+		if (motion == 0)
+		{
+			navigation nav(0, ob, -1, -1, Direction::NA);
+			nav_data.push_back(nav);
+		}
 	}
 	void Greed_chaseShip(int s_id)
 	{
 		
 			unique_lock<mutex> lk(mutx->m[ship_id]);
-			navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
-			nav_data.push_back(nav);
-			lock_chase_ship = 1;
+			if (motion == 0)
+			{
+				navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
+				nav_data.push_back(nav);
+				lock_chase_ship = 1;
+			}
 		
 	}
 	void Greed_anchorShip()
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		navigation nav(3, Greed::coords(-1, -1), -1, -1, Direction::NA);
-		nav_data.push_back(nav);
+		if (motion == 1)
+		{
+			navigation nav(3, Greed::coords(-1, -1), -1, -1, Direction::NA);
+			nav_data.push_back(nav);
+		}
 	}
 	//entity conversion functions
 	void Greed_fireCannon(cannon can, int s_id, ShipSide s)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
+		
 		bullet_info.push_back(bullet_data(0,can,s_id,s,-1));
 
 	}
 	void Greed_fireAtCannon(int c_id, cannon can = cannon::FRONT)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
+		
 		bullet_info.push_back(bullet_data(1,can,-1,ShipSide::NA,c_id));
 	}
 
@@ -2217,7 +2248,7 @@ public:
 		
 		pl1[id]->score = ob.score;
 	
-	
+		pl1[id]->server_fire = ob.server_fire;
 		pl1[id]->radius = ob.radius;
 		pl1[id]->health = ob.health;
 		pl1[id]->gold = ob.gold;
@@ -2272,6 +2303,7 @@ public:
 	}
 	void me_to_packet(shipData_forMe& ob, int id, deque<ship*>& pl1)
 	{
+		ob.server_fire = pl1[id]->server_fire;
 		ob.seconds = pl1[id]->seconds;
 		ob.minutes = pl1[id]->minutes;
 		ob.killer_ship_id = pl1[id]->killer_ship_id;
@@ -2353,7 +2385,7 @@ public:
 
 		pl1[id]->unlock.clear();
 	}
-	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx)
+	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx,int &nav_res_count,int &bullet_res_count, int &no_bullet_resend)
 	{
 		//transfer data members from pl1 to shipData_forServer
 		ob.ship_id = pl1[ship_id]->ship_id;
@@ -2371,25 +2403,27 @@ public:
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (pl1[ship_id]->nav_data_final.size() > 0)
 		{
-			cout << "\n size of navigation is==>" << pl1[ship_id]->nav_data_final.size();
+			
 		}
-		if (pl1[ship_id]->nav_data_final.size() <= 2)
+		if (pl1[ship_id]->nav_data_final.size() <= 4)
 		{
 			ob.size_navigation = pl1[ship_id]->nav_data_final.size();
+			if (resend_navigation.size() == 0)
+			{
+				nav_res_count = 1;
+			}
 
 		}
 		else 
 		{
 			
-			ob.size_navigation = 2;
+			ob.size_navigation = 4;
 		}
 		
-		for (int i = 0; i < ob.size_navigation && i<2; i++)
+		for (int i = 0; i < ob.size_navigation && i<4; i++)
 		{
 			ob.nav_data[i] = pl1[ship_id]->nav_data_final[i];
-			//cout << "\n type is=>" << pl1[ship_id]->nav_data[i].type;
-			cout << "\n sending nav_data==>" << pl1[ship_id]->nav_data_final[i].type;
-			
+			resend_navigation.push_back(pl1[ship_id]->nav_data_final[i]);			
 		}
 
 		//clearing the first ob.size_navigation entries from the queue
@@ -2399,23 +2433,32 @@ public:
 		}
 		
 		//ob.size_bulletData = pl1[ship_id]->bullet_info.size();
-		if (pl1[ship_id]->bullet_info.size() <= 10)
+		if (pl1[ship_id]->bullet_info.size() <= 15)
 		{
+
 			ob.size_bulletData = pl1[ship_id]->bullet_info.size();
 		}
 		else
 		{
-			ob.size_bulletData = 10;
+			ob.size_bulletData = 15;
 		}
 		if (ob.size_bulletData > 0)
 		{
-			avg_bullet += ob.size_bulletData;
-			no_of_times++;
+			if (resend_bullet.size() == 0)
+			{
+				bullet_res_count = 1;
+			}
 		}
-		for (int i = 0; i < ob.size_bulletData && i<10; i++)
+		for (int i = 0; i < ob.size_bulletData && i<15; i++)
 		{
 			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
+			resend_bullet.push_back(pl1[ship_id]->bullet_info[i]);
+			pl1[ship_id]->client_fire++;
 		}
+		pl1[ship_id]->client_fire -= no_bullet_resend;
+		no_bullet_resend = 0;
+
+		ob.client_fire = pl1[ship_id]->client_fire;
 		pl1[ship_id]->bullet_info.clear(); 
 
 		if (pl1[ship_id]->udata.size() <= 10)
@@ -2438,7 +2481,10 @@ public:
 			{
 				cout << "\n sent for health by=>" << ship_id;
 			}
-
+			if (pl1[ship_id]->udata[i].type == 0)
+			{
+				cout << "\n sent for ammo==>";
+			}
 			ob.udata[i] = pl1[ship_id]->udata[i];
 		}
 		pl1[ship_id]->udata.clear();	
@@ -2473,17 +2519,27 @@ public:
 		pl1[ship_id]->threshold_fuel = ob.threshold_fuel;
 		pl1[ship_id]->radius = ob.radius;
 		pl1[ship_id]->bullet_info.clear();
-
-		if (ob.size_bulletData > 0 && ship_id==0) 
+		pl1[ship_id]->client_fire = ob.client_fire;
+		if (ob.size_bulletData > 0) 
 		{
 			avg_bullet += ob.size_bulletData;
 			no_of_times++;
+			
 		}
 			
 		for (int i = 0; i < ob.size_bulletData; i++)//it has to be merged
 		{
 			//cout << "\n in convertor, fired by=>" << ob.ship_id;
-			pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
+			if (ship_id == 0)
+			{
+				cout << "\n server_fire==>" << pl1[ship_id]->server_fire << " client fire==>" << pl1[ship_id]->client_fire;
+				
+			}
+			if (pl1[ship_id]->server_fire < pl1[ship_id]->client_fire)
+			{
+				pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
+				pl1[ship_id]->server_fire++;
+			}
 			//cout << "\n firing";
 		}
 		int found = 0;

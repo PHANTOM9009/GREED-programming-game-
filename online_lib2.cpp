@@ -1019,6 +1019,8 @@ bool ship::frame_rate_limiter()
 
 ship::ship()//default ctor for now
 {
+	client_fire = 0;
+	server_fire = 0;
 	gameOver = false;
 	hector = false;
 	lock_ammo = 0;
