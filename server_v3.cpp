@@ -1209,10 +1209,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					{
 						for (int k = 0; k < data2[i].shipdata_forServer.size_bulletData; k++)
 						{
-							if (pl1[j]->server_fire < pl1[j]->client_fire)
+							if (pl1[j]->bullet_id_count.find(data2[i].shipdata_forServer.b_data[i].bullet_id) == pl1[j]->bullet_id_count.end())
 							{
 								pl1[j]->bullet_info.push_front(data2[i].shipdata_forServer.b_data[k]);
 								pl1[j]->server_fire++;
+								pl1[j]->bullet_id_count[data2[i].shipdata_forServer.b_data[i].bullet_id] = 1;
 							}
 						}
 						for (int k = 0; k < data2[i].shipdata_forServer.size_upgrade_data; k++)
@@ -1270,7 +1271,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							}
 							else if (pl1[i]->udata[j].type == 1)
 							{
-								//cout << "health upgrade came by==>" << i << " at the health level=>" << pl1[i]->health;
+								
 								pl1[i]->upgradeHealth(pl1[i]->udata[j].n);
 								cout << "\n health bought by the ship==>" << i;
 							}

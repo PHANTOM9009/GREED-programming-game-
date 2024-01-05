@@ -53,7 +53,7 @@
 	void GreedMain(ship& ob)
 	{
 		//setting the aim
-		/*
+		
 		vector <Greed::cannon> cannonList = ob.getCannonList();
 		for (int j = 0; j < cannonList.size(); j++)
 		{
@@ -65,7 +65,7 @@
 				ob.Greed_updateCost(arr[i], 50);
 			}
 		}
-		*/
+		
 		
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
@@ -73,9 +73,10 @@
 		int frame_rate = 0;
 		
 		double elapsed_time = 0;
+		sf::Clock clock;
 		while (1)
 		{
-
+			elapsed_time += clock.restart().asSeconds();
 			if (ob.frame_rate_limiter())
 			{//this is anchit rana talking to the world and i want ot know the difference between
 				//cout<<"\n my health is==>"<<ob.getCurrentHealth();
@@ -83,7 +84,7 @@
 				
 				if (elapsed_time > 1)
 				{
-				
+					//cout << "\n algorithms frame rate is==>" << frame_rate;
 					frame_rate = 0;
 					elapsed_time = 0;
 				}
@@ -134,10 +135,9 @@
 					if (q[i].eventType == Event::EventType::ShipsInMyRadius)
 					{
 						//cout << "\n firing";
-						for (auto it : q[i].shipFire.getShipId())
+						for (auto it : q[i].radiusShip.getShipId())
 						{
-							cout << "\n firing at=>" << it.first;
-							ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::FRONT);
+							ob.Greed_fireCannon(cannon::FRONT, it, ShipSide::FRONT);
 						}
 					}
 

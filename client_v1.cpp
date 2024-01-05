@@ -503,6 +503,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int bullet_res_count = 1;
 
 	int no_bullet_resend = 0;//to keep a count on number of bullets that were resent
+
+	int no_of_bullets = 0;
+	int no_of_times = 0;
 	while (1)
 	{
 		/*NOTES:
@@ -643,14 +646,15 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						}
 					}
 				//check if navigation and firing commands reached the server properly, if not then resend them
-					if (resend_navigation.size() > 0 && nav_res_count%4==0)//this has be run only after alternate frames after sending the navigation request8
+					if (resend_navigation.size() > 0 && nav_res_count % 4 == 0)//this has be run only after alternate frames after sending the navigation request8
 					{
-						if (resend_navigation[0].type != 3 && pl1[ship_id]->motion==0)
+						nav_res_count = 1;
+						if (resend_navigation[0].type != 3 && pl1[ship_id]->motion == 0)
 						{
 							//resend the navigation command again
 							pl1[ship_id]->nav_data_final.push_front(resend_navigation[0]);
 							cout << "\n reattemting navigation command to move==>" << game_tick;
-							nav_res_count = 1;
+
 							//cout << "\n navigation has started at frame rate==>" << game_tick;
 							//resend_navigation.pop_front();
 
@@ -661,44 +665,52 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							nav_res_count = 3;
 
 						}
-						
+
 						else if (resend_navigation[0].type == 3 && pl1[ship_id]->motion == 1)
 						{
 							pl1[ship_id]->nav_data_final.push_front(resend_navigation[0]);
 							cout << "\n reattempting navigation command to halt==>" << game_tick;
 							nav_res_count = 1;
 						}
-						else if(resend_navigation[0].type==3 && pl1[ship_id]->motion==0)
+						else if (resend_navigation[0].type == 3 && pl1[ship_id]->motion == 0)
 						{
 							resend_navigation.pop_front();
 							nav_res_count = 3;
 						}
+
+					}
+					if (resend_bullet.size() > 0)
+					{
+						cout << "\n firing quue is==>";
+						for (int i = 0; i < resend_bullet.size(); i++)
+						{
+							cout << resend_bullet[i].first.bullet_id << " ";
+
+						}
 					}
 					if (bullet_res_count % 4 == 0)
 					{
+						
 						for (int i = 0; i < resend_bullet.size() && i < 5; i++)
 						{
 							unique_lock<mutex> lk(mutx->m[ship_id]);
-
+							cout << "\n server fire=>" << pl1[ship_id]->server_fire << " " << " client fire=>" << pl1[ship_id]->client_fire;
 							if (pl1[ship_id]->client_fire > pl1[ship_id]->server_fire)
 							{
-								///cout << "\n reattempting fire command at=>" << game_tick;
+								cout << "\n reattempting fire command for=>" << resend_bullet[i].first.bullet_id;
 
-								pl1[ship_id]->bullet_info.push_front(resend_bullet[i]);
-								bullet_res_count = 1;
+								pl1[ship_id]->bullet_info.push_front(resend_bullet[i].first);
+								resend_bullet[i].second++;
 								no_bullet_resend++;
 
 							}
-							else if (pl1[ship_id]->client_fire == pl1[ship_id]->server_fire)
-							{
-								resend_bullet.pop_front();
-								bullet_res_count = 2;
-							}
+							
 							else if (pl1[ship_id]->client_fire < pl1[ship_id]->server_fire)
 							{
 								cout << "\n server fire=>" << pl1[ship_id]->server_fire << " " << " client fire=>" << pl1[ship_id]->client_fire;
 							}
 						}
+						bullet_res_count = 1;
 					}
 					if (resend_navigation.size() > 0)
 					{
@@ -1470,6 +1482,9 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							{
 								cout << "\n sending navigation data at==>" << game_tick;
 							}
+
+							no_of_bullets += pl1[ship_id]->bullet_info.size();
+							no_of_times++;
 							control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx,nav_res_count,bullet_res_count,no_bullet_resend);
 							
 						
@@ -1528,14 +1543,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		
 			
 	}
-	cout << "\n size of the packet sent to server==>" << sizeof(send_data);
-	cout << "\n size of the packet sent to the client==>" << sizeof(recv_data);
-	cout << "\navg navigation is==>" << (double)nav_data_once / nav_data_count;
-	cout << "\n avg bullet is==>" << (double)b_data_once / b_data_count;
-	cout << "\n avg update is==>" << (double)u_data_once / u_data_count;
-	cout << "\n avg cost is==>" << (double)c_data_once / c_data_count;
-	cout << "\n avg send is==>" << (double)send_count / total_frames1;
-	cout<<"\navg input size is==> "<<(double)avg_input/total_count;
+	cout << "\n number of bullets coming per time is==>" << (double)no_of_bullets / no_of_times;
 	CLOSESOCKET(peer_socket);
 	CLOSESOCKET(sending_socket);
 	WSACleanup();

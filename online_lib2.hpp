@@ -1217,6 +1217,7 @@ class bullet_data//new bullet data
 
 
 public:
+	int bullet_id;//unique id given to every bullet
 	int type;
 	/*
 	* 0 for fireCannon or fire at ship
@@ -1229,10 +1230,11 @@ public:
 
 	bullet_data()
 	{
-
+		bullet_id = -1;
 	}
 	bullet_data(int type,cannon can,int s_id,ShipSide s,int c_id)
 	{
+		bullet_id = -1;
 		this->type = type;
 		this->can = can;
 		this->s_id = s_id;
@@ -1244,7 +1246,7 @@ public:
 };
 
 deque<navigation> resend_navigation;//to store the navigation requests that has be resent
-deque<bullet_data> resend_bullet;//firing data that has to be resent
+deque<pair<bullet_data,int>> resend_bullet;//firing data that has to be resent
 class map_cost//class to send updateCost of the map tile data to the server over the network
 {
 public:
@@ -1354,7 +1356,10 @@ public:
 
 	int size_unlock;
 	int unlock[5];
-	friend class graphics;
+
+	int size_bullet_recved;
+	int bullet_recved[50];//id's of the last 50 bullets that the server has recved 
+		friend class graphics;
 	friend class control1;
 };
 class shipData_exceptMe //updated data that the server will send for the client
@@ -1468,6 +1473,8 @@ private:
 
 public: //this will be public the user will be able to access this object freely
 	//object 
+	std::map<int, int> bullet_id_count;
+	int bullet_count;
 	int client_fire;
 	int server_fire;
 	bool gameOver;
@@ -2297,8 +2304,39 @@ public:
 			{
 				pl1[id]->lock_fuel = 0;
 			}
+			
+		}
+		//now one by one empty the resend queue based on the detail that we got:
+		if (ob.size_bullet_recved > 0)
+		{
+			cout << "\n to be deleted recved by the server is==>";
+			for (int i = 0; i < ob.size_bullet_recved; i++)
+			{
+				cout << ob.bullet_recved[i] << " ";
+			}
+		}
+		cout << "\n firing queue is==>";
+		for (int i = 0; i < resend_bullet.size(); i++)
+		{
+			cout << resend_bullet[i].first.bullet_id << " ";
 		}
 		
+		for (int i = 0; i < ob.size_bullet_recved; i++)
+		{
+			
+			int size = resend_bullet.size();
+			for (int j = 0; j < resend_bullet.size(); j++)
+			{
+				if (resend_bullet[j].first.bullet_id == ob.bullet_recved[i] || resend_bullet[j].second > 5)
+				{
+					cout << "\n deleted==>" << ob.bullet_recved[i];
+					auto it = resend_bullet.begin();
+					advance(it, j);
+					resend_bullet.erase(it);
+					j--;
+				}
+			}
+		}
 
 	}
 	void me_to_packet(shipData_forMe& ob, int id, deque<ship*>& pl1)
@@ -2382,6 +2420,16 @@ public:
 			ob.unlock[i] = pl1[id]->unlock[i];
 			
 		}
+		ob.size_bullet_recved = std::min(50, (int)pl1[id]->bullet_id_count.size());
+		int k = 0;
+		for (int i = max(0, (int)pl1[id]->bullet_id_count.size() - 50); i < pl1[id]->bullet_id_count.size(); i++)
+		{
+			auto it = pl1[id]->bullet_id_count.begin();
+			advance(it, i);
+			ob.bullet_recved[k] = it->first;
+			k++;
+		}
+
 
 		pl1[id]->unlock.clear();
 	}
@@ -2448,16 +2496,23 @@ public:
 			{
 				bullet_res_count = 1;
 			}
+					
 		}
 		for (int i = 0; i < ob.size_bulletData && i<15; i++)
 		{
+			//the id will be pre assigned for the bullet which is being sent for a resend;
+			if (pl1[ship_id]->bullet_info[i].bullet_id == -1)//assigning the id of the bullet if the id is not preassigned
+			{
+				pl1[ship_id]->bullet_info[i].bullet_id = pl1[ship_id]->bullet_count;
+				pl1[ship_id]->bullet_count++;
+				resend_bullet.push_back(pair<bullet_data,int>(pl1[ship_id]->bullet_info[i],1));
+				pl1[ship_id]->client_fire++;
+			}
 			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
-			resend_bullet.push_back(pl1[ship_id]->bullet_info[i]);
-			pl1[ship_id]->client_fire++;
-		}
-		pl1[ship_id]->client_fire -= no_bullet_resend;
-		no_bullet_resend = 0;
 
+			
+		}
+		
 		ob.client_fire = pl1[ship_id]->client_fire;
 		pl1[ship_id]->bullet_info.clear(); 
 
@@ -2530,13 +2585,14 @@ public:
 		for (int i = 0; i < ob.size_bulletData; i++)//it has to be merged
 		{
 			//cout << "\n in convertor, fired by=>" << ob.ship_id;
-			if (ship_id == 0)
+			
+			if (pl1[ship_id]->bullet_id_count.find(ob.b_data[i].bullet_id)==pl1[ship_id]->bullet_id_count.end())
 			{
-				cout << "\n server_fire==>" << pl1[ship_id]->server_fire << " client fire==>" << pl1[ship_id]->client_fire;
-				
-			}
-			if (pl1[ship_id]->server_fire < pl1[ship_id]->client_fire)
-			{
+				if (ship_id == 0)
+				{
+					cout << "\n bullet id==>" << ob.b_data[i].bullet_id;
+				}
+				pl1[ship_id]->bullet_id_count[ob.b_data[i].bullet_id] = 1;
 				pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
 				pl1[ship_id]->server_fire++;
 			}
