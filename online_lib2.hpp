@@ -1111,6 +1111,7 @@ public:
 class upgrade_data
 {
 public:
+	int id;
 	int type;
 	/*
 	* 0 for ammo
@@ -1119,11 +1120,14 @@ public:
 	*/
 	int n;//upgrade by number
 
-	upgrade_data(){}
+	upgrade_data() {
+		id = -1;
+	}
 	upgrade_data(int t, int n)
 	{
 		type = t;
 		this->n = n;
+		id = -1;
 	}
 	friend class control1;
 	friend class graphics;
@@ -1250,14 +1254,16 @@ deque<pair<bullet_data,int>> resend_bullet;//firing data that has to be resent
 class map_cost//class to send updateCost of the map tile data to the server over the network
 {
 public:
+	
 	double new_cost;
 	Greed::coords ob;
 	map_cost()
 	{
-
+		
 	}
 	map_cost(double n, Greed::coords o)
 	{
+		
 		new_cost = n;
 		ob = o;
 	}
@@ -1304,6 +1310,7 @@ public:
 	int size_upgrade_data;
 	upgrade_data udata[10];//to be merged
 
+	int cost_id;//this is the id of the map cost data
 	int size_update_cost;//to update the cost of the local map of the user
 	map_cost cdata[80];//to update the data
 	//to be merged
@@ -1359,6 +1366,13 @@ public:
 
 	int size_bullet_recved;
 	int bullet_recved[50];//id's of the last 50 bullets that the server has recved 
+
+	int size_upgrade_recved;
+	int upgrade_recved[10];
+
+	int size_cost_id;
+	int cost_recved[3];
+
 		friend class graphics;
 	friend class control1;
 };
@@ -1431,6 +1445,31 @@ class pack_ship;
 void update_frame(deque<ship*>& pl1, pack_ship& ob, int i);
 //some networking classes*/
 
+class upgrade_keeping//class for bookeeping the upgrade data
+{
+public:
+	int active;//if it is active or not
+	int id;
+	int type;//type of the upgrade 0 for ammo, 1 for health and 2 for fuel
+	int current_value;//current value of the object at the time of creation
+	int new_value;//should be value of the object
+	int timer;//when the timer is over it will be resent
+	upgrade_data udata;
+	upgrade_keeping()
+	{
+		timer = 0;
+	}
+	upgrade_keeping(int active, int type, int current_value, int new_val,upgrade_data udata)
+	{
+		timer = 0;
+		this->active = active;
+		this->type = type;
+		this->current_value = current_value;
+		this->new_value = new_val;
+		this->udata = udata;
+	}
+
+};
 
 class ship//this class will be used to initialize the incoming player and give it a ship. and then keep tracking of that ship
 {
@@ -1473,7 +1512,12 @@ private:
 
 public: //this will be public the user will be able to access this object freely
 	//object 
-	std::map<int, int> bullet_id_count;
+	std::map<int, int> bullet_id_count;//used by the server
+	std::map<int, int> upgrade_id_count;//to count the id's that have arrived to upgrade the data used by the server
+	std::map<int, deque<map_cost>> upgrade_cost;//used by the client
+	std::map<int, int> cost_id_count;//used by the server
+
+	int cost_upgrade_count;
 	int bullet_count;
 	int client_fire;
 	int server_fire;
@@ -1966,6 +2010,7 @@ private:
 	bool checkCollision(int sid, const Greed::bullet& ob);//sid is the ship id of  the victim ship.
 public:
 	// bool updateCost(Greed::abs_pos ob,double new_cost);
+	int count_upgrade;//number of times the agent has sent the upgrading request
 	bool isCannonInRadius(int c_id, ShipSide side = ShipSide::FRONT);
 
 	bool isInShipRadius(int s_id, Greed::coords ob, ShipSide side = ShipSide::FRONT);//check for a poitn
@@ -2099,7 +2144,7 @@ public:
 		bullet_info.push_back(bullet_data(1,can,-1,ShipSide::NA,c_id));
 	}
 
-
+	deque<upgrade_keeping> upgrade_queue;
 	void Greed_upgradeHealth(int n)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
@@ -2108,6 +2153,8 @@ public:
 			
 			udata.push_back(upgrade_data(1, n));
 			lock_health = 1;
+			
+
 		}
 	}
 	void Greed_upgradeAmmo(int n)
@@ -2118,6 +2165,7 @@ public:
 			
 			udata.push_back(upgrade_data(0, n));
 			lock_ammo = 1;
+			
 		}
 	}
 	void Greed_upgradeFuel(int n)
@@ -2128,6 +2176,7 @@ public:
 			
 			udata.push_back(upgrade_data(2, n));
 			lock_fuel = 1;
+			
 		}
 	}
 
@@ -2293,10 +2342,12 @@ public:
 		{
 			if (ob.unlock[i] == 0)
 			{
+				cout << "\n lock unlocked came for ammo";
 				pl1[id]->lock_ammo = 0;
 			}
 			else if (ob.unlock[i] == 1)
 			{
+				cout << "\n lock unlocked came for health";
 				pl1[id]->lock_health = 0;
 				
 			}
@@ -2309,16 +2360,11 @@ public:
 		//now one by one empty the resend queue based on the detail that we got:
 		if (ob.size_bullet_recved > 0)
 		{
-			cout << "\n to be deleted recved by the server is==>";
+			//cout << "\n to be deleted recved by the server is==>";
 			for (int i = 0; i < ob.size_bullet_recved; i++)
 			{
-				cout << ob.bullet_recved[i] << " ";
+				//cout << ob.bullet_recved[i] << " ";
 			}
-		}
-		cout << "\n firing queue is==>";
-		for (int i = 0; i < resend_bullet.size(); i++)
-		{
-			cout << resend_bullet[i].first.bullet_id << " ";
 		}
 		
 		for (int i = 0; i < ob.size_bullet_recved; i++)
@@ -2327,9 +2373,9 @@ public:
 			int size = resend_bullet.size();
 			for (int j = 0; j < resend_bullet.size(); j++)
 			{
-				if (resend_bullet[j].first.bullet_id == ob.bullet_recved[i] || resend_bullet[j].second > 5)
+				if (resend_bullet[j].first.bullet_id == ob.bullet_recved[i] || resend_bullet[j].second > 30)
 				{
-					cout << "\n deleted==>" << ob.bullet_recved[i];
+					//cout << "\n deleted==>" << ob.bullet_recved[i];
 					auto it = resend_bullet.begin();
 					advance(it, j);
 					resend_bullet.erase(it);
@@ -2337,7 +2383,35 @@ public:
 				}
 			}
 		}
-
+		//removing the upgrade data from the queue
+		for (int i = 0; i < ob.size_upgrade_recved; i++)
+		{
+			for (int j = 0; j < pl1[id]->upgrade_queue.size(); j++)
+			{
+				if (ob.upgrade_recved[i] == pl1[id]->upgrade_queue[j].udata.id)
+				{
+					//cout << "\n deleting from the queue...";
+					auto it = pl1[id]->upgrade_queue.begin();
+					advance(it, j);
+					pl1[id]->upgrade_queue.erase(it);
+					j--;
+				}
+			}
+		}
+		for (int i = 0; i < ob.size_cost_id; i++)
+		{
+			for (int j = 0; j < pl1[id]->upgrade_cost.size(); j++)
+			{
+				auto it = pl1[id]->upgrade_cost.begin();
+				advance(it, j);
+				if (ob.cost_recved[i] == it->first)
+				{
+					pl1[id]->upgrade_cost.erase(it);
+					j--;
+					cout << "\n deleted with the id==>" << ob.cost_recved[i];
+				}
+			}
+		}
 	}
 	void me_to_packet(shipData_forMe& ob, int id, deque<ship*>& pl1)
 	{
@@ -2430,8 +2504,27 @@ public:
 			k++;
 		}
 
-
+		ob.size_upgrade_recved = std::min(10, (int)pl1[id]->upgrade_id_count.size());
+		 k = 0;
+		for (int i = max(0, (int)pl1[id]->upgrade_id_count.size() - 10); i < pl1[id]->upgrade_id_count.size(); i++)
+		{
+			auto it = pl1[id]->upgrade_id_count.begin();
+			advance(it, i);
+			ob.upgrade_recved[k] = it->first;
+			k++;
+		}
 		pl1[id]->unlock.clear();
+
+		ob.size_cost_id = std::min(3, (int)pl1[id]->cost_id_count.size());
+		k = 0;
+		for (int i = max(0, (int)pl1[id]->cost_id_count.size() - 3); i < pl1[id]->cost_id_count.size(); i++)
+		{
+			auto it = pl1[id]->cost_id_count.begin();
+			advance(it, i);
+			ob.cost_recved[k] = it->first;
+			k++;
+		}
+		
 	}
 	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx,int &nav_res_count,int &bullet_res_count, int &no_bullet_resend)
 	{
@@ -2528,35 +2621,75 @@ public:
 	
 		if (pl1[ship_id]->udata.size() > 3)
 		{
-			cout << "\n sending more than 3 locks to update the stuff";
+			cout << "\n sending more than 3 locks to update the stuff==>" << pl1[ship_id]->udata.size();
 		}
+		//cout << "\n came in to send the data==>" << pl1[ship_id]->udata.size();
 		for (int i = 0; i < ob.size_upgrade_data; i++)
 		{
-			if (pl1[ship_id]->udata[i].type == 1)
+			if (pl1[ship_id]->udata[i].id == -1)
 			{
-				cout << "\n sent for health by=>" << ship_id;
+				pl1[ship_id]->udata[i].id = pl1[ship_id]->count_upgrade;
+				pl1[ship_id]->count_upgrade++;
+				if (pl1[ship_id]->udata[i].type == 0)//for ammo
+				{
+					pl1[ship_id]->upgrade_queue.push_back(upgrade_keeping(1,0,pl1[ship_id]->ammo,pl1[ship_id]->ammo+pl1[ship_id]->udata[i].n,pl1[ship_id]->udata[i]));
+				}
+				if (pl1[ship_id]->udata[i].type == 1)//for ammo
+				{
+					pl1[ship_id]->upgrade_queue.push_back(upgrade_keeping(1, 1, pl1[ship_id]->health, pl1[ship_id]->health + pl1[ship_id]->udata[i].n, pl1[ship_id]->udata[i]));
+				}
+				if (pl1[ship_id]->udata[i].type == 2)//for ammo
+				{
+					pl1[ship_id]->upgrade_queue.push_back(upgrade_keeping(1, 2, pl1[ship_id]->fuel, pl1[ship_id]->fuel + pl1[ship_id]->udata[i].n, pl1[ship_id]->udata[i]));
+				}
+				//add in the queue
 			}
-			if (pl1[ship_id]->udata[i].type == 0)
-			{
-				cout << "\n sent for ammo==>";
-			}
+		//	cout << "\n sending request to upgrade with the id==>" << pl1[ship_id]->udata[i].id<<" with the type==>"<<pl1[ship_id]->udata[i].type;
 			ob.udata[i] = pl1[ship_id]->udata[i];
 		}
-		pl1[ship_id]->udata.clear();	
+		
+		pl1[ship_id]->udata.clear();
+		if (pl1[ship_id]->upgrade_cost.size() > 0)
+		{
+			
+			auto it = pl1[ship_id]->upgrade_cost.begin();
+			ob.cost_id = it->first;
+			ob.size_update_cost = min(80, (int)it->second.size());
+			for (int i = 0; i < ob.size_update_cost; i++)
+			{
+				ob.cdata[i] = it->second[i];
+			}
+		}
+		else if (pl1[ship_id]->upgrade_cost.size() == 0)
+		{
+			if (pl1[ship_id]->map_cost_data.size() <= 80)
+			{
+				ob.size_update_cost = pl1[ship_id]->map_cost_data.size();
+			}
+			else
+			{
+				ob.size_update_cost = 80;
+			}
+			if (pl1[ship_id]->map_cost_data.size() > 0)
+			{
+				pl1[ship_id]->cost_upgrade_count++;
+				ob.cost_id = pl1[ship_id]->cost_upgrade_count;
 
-		if (pl1[ship_id]->map_cost_data.size() <= 80)
-		{
-			ob.size_update_cost = pl1[ship_id]->map_cost_data.size();
+			}
+			for (int i = 0; i < ob.size_update_cost; i++)
+			{
+
+				ob.cdata[i] = pl1[ship_id]->map_cost_data[0];
+				pl1[ship_id]->upgrade_cost[pl1[ship_id]->cost_upgrade_count].push_back(ob.cdata[i]);
+				pl1[ship_id]->map_cost_data.pop_front();
+			}
+			//putting in the queue for resending this stuff
 		}
-		else
-		{
-			ob.size_update_cost = 80;
-		}
-		for (int i = 0; i < ob.size_update_cost; i++)
-		{
-			ob.cdata[i] = pl1[ship_id]->map_cost_data[i];
-		}
-		pl1[ship_id]->map_cost_data.clear();
+		
+
+		
+		
+		
 	}
 
 	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
@@ -2588,10 +2721,7 @@ public:
 			
 			if (pl1[ship_id]->bullet_id_count.find(ob.b_data[i].bullet_id)==pl1[ship_id]->bullet_id_count.end())
 			{
-				if (ship_id == 0)
-				{
-					cout << "\n bullet id==>" << ob.b_data[i].bullet_id;
-				}
+				
 				pl1[ship_id]->bullet_id_count[ob.b_data[i].bullet_id] = 1;
 				pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
 				pl1[ship_id]->server_fire++;
@@ -2601,15 +2731,36 @@ public:
 		int found = 0;
 		for (int i = 0; i < ob.size_upgrade_data; i++)
 		{
-			pl1[ship_id]->udata.push_back(ob.udata[i]);
-			
-			
-			found = 1;
+			if (pl1[ship_id]->upgrade_id_count.find(ob.udata[i].id) == pl1[ship_id]->upgrade_id_count.end())
+			{
+				pl1[ship_id]->udata.push_back(ob.udata[i]);
+				if (ob.udata[i].type == 0)
+				{
+					cout << "\n update came for ammo==>" << ship_id<<" witht he id==>"<<ob.udata[i].id;
+				}
+				else if (ob.udata[i].type == 1)
+				{
+					cout << "\n update came for health==>" << ship_id<<" with the id==>"<<ob.udata[i].id;
+				}
+
+				found = 1;
+				pl1[ship_id]->upgrade_id_count[ob.udata[i].id] = 1;
+			}
 		}
-		for (int i = 0; i < ob.size_update_cost; i++)
+		if (ob.size_update_cost > 0)
 		{
-			pl1[ship_id]->map_cost_data.push_back(ob.cdata[i]);
+			if (pl1[ship_id]->cost_id_count.find(ob.cost_id) == pl1[ship_id]->cost_id_count.end())
+			{
+				cout << "\n recved request to update the cost by the ship==>" << ship_id << " with the id==>" << ob.cost_id;
+				pl1[ship_id]->cost_id_count[ob.cost_id] = 1;
+				for (int i = 0; i < ob.size_update_cost; i++)
+				{
+					pl1[ship_id]->map_cost_data.push_back(ob.cdata[i]);
+				}
+			}
 		}
+		
+		
 
 	}
 	friend class graphics;

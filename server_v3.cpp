@@ -987,7 +987,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		{
 			ep = 0;
 		}
-		next_frame = ep * 60;
+		next_frame = ep * 30;
 
 	
 		if (next_frame != current_frame)
@@ -1119,7 +1119,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 										flag = 0;
 								
 										wait_tick++;
-										if (wait_tick > 10000 * pl1.size())
+										if (wait_tick > 80000)
 										{
 											flag = 1;
 										//	cout << "\n used-------------------------------------------------------------";
@@ -1266,14 +1266,14 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						{
 							if (pl1[i]->udata[j].type == 0)
 							{
-								cout << "\n ammo bought by the ship==>" << i;
+							//	cout << "\n ammo bought by the ship==>" << i << " at==>" << pl1[i]->ammo<<" at the id=>"<<pl1[i]->udata[j].id;
 								pl1[i]->upgradeAmmo(pl1[i]->udata[j].n);//when the user buys something
 							}
 							else if (pl1[i]->udata[j].type == 1)
 							{
 								
 								pl1[i]->upgradeHealth(pl1[i]->udata[j].n);
-								cout << "\n health bought by the ship==>" << i;
+							//	cout << "\n health bought by the ship==>" << i<<" at==>"<<pl1[i]->health<< " at the id=>" << pl1[i]->udata[j].id;
 							}
 							else if (pl1[i]->udata[j].type == 2)
 							{
@@ -1286,7 +1286,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 						for (int j = 0; j < pl1[i]->bullet_info.size(); j++)
 						{
-							
+							//cout << "\n bullet info came for ship==>" << i << "  with the bullet id=>" << pl1[i]->bullet_info[j].bullet_id;
 							if (pl1[i]->bullet_info[j].type == 0)
 							{
 
@@ -1378,12 +1378,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						mutx->m[i].lock();
 							List<Greed::abs_pos>& l1 = pl1[i]->getPathList(2369);
 
-							if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 1 != pl1[i]->getPointPath(2369) && pl1[i]->tile_path.howMany() > 0)
+							if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 2 != pl1[i]->getPointPath(2369) && pl1[i]->tile_path.howMany() > 0)
 							{
 								// cout << "\n fuel " << i << " now=>" << pl1[i]->fuel;
 								pl1[i]->motion = 1;
 
-								pl1[i]->update_pointPath(pl1[i]->getPointPath(2369) + 1, 2369);
+								pl1[i]->update_pointPath(pl1[i]->getPointPath(2369) + 2, 2369);
 
 								pl1[i]->rect.setPosition(::cx(l1[pl1[i]->getPointPath(2369)].x + origin_x), ::cy(l1[pl1[i]->getPointPath(2369)].y + origin_y));
 
@@ -1451,7 +1451,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							{
 								pl1[i]->cannon_ob.activeBullets[j].absolute_position = Greed::abs_pos(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].x, pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].y);
 								pl1[i]->cannon_ob.activeBullets[j].bullet_entity.setPosition(sf::Vector2f(::cx(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].x + origin_x), ::cy(pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory[0].y + origin_y)));
-								for (int l = 1; l <= 3; l++)//this is speed of bullet. skipping 3 pixels per frame, speed is 180 frames(pixels) per sec
+								for (int l = 1; l <= 5; l++)//this is speed of bullet. skipping 3 pixels per frame, speed is 180 frames(pixels) per sec
 								{
 									if (pl1[i]->cannon_ob.activeBullets[j].bullet_trajectory.size() > 0)
 									{
@@ -1536,8 +1536,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 												continue;
 											}
 											Greed::coords cor = Greed::coords((int)(::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y) - origin_y) / 80, (int)(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x) - origin_x) / 80);
+											//cout << "\n coordinates of bullet is==>" << cor.r << " " << cor.c<<" coordinates of cannon==>"<<cannon_list[k].tile.r<<" "<<cannon_list[k].tile.c;
+											
 											if (cannon_list[k].tile == cor)
 											{
+												//cout << "\n bullet collided";
+
 												// pl1[i]->cannon_ob.allBullets[pl1[i]->cannon_ob.activeBullets[j].id].set_after_data_for_cannon(5, cannon_list[k].cannon_id, true);
 												pl1[i]->cannon_ob.activeBullets[j].set_after_data_for_cannon(5, cannon_list[k].cannon_id, true);
 												pl1[i]->cannon_ob.activeBullets[j].hit_or_not = true;
@@ -1634,7 +1638,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 									continue;
 
 								}
-								if (j >= 0 && pl1[i]->cannon_ob.activeBullets[j].hit_cannon != -1 && pl1[i]->cannon_ob.activeBullets[j].ttl == 15)//this condition is specially for the cannon
+								// && pl1[i]->cannon_ob.activeBullets[j].ttl == 15
+								if (j >= 0 && pl1[i]->cannon_ob.activeBullets[j].hit_cannon != -1)//this condition is specially for the cannon
 								{
 
 									//here the cannon will suffer a  loss
@@ -1690,7 +1695,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							{
 								cannon_list[j].bullet_list[k].absolute_position = Greed::abs_pos(cannon_list[j].bullet_list[k].bullet_trajectory[0].x, cannon_list[j].bullet_list[k].bullet_trajectory[0].y);
 								cannon_list[j].bullet_list[k].bullet_entity.setPosition(sf::Vector2f(cx(cannon_list[j].bullet_list[k].bullet_trajectory[0].x + origin_x), cy(cannon_list[j].bullet_list[k].bullet_trajectory[0].y + origin_y)));
-								for (int l = 1; l <= 3; l++)
+								for (int l = 1; l <= 4; l++)
 								{
 									if (cannon_list[j].bullet_list[k].bullet_trajectory.size() > 0)
 									{
@@ -1897,8 +1902,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 				}
 			}
-
-
+		
 
 			ship_packet.no_of_bullets = bullet_no;
 			sf::Time time = processing.getElapsedTime();
@@ -1981,12 +1985,12 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						else if (current_angle > req_angle)
 						{
 							//cannon_list[i].cannon_sprite.rotate(-2.5);
-							cannon_list[i].current_angle -= 2.5;
+							cannon_list[i].current_angle -= 5;
 						}
 						else if (current_angle < req_angle)
 						{
 							//cannon_list[i].cannon_sprite.rotate(2.5);
-							cannon_list[i].current_angle += 2.5;
+							cannon_list[i].current_angle += 5;
 						}
 
 					}

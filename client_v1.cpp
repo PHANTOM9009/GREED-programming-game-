@@ -251,7 +251,7 @@ void data_recver(SOCKET socket_listen,Mutex *m)
 				 bytes = recv(socket_listen, (char*)&buffer, sizeof(buffer), 0);
 				if (bytes < 1)
 				{
-					cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
+					//cout << "\n cannot recv the bytes==>" << GETSOCKETERRNO();
 					continue;
 				}
 				if (bytes == 4)
@@ -369,7 +369,7 @@ void data_send(Mutex* m,deque<ship*> &pl1)
 					int bytes = send(sending_socket, buffer + sent_bytes, bytesToSend, 0);
 					if (bytes < 1)
 					{
-						cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+						//cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
 					}
 					else
 					{
@@ -400,7 +400,29 @@ void data_send(Mutex* m,deque<ship*> &pl1)
 		}
 	}
 }
-
+bool find_id(deque<upgrade_data>& arr, int id)
+{
+	for (auto it : arr)
+	{
+		if (it.id == id)
+		{
+			return false;
+		}
+		
+	}
+	return true;
+}
+bool find_bullet_id(deque<bullet_data>& arr, int id)
+{
+	for (auto it : arr)
+	{
+		if (it.bullet_id == id)
+		{
+			return false;
+		}
+	}
+	return true;
+}
 void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns], Map& map_ob,int peer_s,ship &player)
 {
 
@@ -525,6 +547,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 		{
+			gameOver = true;
 			break;
 		}
 		sf::Time tt = clock1.restart();
@@ -678,26 +701,17 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							nav_res_count = 3;
 						}
 
-					}
-					if (resend_bullet.size() > 0)
-					{
-						cout << "\n firing quue is==>";
-						for (int i = 0; i < resend_bullet.size(); i++)
-						{
-							cout << resend_bullet[i].first.bullet_id << " ";
-
-						}
-					}
-					if (bullet_res_count % 4 == 0)
-					{
+					}			
+					
 						
 						for (int i = 0; i < resend_bullet.size() && i < 5; i++)
 						{
 							unique_lock<mutex> lk(mutx->m[ship_id]);
-							cout << "\n server fire=>" << pl1[ship_id]->server_fire << " " << " client fire=>" << pl1[ship_id]->client_fire;
-							if (pl1[ship_id]->client_fire > pl1[ship_id]->server_fire)
+							
+							//cout << "\n server fire=>" << pl1[ship_id]->server_fire << " " << " client fire=>" << pl1[ship_id]->client_fire;
+							if (find_bullet_id(pl1[ship_id]->bullet_info,resend_bullet[i].first.bullet_id) && pl1[ship_id]->client_fire > pl1[ship_id]->server_fire)
 							{
-								cout << "\n reattempting fire command for=>" << resend_bullet[i].first.bullet_id;
+							//	cout << "\n reattempting fire command for=>" << resend_bullet[i].first.bullet_id;
 
 								pl1[ship_id]->bullet_info.push_front(resend_bullet[i].first);
 								resend_bullet[i].second++;
@@ -707,11 +721,11 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							
 							else if (pl1[ship_id]->client_fire < pl1[ship_id]->server_fire)
 							{
-								cout << "\n server fire=>" << pl1[ship_id]->server_fire << " " << " client fire=>" << pl1[ship_id]->client_fire;
+							//	cout << "\n server fire=>" << pl1[ship_id]->server_fire << " " << " client fire=>" << pl1[ship_id]->client_fire;
 							}
 						}
 						bullet_res_count = 1;
-					}
+					
 					if (resend_navigation.size() > 0)
 					{
 						nav_res_count++;
@@ -720,16 +734,37 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					{
 						bullet_res_count++;
 					}
+					if(pl1[ship_id]->upgrade_queue.size()>0)
+					//cout << "\n upgrade queue is==>";
+					for (int i = 0; i < pl1[ship_id]->upgrade_queue.size(); i++)
+					{
+						pl1[ship_id]->upgrade_queue[i].timer++;
+					
+							//check if it has to be resent or not?
+							
+								if (find_id(pl1[ship_id]->udata,pl1[ship_id]->upgrade_queue[i].udata.id))//in this case retrasmit, without deleting it from the queue
+								{
+									pl1[ship_id]->udata.push_back(pl1[ship_id]->upgrade_queue[i].udata);
+									//cout << "\n reattempting fire with the id=>" << pl1[ship_id]->upgrade_queue[i].udata.id;
+								}
+						
+						//	cout << pl1[ship_id]->upgrade_queue[i].type << " ";
+							
+						
+					}
+						
 
 						unique_lock<mutex> lk1(pl1[ship_id]->mutx->m[ship_id]);
 						if (current_health < pl1[ship_id]->health)
 						{
 							pl1[ship_id]->lock_health = 0;
+							cout << "\n lock unlocked manually for health";
 							
 						}
 						if (current_ammo < pl1[ship_id]->ammo)
 						{
 							pl1[ship_id]->lock_ammo = 0;
+							cout << "\n lock unloced manually for ammo";
 						}
 						if (current_fuel < pl1[ship_id]->fuel)
 						{
@@ -1539,7 +1574,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 			total_frames1++;
 		}
 		
-		next_frame = elapsed_time * 150;
+		next_frame = elapsed_time * 80;
 		
 			
 	}

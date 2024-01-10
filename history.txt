@@ -264,3 +264,5 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  ----------------------------------------------------------------------------
  4 jan 2024
  this concept of persisting information in further packets needs to be extended to upgrade costs and upgrade ammo, health etc. 
+ ----------------------------------------------------------------------------
+ increase the size for firing, make it alteast  30, 20 for reattempt.

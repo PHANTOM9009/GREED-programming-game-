@@ -101,16 +101,17 @@
 					for (auto it : e.shipFire.getShipId())
 					{
 						ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::FRONT);
+						
 					}
 				}
 				//ob.Greed_fireCannon(cannon::FRONT, 0, ShipSide::REAR);
-				if (ob.getCurrentHealth() < 20)
+				if (ob.getCurrentHealth() <= 10)
 				{
-					ob.Greed_upgradeHealth(20);
+					ob.Greed_upgradeHealth(10);
 				}
-				if (ob.getCurrentAmmo() < 40)
+				if (ob.getCurrentAmmo() <= 5)
 				{
-					ob.Greed_upgradeAmmo(20);
+					ob.Greed_upgradeAmmo(10);
 				}
 				if (e.eventType == Event::EventType::ShipsInMyRadius)
 				{
@@ -137,7 +138,7 @@
 						//cout << "\n firing";
 						for (auto it : q[i].radiusShip.getShipId())
 						{
-							ob.Greed_fireCannon(cannon::FRONT, it, ShipSide::FRONT);
+						//ob.Greed_fireCannon(cannon::FRONT, it, ShipSide::FRONT);
 						}
 					}
 
