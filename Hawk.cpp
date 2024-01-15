@@ -54,7 +54,7 @@
 	{
 		//setting the aim
 		
-		/*
+		
 		vector <Greed::cannon> cannonList = ob.getCannonList();
 		for (int j = 0; j < cannonList.size(); j++)
 		{
@@ -66,11 +66,11 @@
 				ob.Greed_updateCost(arr[i], 50);
 			}
 		}
-		*/
+		
 		
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
-		//ob.Greed_chaseShip(index);
+		ob.Greed_chaseShip(index);
 		int frame_rate = 0;
 		
 		double elapsed_time = 0;
@@ -117,7 +117,7 @@
 				if (e.eventType == Event::EventType::ShipsInMyRadius)
 				{
 					ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[0], ShipSide::FRONT);
-					ob.Greed_setPath(Greed::coords(0, 0));
+		//			ob.Greed_setPath(Greed::coords(0, 0));
 				}
 				
 				deque<Event> q = ob.getPassiveEvent();

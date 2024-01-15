@@ -1367,6 +1367,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 									pl1[i]->collided_ships.push_back(j);
 									pl1[j]->collided_ships.push_back(i);
+									pl1[i]->collide_count++;
+									pl1[j]->collide_count++;
 									pl1[i]->anchorShip_collision();
 									pl1[j]->anchorShip_collision();//collision is called on both the objects...
 
@@ -1626,6 +1628,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->bullet_hit.add_rear(pl1[i]->cannon_ob.activeBullets[j]);
 									//bullet hit tempo for finding the bullet_hit event
 									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->bullet_hit_tempo.push_back(pl1[i]->cannon_ob.activeBullets[j]);
+									pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->hit_bullet_count++;
 									animation_list.add_rear(animator(sf::Vector2f(::rx(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().x), ::ry(pl1[i]->cannon_ob.activeBullets[j].bullet_entity.getPosition().y)), elapsed_time, ANIMATION_TYPE::EXPLOSION, sf::Vector2f(pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->absolutePosition.x + origin_x, pl1[pl1[i]->cannon_ob.activeBullets[j].hit_ship]->absolutePosition.y + origin_y), pl1[i]->cannon_ob.activeBullets[j].hit_ship));
 
 
@@ -1784,6 +1787,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 								}
 
 								pl1[cannon_list[j].bullet_list[k].hit_ship]->getBulletHitList().add_rear(cannon_list[j].bullet_list[k]);
+								pl1[cannon_list[j].bullet_list[k].hit_ship]->hit_bullet_count++;
 								pl1[cannon_list[j].bullet_list[k].hit_ship]->bullet_hit_tempo.push_back(cannon_list[j].bullet_list[k]);
 
 								animation_list.add_rear(animator(sf::Vector2f(rx(cannon_list[j].bullet_list[k].bullet_entity.getPosition().x), ry(cannon_list[j].bullet_list[k].bullet_entity.getPosition().y)), elapsed_time, ANIMATION_TYPE::EXPLOSION, sf::Vector2f((pl1[cannon_list[j].bullet_list[k].hit_ship]->absolutePosition.x + origin_x), pl1[cannon_list[j].bullet_list[k].hit_ship]->absolutePosition.y + origin_y), cannon_list[j].bullet_list[k].hit_ship));

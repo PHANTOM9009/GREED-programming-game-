@@ -2306,17 +2306,17 @@ public:
 		//transfer each data member from ob to pl1
 		pl1[id]->seconds = ob.seconds;
 		pl1[id]->minutes = ob.minutes;
-		
+
 		pl1[id]->killer_ship_id = ob.killer_ship_id;
 		pl1[id]->killed_ships.clear();//clearing the previous killed ship so that no duplicate entry is there
 		for (int i = 0; i < ob.killed_ships_size; i++)
-			
+
 		{
 			pl1[id]->killed_ships.push_back(ob.killed_ships[i]);
 		}
-		
+
 		pl1[id]->score = ob.score;
-	
+
 		pl1[id]->server_fire = ob.server_fire;
 		pl1[id]->radius = ob.radius;
 		pl1[id]->health = ob.health;
@@ -2333,9 +2333,24 @@ public:
 		pl1[id]->dir = ob.dir;
 		pl1[id]->motion = ob.motion;
 		pl1[id]->absolutePosition = ob.absolute_position;
-	
+
 		pl1[id]->collided_ships.clear();
+		/*
+		for (int i = 0; i < ob.size_collided_ships; i++)
+		{
+			pl1[id]->collided_ships.push_back(ob.collided_ships[i]);
+		}
+		for (int i = 0; i < ob.size_hit_bullet; i++)
+		{
+			Greed::bullet b;
+			data_to_bullet(b, ob.hit_bullet[i]);
+			pl1[id]->bullet_hit_tempo.push_back(b);
+			pl1[id]->hit_bullet_count++;
+		}
+		*/
+
 	//	cout << "\n my ship position is==>" << ob.front_tile.r << " " << ob.front_tile.c;
+		
 		if (ob.collided_size > pl1[id]->collide_count)
 		{
 			int col_size = ob.size_collided_ships - min(10, ob.collided_size - pl1[id]->collide_count);
@@ -2362,6 +2377,7 @@ public:
 			}
 			cout << "\nafter updating the client bullet count is==>" << pl1[id]->hit_bullet_count;
 		}
+		
 		if (ob.size_unlock > 3)
 		{
 			cout << "\n received more than 3 unlock requests";
@@ -2495,25 +2511,26 @@ public:
 
 		ob.size_collided_ships = std::min(10, (int)pl1[id]->collided_ships.size());
 		int p = 0;
-		for (int i = std::max(0, (int)pl1[id]->collided_ships.size() - 10); i < ob.size_collided_ships; i++)
+		for (int i=0; i < pl1[id]->collided_ships.size(); i++)
 		{
 			ob.collided_ships[p] = pl1[id]->collided_ships[i];
-			pl1[id]->collide_count++;
+			
 			p++;
 		}
 		ob.collided_size = pl1[id]->collide_count;
+		//pl1[id]->collided_ships.clear();
 
 		ob.size_hit_bullet = std::min(10, (int)pl1[id]->bullet_hit_tempo.size());
 		p = 0;
-		for (int i = std::max(0,(int)pl1[id]->bullet_hit_tempo.size()-10); i < ob.size_hit_bullet; i++)
+		for (int i =std::max(0,(int)pl1[id]->bullet_hit_tempo.size()-10) ;i < pl1[id]->bullet_hit_tempo.size(); i++)
 		{
 			bullet_data_client b;
 			bullet_to_data(pl1[id]-> bullet_hit_tempo[i], b);
 			ob.hit_bullet[p] = b;
 			p++;
-			pl1[id]->bullet_count++;
 		}
-		ob.bullet_hit_size = pl1[id]->bullet_count;
+		ob.bullet_hit_size = pl1[id]->hit_bullet_count;
+		//pl1[id]->bullet_hit_tempo.clear();
 
 		if (pl1[id]->unlock.size() <= 5)
 		{
