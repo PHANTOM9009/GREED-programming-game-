@@ -1019,6 +1019,9 @@ bool ship::frame_rate_limiter()
 
 ship::ship()//default ctor for now
 {
+	this->collide_count = 0;
+	this->hit_bullet_count = 0;
+	this->navigation_count = 0;
 	this->cost_upgrade_count = 0;
 	this->count_upgrade = 0;
 	bullet_count = 0;

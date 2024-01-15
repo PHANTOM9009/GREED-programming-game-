@@ -669,45 +669,18 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						}
 					}
 				//check if navigation and firing commands reached the server properly, if not then resend them
-					if (resend_navigation.size() > 0 && nav_res_count % 4 == 0)//this has be run only after alternate frames after sending the navigation request8
+					for (int i = 0; i < resend_navigation.size(); i++)
 					{
-						nav_res_count = 1;
-						if (resend_navigation[0].type != 3 && pl1[ship_id]->motion == 0)
-						{
-							//resend the navigation command again
-							pl1[ship_id]->nav_data_final.push_front(resend_navigation[0]);
-							cout << "\n reattemting navigation command to move==>" << game_tick;
 
-							//cout << "\n navigation has started at frame rate==>" << game_tick;
-							//resend_navigation.pop_front();
+						pl1[ship_id]->nav_data_final.push_back(resend_navigation[i]);
+					}
 
-						}
-						else if (resend_navigation[0].type != 3 && pl1[ship_id]->motion == 1)
-						{
-							resend_navigation.pop_front();
-							nav_res_count = 3;
 
-						}
-
-						else if (resend_navigation[0].type == 3 && pl1[ship_id]->motion == 1)
-						{
-							pl1[ship_id]->nav_data_final.push_front(resend_navigation[0]);
-							cout << "\n reattempting navigation command to halt==>" << game_tick;
-							nav_res_count = 1;
-						}
-						else if (resend_navigation[0].type == 3 && pl1[ship_id]->motion == 0)
-						{
-							resend_navigation.pop_front();
-							nav_res_count = 3;
-						}
-
-					}			
-					
-						
+								
 						for (int i = 0; i < resend_bullet.size() && i < 5; i++)
 						{
 							unique_lock<mutex> lk(mutx->m[ship_id]);
-							
+							//cout << resend_bullet[i].first.bullet_id << " ";
 							//cout << "\n server fire=>" << pl1[ship_id]->server_fire << " " << " client fire=>" << pl1[ship_id]->client_fire;
 							if (find_bullet_id(pl1[ship_id]->bullet_info,resend_bullet[i].first.bullet_id) && pl1[ship_id]->client_fire > pl1[ship_id]->server_fire)
 							{
@@ -738,7 +711,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 					//cout << "\n upgrade queue is==>";
 					for (int i = 0; i < pl1[ship_id]->upgrade_queue.size(); i++)
 					{
-						pl1[ship_id]->upgrade_queue[i].timer++;
+						
 					
 							//check if it has to be resent or not?
 							

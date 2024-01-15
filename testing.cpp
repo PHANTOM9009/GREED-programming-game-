@@ -52,6 +52,14 @@ void GreedMain(ship& ob)
 			
 			Event e;
 			ob.getNextCurrentEvent(e);
+			if (ob.getCurrentHealth() <= 10)
+			{
+				ob.Greed_upgradeHealth(10);
+			}
+			if (ob.getCurrentAmmo() <= 10)
+			{
+				ob.Greed_upgradeAmmo(10);
+			}
 			if (e.eventType == Event::EventType::ShipsInMyRadius)
 			{
 				ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[0], ShipSide::FRONT);

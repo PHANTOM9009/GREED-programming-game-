@@ -1134,6 +1134,7 @@ public:
 };
 class navigation
 {
+	int id;
 	int type;
 	/*
 	* 0 for target type
@@ -1146,9 +1147,12 @@ class navigation
 	int n;//number of tiles
 	Direction dir;
 public:
-	navigation(){}
+	navigation(){
+		id = -1;
+	}
 	navigation(int t, Greed::coords tar, int sid, int nn, Direction d)
 	{
+		id = -1;
 		type = t;
 		target = tar;
 		s_id = sid;
@@ -1346,6 +1350,8 @@ public:
 	int fuel;//fuel is used for moving the ship around, once its over the ship cant move
 	int invisible;//to be changed
 	int server_fire;
+	int collided_size;
+	int bullet_hit_size;
 
 	Greed::coords front_tile;
 	Greed::coords rear_tile;
@@ -1372,6 +1378,9 @@ public:
 
 	int size_cost_id;
 	int cost_recved[3];
+
+	int size_nav_id;
+	int nav_recved[6];
 
 		friend class graphics;
 	friend class control1;
@@ -1516,7 +1525,11 @@ public: //this will be public the user will be able to access this object freely
 	std::map<int, int> upgrade_id_count;//to count the id's that have arrived to upgrade the data used by the server
 	std::map<int, deque<map_cost>> upgrade_cost;//used by the client
 	std::map<int, int> cost_id_count;//used by the server
+	std::map<int, int> nav_id_count;//to be used by the server
+	int navigation_count;//to give the id to the new navigation command
 
+	int collide_count;
+	int hit_bullet_count;
 	int cost_upgrade_count;
 	int bullet_count;
 	int client_fire;
@@ -2323,16 +2336,31 @@ public:
 	
 		pl1[id]->collided_ships.clear();
 	//	cout << "\n my ship position is==>" << ob.front_tile.r << " " << ob.front_tile.c;
-		for (int i = 0; i < ob.size_collided_ships; i++)
+		if (ob.collided_size > pl1[id]->collide_count)
 		{
-			pl1[id]->collided_ships.push_back(ob.collided_ships[i]);
+			int col_size = ob.size_collided_ships - min(10, ob.collided_size - pl1[id]->collide_count);
+			for (int i = col_size; i < ob.size_collided_ships; i++)
+			{
+				pl1[id]->collided_ships.push_back(ob.collided_ships[i]);
+				pl1[id]->collide_count++;
+			}
 		}
-
-		for (int i = 0; i < ob.size_hit_bullet; i++)
+		if (ob.bullet_hit_size > pl1[id]->hit_bullet_count)
 		{
-			Greed::bullet b;
-			data_to_bullet(b,ob.hit_bullet[i]);
-			pl1[id]->bullet_hit_tempo.push_back(b);
+			int bullet_size = ob.size_hit_bullet - min(10, ob.bullet_hit_size - pl1[id]->hit_bullet_count);
+			if (ob.size_hit_bullet > 0)
+			{
+				cout << "\n server bullet hit count is==>" << ob.bullet_hit_size << "  client bullet hit count is=>" << pl1[id]->hit_bullet_count;
+				cout << "\n size of hit bullet==>" << ob.size_hit_bullet;
+			}
+			for (int i = bullet_size; i < ob.size_hit_bullet; i++)
+			{
+				Greed::bullet b;
+				data_to_bullet(b, ob.hit_bullet[i]);
+				pl1[id]->bullet_hit_tempo.push_back(b);
+				pl1[id]->hit_bullet_count++;
+			}
+			cout << "\nafter updating the client bullet count is==>" << pl1[id]->hit_bullet_count;
 		}
 		if (ob.size_unlock > 3)
 		{
@@ -2373,7 +2401,7 @@ public:
 			int size = resend_bullet.size();
 			for (int j = 0; j < resend_bullet.size(); j++)
 			{
-				if (resend_bullet[j].first.bullet_id == ob.bullet_recved[i] || resend_bullet[j].second > 30)
+				if (resend_bullet[j].first.bullet_id == ob.bullet_recved[i])
 				{
 					//cout << "\n deleted==>" << ob.bullet_recved[i];
 					auto it = resend_bullet.begin();
@@ -2408,7 +2436,21 @@ public:
 				{
 					pl1[id]->upgrade_cost.erase(it);
 					j--;
-					cout << "\n deleted with the id==>" << ob.cost_recved[i];
+					//cout << "\n deleted with the id==>" << ob.cost_recved[i];
+				}
+			}
+		}
+		for (int i = 0; i < ob.size_nav_id; i++)
+		{
+			for (int j = 0; j < resend_navigation.size(); j++)
+			{
+				auto it = resend_navigation.begin();
+				advance(it, j);
+				if (ob.nav_recved[i] == it->id)
+				{
+					resend_navigation.erase(it);
+					j--;
+				//	cout << "\n deleted with the id==>" << ob.nav_recved[i];
 				}
 			}
 		}
@@ -2451,34 +2493,27 @@ public:
 		ob.motion = pl1[id]->motion;
 		ob.absolute_position = pl1[id]->absolutePosition;
 
-		if (pl1[id]->collided_ships.size() <= 10)
+		ob.size_collided_ships = std::min(10, (int)pl1[id]->collided_ships.size());
+		int p = 0;
+		for (int i = std::max(0, (int)pl1[id]->collided_ships.size() - 10); i < ob.size_collided_ships; i++)
 		{
-			ob.size_collided_ships = pl1[id]-> collided_ships.size();
+			ob.collided_ships[p] = pl1[id]->collided_ships[i];
+			pl1[id]->collide_count++;
+			p++;
 		}
-		else
-		{
-			ob.size_collided_ships = 10;
-		}
-		for (int i = 0; i < ob.size_collided_ships; i++)
-		{
-			ob.collided_ships[i] = pl1[id]->collided_ships[i];
-		}
-		pl1[id]->collided_ships.clear();
-		if (pl1[id]->bullet_hit_tempo.size() <= 100)
-		{
-			ob.size_hit_bullet = pl1[id]->bullet_hit_tempo.size();
-		}
-		else
-		{
-			ob.size_hit_bullet = 100;
-		}
-		for (int i = 0; i < ob.size_hit_bullet; i++)
+		ob.collided_size = pl1[id]->collide_count;
+
+		ob.size_hit_bullet = std::min(10, (int)pl1[id]->bullet_hit_tempo.size());
+		p = 0;
+		for (int i = std::max(0,(int)pl1[id]->bullet_hit_tempo.size()-10); i < ob.size_hit_bullet; i++)
 		{
 			bullet_data_client b;
 			bullet_to_data(pl1[id]-> bullet_hit_tempo[i], b);
-			ob.hit_bullet[i] = b;
+			ob.hit_bullet[p] = b;
+			p++;
+			pl1[id]->bullet_count++;
 		}
-		pl1[id]->bullet_hit_tempo.clear();
+		ob.bullet_hit_size = pl1[id]->bullet_count;
 
 		if (pl1[id]->unlock.size() <= 5)
 		{
@@ -2524,6 +2559,16 @@ public:
 			ob.cost_recved[k] = it->first;
 			k++;
 		}
+
+		ob.size_nav_id = std::min(6, (int)pl1[id]->nav_id_count.size());
+		k = 0;
+		for (int i = max(0, (int)pl1[id]->nav_id_count.size() - 6); i < pl1[id]->nav_id_count.size(); i++)
+		{
+			auto it = pl1[id]->nav_id_count.begin();
+			advance(it, i);
+			ob.nav_recved[k] = it->first;
+			k++;
+		}
 		
 	}
 	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx,int &nav_res_count,int &bullet_res_count, int &no_bullet_resend)
@@ -2542,36 +2587,20 @@ public:
 
 			
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (pl1[ship_id]->nav_data_final.size() > 0)
+		ob.size_navigation = min(4, (int)pl1[ship_id]->nav_data_final.size());
+		for (int i = 0; i < ob.size_navigation; i++)
 		{
-			
-		}
-		if (pl1[ship_id]->nav_data_final.size() <= 4)
-		{
-			ob.size_navigation = pl1[ship_id]->nav_data_final.size();
-			if (resend_navigation.size() == 0)
+			if (pl1[ship_id]->nav_data_final[0].id == -1)//its a new command add in the resend queue
 			{
-				nav_res_count = 1;
+				pl1[ship_id]->nav_data_final[0].id = pl1[ship_id]->navigation_count;
+				resend_navigation.push_back(pl1[ship_id]->nav_data_final[0]);
+				pl1[ship_id]->navigation_count++;
 			}
-
-		}
-		else 
-		{
-			
-			ob.size_navigation = 4;
-		}
-		
-		for (int i = 0; i < ob.size_navigation && i<4; i++)
-		{
-			ob.nav_data[i] = pl1[ship_id]->nav_data_final[i];
-			resend_navigation.push_back(pl1[ship_id]->nav_data_final[i]);			
-		}
-
-		//clearing the first ob.size_navigation entries from the queue
-		for (int i = 1; i <= ob.size_navigation; i++)
-		{
+			ob.nav_data[i] = pl1[ship_id]->nav_data_final[0];
 			pl1[ship_id]->nav_data_final.pop_front();
 		}
+
+		
 		
 		//ob.size_bulletData = pl1[ship_id]->bullet_info.size();
 		if (pl1[ship_id]->bullet_info.size() <= 15)
@@ -2644,7 +2673,7 @@ public:
 				}
 				//add in the queue
 			}
-		//	cout << "\n sending request to upgrade with the id==>" << pl1[ship_id]->udata[i].id<<" with the type==>"<<pl1[ship_id]->udata[i].type;
+			cout << "\n sending request to upgrade with the id==>" << pl1[ship_id]->udata[i].id<<" with the type==>"<<pl1[ship_id]->udata[i].type;
 			ob.udata[i] = pl1[ship_id]->udata[i];
 		}
 		
@@ -2697,7 +2726,11 @@ public:
 		
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
-			pl1[ship_id]->nav_data_temp.push_back(ob.nav_data[i]);
+			if (pl1[ship_id]->nav_id_count.find(ob.nav_data[i].id) == pl1[ship_id]->nav_id_count.end())
+			{
+				pl1[ship_id]->nav_data_temp.push_back(ob.nav_data[i]);
+				pl1[ship_id]->nav_id_count[ob.nav_data[i].id] = 1;
+			}
 			
 		}
 		
@@ -2721,7 +2754,7 @@ public:
 			
 			if (pl1[ship_id]->bullet_id_count.find(ob.b_data[i].bullet_id)==pl1[ship_id]->bullet_id_count.end())
 			{
-				
+				cout << "\n bullet fired by==>" << ship_id << " with the id==>" << ob.b_data[i].bullet_id;
 				pl1[ship_id]->bullet_id_count[ob.b_data[i].bullet_id] = 1;
 				pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
 				pl1[ship_id]->server_fire++;

@@ -12,6 +12,13 @@ sending data has two threads as follows:
 
 this way we are ensuring that data reaches to all the clients at the appropriate time...
 -----------------------------------------------------------------------------------------------------------------
-format of ack message will be 1 and -1; exculding the use of 0, because it can be sometimes misleading
-1: message received properly
--1: did not receive the message so resend it/
+the new alogirthm used to remove the packet loss:
+persistence of information:
+how i designed the entire network protocol for the game:
+1. threading for recving and sending the data
+2. fragmenting packets to suit the size of MTU
+3. persistence of information so that no important information is missed.
+
+persistence of information increases the size of the packet that is being transmitted but makes sure that no packet carrying important information
+is lost; uses a simple mechanism of ack, send for some time so that the client can delete it over the time
+
