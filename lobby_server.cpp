@@ -266,11 +266,11 @@ void listener()
 				{
 					user_credentials cred;
 					int bytes = recv(i, (char*)&cred, sizeof(cred), 0);
-					if (bytes < 1)
+					if (bytes < 1)//in this case the client has disconnected the connection so remove this  socket and remove from the master socket
 					{
-						cout << "\n could not recv bytes from the incoming client=>" << GetLastErrorAsString();
-						cout << GETSOCKETERRNO();
-
+						
+						FD_CLR(i, &master);
+						CLOSESOCKET(i);//closing this socket
 					}
 					if (bytes > 0)
 					{
