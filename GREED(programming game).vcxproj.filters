@@ -156,6 +156,9 @@
     <ClCompile Include="client_v1_offline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="java_class.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">

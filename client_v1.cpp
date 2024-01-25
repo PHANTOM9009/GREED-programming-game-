@@ -44,7 +44,7 @@
 /*
 * what am i doing here?sssssssssssssssss
 * the entire template is in lib2.hpp and its cpp counterpart
-* so everytime we need to make a new version of the pre-existing game, just import the Gassssssssssssssssssssssssssssssssssssssssme API with all implementations
+* so everytime we need to make a new version of the pre-existing game, just import the Game API with all implementations
 * and write your own graphics::callable function and a handler function void main() to complete it
 * this way we can create any variant of the game using only the pre-built template.
 * PS: any extra classes required can be written here

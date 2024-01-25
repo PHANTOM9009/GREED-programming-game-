@@ -21,4 +21,6 @@ how i designed the entire network protocol for the game:
 
 persistence of information increases the size of the packet that is being transmitted but makes sure that no packet carrying important information
 is lost; uses a simple mechanism of ack, send for some time so that the client can delete it over the time
+-----------------------------------------------------------------------------------------------
+for making the game support for multiple languages: we need to follow the following architecture:
 

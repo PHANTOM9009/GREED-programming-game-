@@ -478,39 +478,42 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 		//now start sending the data over the network to each individual clients..
 		for (int i = 0; i < data.size(); i++)
 		{
-			//send the data to the client
-			data[i].second.st = 100;
-			data[i].second.end = 101;
-			
-			recv_data ob = data[i].second;
-			char buffer[sizeof(data[i].second)];
-			memcpy(buffer, &ob, sizeof(ob));
-
-			int sent_bytes = 0;
-			//sending that starting a new packet
-			int sending_new = 1;
-			sendto(socket_listen, (char*)&sending_new, sizeof(sending_new), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
-			while (sent_bytes < sizeof(ob))
+			if (addr_info.find(data[i].first) != addr_info.end())
 			{
-				int fuck = sizeof(ob) - sent_bytes;
-				int bytesToSend = min(MAX_LENGTH, fuck);
-				int bytes= sendto(socket_listen, buffer + sent_bytes, bytesToSend, 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
-				if (bytes < 1)
-				{
-					cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
-				}
-				else
-				{
-					sent_bytes += bytes;
-					
-					auto now = std::chrono::system_clock::now();
-					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-					auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-					auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-					auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+				//send the data to the client
+				data[i].second.st = 100;
+				data[i].second.end = 101;
 
-					//cout << "\n sent data to the client terminal=> " <<ob.packet_id<<" "<<
-					  // hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+				recv_data ob = data[i].second;
+				char buffer[sizeof(data[i].second)];
+				memcpy(buffer, &ob, sizeof(ob));
+
+				int sent_bytes = 0;
+				//sending that starting a new packet
+				int sending_new = 1;
+				sendto(socket_listen, (char*)&sending_new, sizeof(sending_new), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
+				while (sent_bytes < sizeof(ob))
+				{
+					int fuck = sizeof(ob) - sent_bytes;
+					int bytesToSend = min(MAX_LENGTH, fuck);
+					int bytes = sendto(socket_listen, buffer + sent_bytes, bytesToSend, 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
+					if (bytes < 1)
+					{
+						cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+					}
+					else
+					{
+						sent_bytes += bytes;
+
+						auto now = std::chrono::system_clock::now();
+						auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+						auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+						auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+						auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+						//cout << "\n sent data to the client terminal=> " <<ob.packet_id<<" "<<
+						  // hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+					}
 				}
 			}
 			//cout << "\n sent bytes to==>" <<data[i].first;
@@ -563,7 +566,7 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 				int bytes = sendto(socket_listen2, buffer + sent_bytes, bytesToSend, 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
 				if (bytes < 1)
 				{
-					cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
+					//cout << "\n cannot send bytes to the client==>" << GETSOCKETERRNO();
 				}
 				else
 				{
@@ -618,7 +621,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 		int bytes = recvfrom(recver, buff, sizeof(buff), 0, (sockaddr*)&client_add, &client_length);
 		if (bytes < 1)
 		{
-			cout << "\n cannot recv bytes=>" << GetLastErrorAsString();
+			//cout << "\n cannot recv bytes=>" << GetLastErrorAsString();
 		}
 		if (bytes == 4)//new packet incoming
 		{
@@ -2327,6 +2330,9 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	vector<int> disp_socket;//collection of sockets of the display unit
 	//stage 1 starts
 	cout << "\n stage 1 of connection starts....";
+
+	//making a max_player proxy for connecting issues
+	int max_player_proxy = max_player;
 	while (max_player > nn || max_display>curdisp)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		reads = master;
@@ -2353,9 +2359,25 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 				{
 					char buffer[1000];
 					int bit = recv(i, buffer, sizeof(buffer), 0);
-					if (bit < 0)
+					if (bit < 0)//in this case the connection is broken with the client so remove that client from the master set and close its socket
 					{
-						cout << "\n error in recving bytes==>" << GetLastErrorAsString() << " Error code is=>" << GETSOCKETERRNO();
+						/*
+						FD_CLR(i, &master);
+						CLOSESOCKET(i);
+						max_player_proxy--;
+						//removing from the queue of tcp_socket_storage
+						for (int j = 0; j < tcp_socket_storage.size(); j++)
+						{
+							if (tcp_socket_storage[j] == i)
+							{
+								auto it = tcp_socket_storage.begin();
+								advance(it, j);
+								tcp_socket_storage.erase(it);
+								break;
+							}
+						}
+						cout << "\n reducing the max_player_proxy==>" << max_player_proxy;
+						*/
 					}
 					cout << "\n bytes recved are==>" << bit;
 					greet_client gc;
@@ -2402,7 +2424,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 						}
 					}
-					else
+					else//this is for receiving heartbeat
 					{
 						//cout << "\n received the heartbeat..";
 						continue;
@@ -2556,9 +2578,11 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		fd_set read;
 	FD_ZERO(&read);
 	int count = 0;
-	
-	while (count != max_player)
+	cout << "\n max player proxy is=>" << max_player_proxy<<" in the set are==>"<<all.fd_count;
+	int count_cross = 0;
+	while (count != max_player_proxy && count_cross < 2000)
 	{
+		count_cross++;
 		read = all;
 		struct timeval timeout;
 		timeout.tv_sec = 0;
@@ -2572,10 +2596,25 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 				
 					int id;
 					int bytes = recv(i, (char*)&id, sizeof(id), 0);
-					if (bytes < 1)
+					if (bytes < 1)//remove from the list
 					{
-						cout << "\n cannot recv tcp id from the client terminal" << GetLastErrorAsString() << GETSOCKETERRNO();
-						cout << "\n socket that got ready is==>" << i;
+						/*
+						max_player_proxy--;
+						FD_CLR(i, &all);
+
+						CLOSESOCKET(i);
+						for (int j = 0; j < tcp_socket_storage.size(); j++)
+						{
+							if (tcp_socket_storage[j] == i)
+							{
+								auto it = tcp_socket_storage.begin();
+								advance(it, j);
+								tcp_socket_storage.erase(it);
+								break;
+							}
+						}
+						cout << "\n reduced max player to==>" << max_player_proxy;
+						*/
 					}
 					//sending the respected data to the client terminal
 					else if (bytes > 1)
@@ -2603,9 +2642,10 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		if (FD_ISSET(i, &all))
 		{
 			int bytes = send(i, (char*)&start, sizeof(start), 0);
-			if (bytes < 1)
+			if (bytes < 1)//remove from the stage
 			{
-				cout << "\n cannot send the data to the client" << GetLastErrorAsString();
+				FD_CLR(i, &master);
+				CLOSESOCKET(i);
 			}
 		}
 	}
@@ -2622,9 +2662,10 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	FD_SET(socket_listen, &master1);
 	FD_ZERO(&read);
 	max_socket = socket_listen;
-	
-	while (new_count != max_player)
+	count_cross = 0;
+	while (new_count != max_player_proxy && count_cross<500)
 	{
+		count_cross++;
 		read = master1;
 		select(max_socket + 1, &read, 0, 0, &timeout);
 		if (FD_ISSET(socket_listen, &read))
@@ -2635,7 +2676,12 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 			int bytes = recvfrom(socket_listen, (char*)&sid, sizeof(sid), 0, (sockaddr*)&client_a, &client_l);
 			if (bytes < 1)
 			{
-				cout << "\n cannot recv bytes==>" << GETSOCKETERRNO();
+				int a;
+				/*
+				max_player_proxy--;
+				//cout << "\n cannot recv bytes==>" << GETSOCKETERRNO();
+				cout << "\n reducing max_player to==>" << max_player;
+				*/
 			}
 			if (sid != -1 && socket_id.find(sid)==socket_id.end())
 			{
@@ -2660,6 +2706,16 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	{
 		int st = 1;
 		int bytes = send(disp_socket[i], (char*)&st, sizeof(st), 0);
+
+
+
+
+
+
+
+
+
+
 	}
 	int c = 0;
 	while (c != disp_socket.size())
@@ -2671,7 +2727,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		
 		if (tits < 1)
 		{
-			cout << "\n cannot recv id from the client display unit==>" << GetLastErrorAsString();
+			//cout << "\n cannot recv id from the client display unit==>" << GetLastErrorAsString();
 		}
 		else if(socket_id_display.find(display_id)==socket_id_display.end())
 		{

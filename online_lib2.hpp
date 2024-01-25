@@ -1539,14 +1539,7 @@ public: //this will be public the user will be able to access this object freely
 	int isShipInMotion()//this function has to be used
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (tile_path.howMany() > 0)
-		{
-			motion = 1;
-		}
-		else
-		{
-			motion = 0;
-		}
+		
 		return motion;
 	}
 	List<Greed::abs_pos> path;
@@ -2062,7 +2055,7 @@ public:
 		return index;
 
 	}
-	[[deprecated("use isShipInMotion() instead")]] bool isShipMoving(int s_id)// tells if another player's ship is moving
+	bool isShipMoving(int s_id)// tells if another player's ship is moving
 	{
 		ship* ob = shipInfoList[s_id].ob; //assuming that no ship entry is deleted and every ship is in increasing order of their ship_id
 		if (ob->motion == 1)
@@ -2079,10 +2072,7 @@ public:
 		//return isShipMoving(this->ship_id);
 		 //current mechanism is to check if the list of absolute coords is >0
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (path.howMany() - 1 == pointPath || path.howMany()==0)
-			return false;
-		else
-			return true;
+		return motion;
 
 	}
 	bool anchorShip();//function to halt the ship
@@ -2365,8 +2355,8 @@ public:
 			int bullet_size = ob.size_hit_bullet - min(10, ob.bullet_hit_size - pl1[id]->hit_bullet_count);
 			if (ob.size_hit_bullet > 0)
 			{
-				cout << "\n server bullet hit count is==>" << ob.bullet_hit_size << "  client bullet hit count is=>" << pl1[id]->hit_bullet_count;
-				cout << "\n size of hit bullet==>" << ob.size_hit_bullet;
+				//cout << "\n server bullet hit count is==>" << ob.bullet_hit_size << "  client bullet hit count is=>" << pl1[id]->hit_bullet_count;
+				//cout << "\n size of hit bullet==>" << ob.size_hit_bullet;
 			}
 			for (int i = bullet_size; i < ob.size_hit_bullet; i++)
 			{
@@ -2375,7 +2365,7 @@ public:
 				pl1[id]->bullet_hit_tempo.push_back(b);
 				pl1[id]->hit_bullet_count++;
 			}
-			cout << "\nafter updating the client bullet count is==>" << pl1[id]->hit_bullet_count;
+			//cout << "\nafter updating the client bullet count is==>" << pl1[id]->hit_bullet_count;
 		}
 		
 		if (ob.size_unlock > 3)
@@ -2771,7 +2761,7 @@ public:
 			
 			if (pl1[ship_id]->bullet_id_count.find(ob.b_data[i].bullet_id)==pl1[ship_id]->bullet_id_count.end())
 			{
-				cout << "\n bullet fired by==>" << ship_id << " with the id==>" << ob.b_data[i].bullet_id;
+				//cout << "\n bullet fired by==>" << ship_id << " with the id==>" << ob.b_data[i].bullet_id;
 				pl1[ship_id]->bullet_id_count[ob.b_data[i].bullet_id] = 1;
 				pl1[ship_id]->bullet_info.push_back(ob.b_data[i]);
 				pl1[ship_id]->server_fire++;

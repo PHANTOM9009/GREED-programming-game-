@@ -62,11 +62,7 @@ int rc = sqlite3_open("Greed.db", &db);
 bool user_found = false;
 static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 {
-	/*
-	* this thing is running for every row, argc is the number of columns in the database,
-	* argv is the value at that column
-	* azColName is the name of the column
-	*/
+	
 	if (argc > 0)
 	{
 		user_found = true;
