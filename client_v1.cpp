@@ -41,6 +41,8 @@
 #include "hawk.cpp"
 #include<ctime>
 #include<chrono>
+#include<conio.h>
+#include<regex>
 /*
 * what am i doing here?sssssssssssssssss
 * the entire template is in lib2.hpp and its cpp counterpart
@@ -1583,6 +1585,131 @@ std::string GetLastErrorAsString()
 
 	return message;
 }
+
+string input_password()
+{
+	const int MAX_PASSWORD_LENGTH = 20;
+	char password1[MAX_PASSWORD_LENGTH + 1]; // +1 for null terminator
+	const char BACKSPACE = 8;
+	const char ENTER = 13;
+	std::cout << "Enter your password==>";
+	char ch;
+	int i = 0;
+	while (true) {
+		ch = _getch();
+
+		if (ch == ENTER) {
+			password[i] = '\0'; // Null-terminate the password
+			break;
+		}
+		else if (ch == BACKSPACE) {
+			if (i > 0) {
+				std::cout << "\b \b"; // Move cursor back, overwrite with space, move back again
+				--i;
+			}
+		}
+		else if (i < MAX_PASSWORD_LENGTH - 1) {
+			std::cout << '*';
+			password[i++] = ch;
+		}
+	}
+
+	return string(password);
+}
+string checkEmail()
+{
+	string email;
+	bool true_mail = false;
+	while (!true_mail)
+	{
+		cin >> email;
+		std::regex pattern("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+
+		// Check if the email matches the pattern
+		true_mail= std::regex_match(email, pattern);
+		if (!true_mail)
+		{
+			cout << "\n please enter a valid email==>";
+		}
+	}
+	return email;
+	//now checking the email
+
+}
+bool login_function(SOCKET lobby_socket);
+void createAccount(SOCKET lobby_socket)
+{
+	int status_code = 0;
+	cout << "\n You don't seem to have an account with us...let's create you one...\n Enter the details:\n what do you want to be called? =>";
+	while (status_code != 1)
+	{
+		cin >> username;
+		//checking if this username is available or not
+		user_credentials ob(2, username, "");
+		int bytes = send(lobby_socket, (char*)&ob, sizeof(ob), 0);
+		bytes = recv(lobby_socket, (char*)&status_code, sizeof(status_code), 0);
+		if (status_code == -1)
+		{
+			cout << "\n Oops..This username is taken, try something else? Enter another username=>";
+		}
+
+	} 
+	//now we are having our username set
+	cout << "\n Wow! You have picked youself a deserving name...\n";
+	password = input_password();
+	cout << "\n Just a few more things...\n Enter you email address ( Enter a valid email, because all your in-game credits and rewards will be intimidated to you on that email)=>";
+	string email = checkEmail();
+	cout << "\n which country do you come from?";
+	string country;
+	cin >> country;
+	cout << "\n what is your designation? eg. student, working etc.==>";
+	string role;
+	cin >> role;
+	user_credentials ob(1, username, password, email, role, country);
+	send(lobby_socket, (char*)&ob, sizeof(ob), 0);
+	login_function(lobby_socket);
+
+}
+bool login_function(SOCKET lobby_socket)
+{
+	cout << "\n enter you username==>";
+	cin >> username;
+	password = input_password();
+	user_credentials ob(0, username, password);
+	int bytes = send(lobby_socket, (char*)&ob, sizeof(ob), 0);
+	if (bytes < 0)
+	{
+		cout << "\n could not send the credentials to the lobby server=>" << GetLastErrorAsString();
+	}
+	int status_code = 0;
+	bytes = recv(lobby_socket, (char*)&status_code, sizeof(status_code), 0);
+	//if everything goes right the status code should be 1
+	if (bytes < 1)
+	{
+		cout << "\n error in recving bytes==>" << GETSOCKETERRNO();
+	}
+	cout << "\n the status code is==>" << status_code;
+	while (status_code != 1)
+	{
+		if (status_code == 2)
+		{
+			//the password of the user is wrong, so promt the user to input the password again
+			cout << "\n the password you entered is wrong...";
+			password = input_password();
+			user_credentials ob(0, username, password);
+			int bytes = send(lobby_socket, (char*)&ob, sizeof(ob), 0);
+			status_code = 0;
+			bytes = recv(lobby_socket, (char*)&status_code, sizeof(status_code), 0);
+
+		}
+		if (status_code == -1)
+		{
+			createAccount(lobby_socket);
+		}
+	}
+	return true;
+
+}
 int connect_to_lobby_server()
 {
 	struct addrinfo hints;
@@ -1597,7 +1724,7 @@ int connect_to_lobby_server()
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 		//return 1;
 	}
-	cout << "\n connecting with the lobby server.....";
+	
 	while (connect(lobby_socket, bind_address->ai_addr, bind_address->ai_addrlen))
 	{
 		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
@@ -1605,22 +1732,33 @@ int connect_to_lobby_server()
 		//return 1;
 	}
 	freeaddrinfo(bind_address);
+	cout << "\n connected with the lobby server..";
 	//sending hi to the server
 	//sending my credentials to the server
-	user_credentials ob(username, password);
-	cout << "\n connected with the lobby server, now sending the bytes to the lobby server..";
-
-	int bytes = send(lobby_socket, (char*)&ob, sizeof(ob), 0);
-	if (bytes < 0)
+	cout << "\n Enter 1 to login ( if you have a username and password) \n Enter 2 to signup (if you don't have any username)";
+	int choice = 0;
+	cin >> choice;
+	if (choice == 1)//the user wants to login
 	{
-		cout << "\n could not send the credentials to the lobby server=>" << GetLastErrorAsString();
+		login_function(lobby_socket);
+		
+		
 	}
-	cout << "\n sent the credentials to the lobby server..";
+	else if (choice == 2)
+	{
+		createAccount(lobby_socket);
+	}
+	
+
+
+
+	
+
 	cout << "\n waiting for game token and port of the game server...";
 	
 	server_startup start;
 	int port;
-	bytes = recv(lobby_socket,(char*)&start, sizeof(start), 0);
+	int bytes = recv(lobby_socket,(char*)&start, sizeof(start), 0);
 	if (bytes < 1)
 	{
 		cout << "\n error in recv bytes from lobby server=>" << GetLastErrorAsString();
@@ -1635,6 +1773,7 @@ int connect_to_lobby_server()
 int main(int argc,char* argv[])
 {
 	//extracting the data
+	
 	cout << "\n enter the ip address of the server==>";
 	cin >> ip_address;
 	cout << "\n enter the mode in which you want to run this client.. press 1. for client with display unit.\n otherwise press 2==>";
@@ -1647,16 +1786,12 @@ int main(int argc,char* argv[])
 		return 1;
 	}
 #endif
-	int port = 0;
+	int port = 0;//port is of the game server which the lobby server will return.
 	SOCKET socket_listen = 0;
 	 port=connect_to_lobby_server();
 	socket_listen = connect_to_server(port);   //no connection is established here only the socket initialization is done here
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
-	
-	
-	
-	
 		
 	/*
 	cout << "\n waiting to recv the data before going for tcp ";

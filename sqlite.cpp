@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
         "VALUES(7,'user5','password','abc6@gmail.com',0,'India');"\
         "INSERT INTO USER_DATA(ID,USERNAME,PASSWORD,EMAIL,ROLE,COUNTRY)"\
         "VALUES(8,'user6','password','abc7@gmail.com',0,'India');";
-    */
+    
 
     
     char sql[] = "select * from user_data where id==9;";
@@ -77,7 +77,11 @@ int main(int argc, char* argv[])
         "TOTAL_SCORE INT,"\
         "RANK INT,"\
         "FOREIGN KEY (ID) REFERENCES USER_DATA);";
+    
     char sql2[] = "UPDATE USER_DATA SET USERNAME='username';";
+    */
+    char sql[] = "INSERT INTO USER_DATA(ID,USERNAME,PASSWORD,EMAIL,ROLE,COUNTRY)"\
+        "VALUES((SELECT IFNULL(MAX(id), 0) + 1 FROM USER_DATA),'anchit','password','abc1@gmail.com',0,'India')";
     /* Execute SQL statement */
     rc = sqlite3_exec(db, sql, callback,0, &zErrMsg);
 

@@ -2379,7 +2379,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 						cout << "\n reducing the max_player_proxy==>" << max_player_proxy;
 						*/
 					}
-					cout << "\n bytes recved are==>" << bit;
+					
 					greet_client gc;
 					if (bit == sizeof(gc))
 					{

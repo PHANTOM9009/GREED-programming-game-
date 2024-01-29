@@ -23,4 +23,34 @@ persistence of information increases the size of the packet that is being transm
 is lost; uses a simple mechanism of ack, send for some time so that the client can delete it over the time
 -----------------------------------------------------------------------------------------------
 for making the game support for multiple languages: we need to follow the following architecture:
+-----------------------------------------------------------------------------------------------
+
+The power behing AI_PLAYGROUNDS and programming games:
+
+Greed can be used as a proxy to code the AI agent for realtime warfare.
+Greed has approximately 1*10^25 states, solving such a huge number of states is a challenging task;
+but we can use the following approach to solve the problem:
+
+it will become the worlds toughest competitions in the world. the competition will code for the AI agent to win!
+atleast let it reach the level of robocode and other games, let atleast 1k people play the game
+
+---------------------------------------------------------------------
+things i want someone else to do while i am coding:
+
+1. maintain the online presence of the game
+
+2. hangle the marketing.
+
+3. talk to the potential customers'
+here the custormers are college clubs and societies
+
+someone to keep on thinking about the company when i am busy in coding. someone who will keep on managing the website work and the marketing work
+
+
+
+
+
+
+
+
 

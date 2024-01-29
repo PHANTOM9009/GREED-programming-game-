@@ -62,7 +62,8 @@ int rc = sqlite3_open("Greed.db", &db);
 bool user_found = false;
 static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 {
-	
+	//argc is the number of rows in the resultant query
+	cout << "\n i am inside callback";
 	if (argc > 0)
 	{
 		user_found = true;
@@ -73,14 +74,31 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 class user_credentials
 {
 public:
+	int type;// type 0 for login, and type 1 for signup //2 for checking the if the username is taken or not. based on this type we will write different code that will hangle it
 	char username[20];
 	char password[20];
-	
+	char email[30];
+	char role[30];
+	char country[30];
 	user_credentials() { }
+	user_credentials(int type, string user, string pass)
+	{
+		this->type = type;
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+	}
 	user_credentials(string user, string pass)
 	{
 		strcpy(username, user.c_str());
 		strcpy(password, pass.c_str());
+	}
+	user_credentials(string user,string pass, string email, string role, string country)
+	{
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+		strcpy(this->email, email.c_str());
+		strcpy(this->role, role.c_str());
+		strcpy(this->country, country.c_str());
 	}
 };
 class user_credentials_array
@@ -174,19 +192,60 @@ public:
 	WSAPROTOCOL_INFO  socket_listen[50];
 	
 };
-bool checkUser(user_credentials& cred)
+bool checkUser(user_credentials& cred,int mode)//here it has 2 modes
 {
+	/*following can be the values of the mode
+	* mode==0 (when i want to check both username and password of the user
+	* mode==1 (when i want to check only the username of the user in case the first mode results in false
+	* */
 	string username = cred.username;
 	string password = cred.password;
-	string query = "SELECT * FROM USER_DATA WHERE USERNAME=" + username + " AND PASSWORD=" + password + ";";
+	string query;
+	if (mode == 0)
+	{
+		query = "SELECT * FROM USER_DATA WHERE USERNAME='" + username + "' AND PASSWORD='" + password + "';";
+	}
+	else if (mode == 1)
+	{
+		query = "SELECT * FROM USER_DATA WHERE USERNAME='" + username+"';";
+	}
 	char* zErrMsg = 0;
 	int rc = sqlite3_exec(db, query.c_str(), callback, 0, &zErrMsg);
+
+	if (rc != SQLITE_OK) {
+		fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+		return false;
+	}
 	if (user_found == true)
 	{
 		user_found = false;
 		return true;
 	}
 	return false;
+}
+bool createUser(user_credentials cred)
+{
+	
+	std::string s = "INSERT INTO USER_DATA(ID,USERNAME,PASSWORD,EMAIL,ROLE,COUNTRY)" \
+		"VALUES((SELECT IFNULL(MAX(id), 0) + 1 FROM USER_DATA),'" +
+		string(cred.username) + "','" + string(cred.password) + "','" + string(cred.email) +
+		"'," + std::to_string(0) + ",'" + string(cred.country) + "')";
+
+	cout << "\n the query is==>" << s;
+	char* zErrMsg;
+	rc = sqlite3_exec(db, s.c_str(), callback, 0, &zErrMsg);
+
+	if (rc != SQLITE_OK) {
+		fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+		return false;
+	}
+	else 
+	{
+		
+		return true;
+	}
 }
 void listener()
 {
@@ -264,31 +323,78 @@ void listener()
 					int bytes = recv(i, (char*)&cred, sizeof(cred), 0);
 					if (bytes < 1)//in this case the client has disconnected the connection so remove this  socket and remove from the master socket
 					{
-						
+
 						FD_CLR(i, &master);
 						CLOSESOCKET(i);//closing this socket
 					}
 					if (bytes > 0)
 					{
-						cout << "\n received credentials are==>" << cred.username << " " << cred.password;
-						if(1)//put the condition if the current user is verified or not
+						/*following are the status code that will be sent to the client to intimate him about is his login status
+						-1: account does not exist( this will happen only when both username and password does'nt exist in the database
+						2: username exists but the password is wrong
+						1: everything is fine
+						*/
+						if (cred.type == 0)//the account already exists
 						{
-							unique_lock<mutex> lk(m->m_valid);
-							valid_connections.push_back(i);
-							user_cred.push_back(user_credentials(cred.username, cred.password));
-							m->is_data.notify_one();
-							cout << "\n connected with a valid user";
-							FD_CLR(i, &master);
-						}
-						else//if the user is not authenticated then tear down the socket connection and remove it from the set of master
-						{
-							cout << "\n invalid user came..";
-							CLOSESOCKET(i);				
+							if (checkUser(cred, 0))//put the condition if the current user is verified or not
+							{
+								unique_lock<mutex> lk(m->m_valid);
+								valid_connections.push_back(i);
+								user_cred.push_back(user_credentials(cred.username, cred.password));
+								m->is_data.notify_one();
+								cout << "\n connected with a valid user";
+								int status_code = 1;
+								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+								FD_CLR(i, &master);
+							}
+							else if (checkUser(cred, 1))
+							{
+								//if it comes to this this means that the password entered is wrong and needs to be re-entered
+								cout << "\n user entered the wrong password...";
+								int status_code = 2;
+								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
 
+
+							}
+							else //not authenticated then tear down the socket connection and remove it from the set of master
+							{
+								cout << "\n invalid user came..";
+								int status_code = -1;
+								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+							}
 						}
+						else if (cred.type == 2)//to check if the username is taken or not
+						{
+							/* here -1 for taken and 1 for ok*/
+							int status_code;
+							if (!checkUser(cred, 1))
+							{
+								status_code = 1;
+								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+
+							}
+							else
+							{
+								status_code = -1;
+								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+							}
+						}
+
+						else if (cred.type == 1)//making a new account for the user
+						{
+							bool res = createUser(cred);
+							if (res)
+							{
+								cout << "\n created a new user==>" << cred.username;
+							}
+							else
+							{
+								cout << "\n cannot create a new user";
+							}
+						}
+						
 					}
 
-					//}
 				}
 				
 			}
