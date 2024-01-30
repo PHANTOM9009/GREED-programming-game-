@@ -1326,6 +1326,44 @@ public:
 	friend class graphics;
 	friend class control1;
 };
+class cannon_info//this data is used by the ships and this data has to be sent to the clients over the wire
+{
+	int cannon_id;//cannon id
+	double health;//health of the cannon
+	Greed::coords location;//current location of the cannon
+	bool is_cannon_dead;
+public:
+	cannon_info()
+	{
+
+	}
+	cannon_info(int cid, double health, Greed::coords loc, int is_cannon_dead)
+	{
+		this->cannon_id = cid;
+		this->health = health;
+		this->location = loc;
+		this->is_cannon_dead = is_cannon_dead;
+	}
+	int getCannonHealth()
+	{
+		return health;
+
+	}
+	int getCannonId()
+	{
+		return cannon_id;
+
+	}
+	Greed::coords getCannonLocation()
+	{
+		return location;
+	}
+	bool isCannonDead()
+	{
+		return is_cannon_dead;
+
+	}
+};
 class shipData_forMe
 {
 	/*data that the server will send to the client after computing the state for that frame*/
@@ -1360,6 +1398,9 @@ public:
 	Greed::abs_pos absolute_position;
 	Direction dir;
 	int motion;
+
+	int size_cannon_data;
+	cannon_info cannon_data[5];//data of the cannon(health etc.)
 
 	int size_collided_ships;
 	int collided_ships[10];
@@ -1497,7 +1538,7 @@ private:
 	deque<timeline> time_line;
 	
 	vector<int> collided_ships;
-
+	vector<::cannon_info> cannon_info;//data of the cannons present in the environment
 	deque<upgrade_data> udata;
 	deque<map_cost> map_cost_data;//only to be used at the client side;
 
@@ -2027,14 +2068,10 @@ public:
 	// armory starts from here
 
 
-	vector<Greed::cannon> getCannonList()
+	vector<::cannon_info> getCannonList()
 	{
-		vector<Greed::cannon> ret;
-		for (int i = 0; i < cannon_list.howMany(); i++)
-		{
-			ret.push_back(cannon_list[i]);
-		}
-		return ret;
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		return cannon_info;
 	}
 
 
@@ -2199,6 +2236,88 @@ public:
 };
 double avg_bullet = 0;
 int no_of_times = 0;
+class Control//this class will control everything regarding the game
+{
+public:
+	mutex m1;//mutex lock for ship_list
+	mutex m2;//mutex lock for cannon_list;
+	mutex m3;//mutex for bonus
+	mutex m4;//mutex for storm
+	static deque<ship*> ship_list;
+	static List<Greed::cannon> cannon_list;
+	static List<Greed::coords> bonus;//list of the coords having bonus
+	static List<Greed::coords> storm;//list of the coords having storm right now
+	static List<Greed::coords> opaque_coords;
+
+	void setBonusList(List<Greed::coords>& bonus)
+	{
+		unique_lock<mutex> lk(m3);
+		this->bonus = bonus;
+	}
+	void setStormList(List<Greed::coords>& storm)
+	{
+		unique_lock<mutex> lk(m4);
+		this->storm = storm;
+	}
+	List<Greed::coords> getOpaqueCoords()
+	{
+		return opaque_coords;
+	}
+
+	deque<ship*>& getShipList(int key)
+	{
+		if (key == 2369)
+		{
+			unique_lock<mutex> lk(m1);
+			return ship_list;
+		}
+
+
+	}
+	List<Greed::cannon>& getCannonList(int key = 0)
+	{
+		unique_lock<mutex> lk(m2);
+		return cannon_list;
+
+
+
+	}
+	void setShipList(deque<ship*>& ob, int key)//function to set the ship List
+	{
+		if (key == 2369)
+		{
+			unique_lock<mutex> lk(m1);
+			ship_list = ob;
+
+		}
+
+	}
+
+
+	List <Greed::coords>& getBonusList()
+	{
+		unique_lock<mutex> lk(m3);
+		return bonus;
+	}
+	List<Greed::coords>& getStormList()
+	{
+		unique_lock<mutex> lk(m4);
+		return storm;
+	}
+
+
+public:
+
+	friend class ship;//declaring ship class as the friend such that mutex m1 and m2 can be used by its functions
+	friend class graphics;
+
+	friend class attribute;
+	friend int main(int argc, char* argv[]);
+	friend void filter();
+	friend class Greed::cannon;
+	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
+
+};
 class control1
 {
 public:
@@ -2294,6 +2413,13 @@ public:
 	{
 		unique_lock<mutex> lk(pl1[id]->mutx->m[id]);
 		//transfer each data member from ob to pl1
+		pl1[id]->cannon_info.clear();
+		for (int i = 0; i < ob.size_cannon_data; i++)
+		{
+			pl1[id]->cannon_info.push_back(ob.cannon_data[i]);
+		}
+
+
 		pl1[id]->seconds = ob.seconds;
 		pl1[id]->minutes = ob.minutes;
 
@@ -2463,6 +2589,15 @@ public:
 	}
 	void me_to_packet(shipData_forMe& ob, int id, deque<ship*>& pl1)
 	{
+		Control control;
+		List<Greed::cannon> cannon_list = control.getCannonList();
+
+		ob.size_cannon_data = cannon_list.howMany();
+		for (int i = 0; i < ob.size_cannon_data; i++)
+		{
+			ob.cannon_data[i] = cannon_info(cannon_list[i].getCannonId(), cannon_list[i].getCannonHealth(), cannon_list[i].getCannonTile(), cannon_list[i].isCannonDead());
+		}
+
 		ob.server_fire = pl1[id]->server_fire;
 		ob.seconds = pl1[id]->seconds;
 		ob.minutes = pl1[id]->minutes;
@@ -2807,90 +2942,7 @@ public:
 };
 
 void filter(List<Greed::coords>& ob);
-class Control//this class will control everything regarding the game
-{
-protected:
-	mutex m1;//mutex lock for ship_list
-	mutex m2;//mutex lock for cannon_list;
-	mutex m3;//mutex for bonus
-	mutex m4;//mutex for storm
-	 static deque<ship*> ship_list;
-	static List<Greed::cannon> cannon_list;
-	static List<Greed::coords> bonus;//list of the coords having bonus
-	static List<Greed::coords> storm;//list of the coords having storm right now
-	static List<Greed::coords> opaque_coords;
 
-	void setBonusList(List<Greed::coords>& bonus)
-	{
-		unique_lock<mutex> lk(m3);
-		this->bonus = bonus;
-	}
-	void setStormList(List<Greed::coords>& storm)
-	{
-		unique_lock<mutex> lk(m4);
-		this->storm = storm;
-	}
-	List<Greed::coords> getOpaqueCoords()
-	{
-		return opaque_coords;
-	}
-
-	deque<ship*>& getShipList(int key)
-	{
-		if (key == 2369)
-		{
-			unique_lock<mutex> lk(m1);
-			return ship_list;
-		}
-
-
-	}
-	List<Greed::cannon>& getCannonList(int key)
-	{
-		if (key == 2369)
-		{
-			unique_lock<mutex> lk(m2);
-			return cannon_list;
-		}
-
-
-	}
-	void setShipList(deque<ship*>& ob, int key)//function to set the ship List
-	{
-		if (key == 2369)
-		{
-			unique_lock<mutex> lk(m1);
-			ship_list = ob;
-
-		}
-
-	}
-
-
-	List <Greed::coords>& getBonusList()
-	{
-		unique_lock<mutex> lk(m3);
-		return bonus;
-	}
-	List<Greed::coords>& getStormList()
-	{
-		unique_lock<mutex> lk(m4);
-		return storm;
-	}
-
-
-public:
-
-	friend class ship;//declaring ship class as the friend such that mutex m1 and m2 can be used by its functions
-	friend class graphics;
-
-	friend class attribute;
-	friend int main(int argc, char* argv[]);
-	friend void filter();
-	friend class Greed::cannon;
-	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
-
-};
 /*networking libs*/
 class pack_ship
 {
@@ -2938,6 +2990,7 @@ public:
 	friend class graphics;
 	friend void update_frame(deque<ship*>&, pack_ship&, int);
 };
+
 class cannon_data
 {
 public:

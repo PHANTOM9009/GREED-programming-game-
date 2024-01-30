@@ -54,7 +54,8 @@
 	{
 		//setting the aim
 		
-		vector <Greed::cannon> cannonList = ob.getCannonList();
+		vector <cannon_info> cannonList = ob.getCannonList();
+		/*
 		for (int j = 0; j < cannonList.size(); j++)
 		{
 
@@ -65,6 +66,7 @@
 				ob.Greed_updateCost(arr[i], 50);
 			}
 		}
+		*/
 		
 		
 		deque<shipInfo> shipList = ob.getShipList();
@@ -129,8 +131,9 @@
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
 						
-						vector<Greed::cannon> ls = ob.getCannonList();
-						if (ls[q[i].radiusCannon.getCannonId()[0]].isCannonDead() == 0)
+						vector<cannon_info> ls = ob.getCannonList();
+						//cout << "\n cannon health is==>" << ls[q[i].radiusCannon.getCannonId()[0]].getCannonHealth();
+						if (!ls[q[i].radiusCannon.getCannonId()[0]].isCannonDead())
 						{
 							ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
 						}

@@ -1856,7 +1856,7 @@ int main(int argc,char* argv[])
 
 	//player[1].localMap[10 * columns + 0].b.cost = 50;
 	deque<ship*> slist;
-
+	
 	for (int i = 0; i < no_of_players; i++)
 	{
 		silist.push_back(shipInfo(&player[i]));
