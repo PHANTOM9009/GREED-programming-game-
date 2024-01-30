@@ -50,35 +50,19 @@
 */
 
 
+
+
+
 class user_credentials
 {
 public:
-	int type;// type 0 for login, and type 1 for signup //2 for checking the if the username is taken or not. based on this type we will write different code that will hangle it
 	char username[20];
 	char password[20];
-	char email[30];
-	char role[30];
-	char country[30];
 	user_credentials() { }
-	user_credentials(int type, string user, string pass)
-	{
-		this->type = type;
-		strcpy(username, user.c_str());
-		strcpy(password, pass.c_str());
-	}
 	user_credentials(string user, string pass)
 	{
 		strcpy(username, user.c_str());
 		strcpy(password, pass.c_str());
-	}
-	user_credentials(int type,string user, string pass, string email, string role, string country)
-	{
-		this->type = type;
-		strcpy(username, user.c_str());
-		strcpy(password, pass.c_str());
-		strcpy(this->email, email.c_str());
-		strcpy(this->role, role.c_str());
-		strcpy(this->country, country.c_str());
 	}
 };
 class user_credentials_array
@@ -435,7 +419,7 @@ public:
 	mutex mchase[20];//mutex for follow up function of ship class
 	mutex updating_data;//for server only
 	mutex gameOver_check;
-	
+
 	mutex send_terminal;//for sending the data to the client terminal
 	mutex send_display;//for sending the data to the client display unit
 	condition_variable cond_terminal;//to check if terminal is ready to recv the data
@@ -445,7 +429,7 @@ public:
 
 	mutex recv_terminal;//to recv the data from the client terminal side
 	mutex recv_display;//to recv the data from the display client side
-	
+
 	mutex game_tick_mutex;//mutex used to protect the game tick of the server
 
 
@@ -459,7 +443,7 @@ public:
 	friend class Greed::bullet;
 	friend class Greed::shipCannon;
 	friend void chaseShip1(int, ship&);
-	friend void send_data_terminal(unordered_map<int, sockaddr_storage>,Mutex*);
+	friend void send_data_terminal(unordered_map<int, sockaddr_storage>, Mutex*);
 	friend void send_data_display(unordered_map<int, sockaddr_storage>, Mutex*);
 	friend class Event;
 	friend class control1;
@@ -609,7 +593,7 @@ public:
 	friend class ship;
 	friend class graphics;
 	friend class Greed::cannon;
-	friend int main(int argc,char* argv[]);
+	friend int main(int argc, char* argv[]);
 	friend class control1;
 
 };
@@ -695,7 +679,7 @@ public:
 	friend graphics;
 	friend int main(int argc, char* argv[]);
 	friend class ship;
-	friend void startup(int n, unordered_map<int,sockaddr_storage>& socket_id, int port);
+	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
 
 };
 class Greed::shipCannon
@@ -763,7 +747,7 @@ class shipInfo
 	Greed::coords getCurrentTile_withoutMutex();
 
 	Greed::coords getCurrentRearTile_withoutMutex();
-	
+
 public:
 
 	shipInfo()
@@ -1163,7 +1147,7 @@ class navigation
 	int n;//number of tiles
 	Direction dir;
 public:
-	navigation(){
+	navigation() {
 		id = -1;
 	}
 	navigation(int t, Greed::coords tar, int sid, int nn, Direction d)
@@ -1256,7 +1240,7 @@ public:
 	{
 		bullet_id = -1;
 	}
-	bullet_data(int type,cannon can,int s_id,ShipSide s,int c_id)
+	bullet_data(int type, cannon can, int s_id, ShipSide s, int c_id)
 	{
 		bullet_id = -1;
 		this->type = type;
@@ -1270,20 +1254,20 @@ public:
 };
 
 deque<navigation> resend_navigation;//to store the navigation requests that has be resent
-deque<pair<bullet_data,int>> resend_bullet;//firing data that has to be resent
+deque<pair<bullet_data, int>> resend_bullet;//firing data that has to be resent
 class map_cost//class to send updateCost of the map tile data to the server over the network
 {
 public:
-	
+
 	double new_cost;
 	Greed::coords ob;
 	map_cost()
 	{
-		
+
 	}
 	map_cost(double n, Greed::coords o)
 	{
-		
+
 		new_cost = n;
 		ob = o;
 	}
@@ -1304,7 +1288,7 @@ public:
 		this->absolute_position = abs;
 	}
 	friend class control1;
-	
+
 };
 class shipData_forServer
 {
@@ -1312,11 +1296,11 @@ class shipData_forServer
 	*/
 public:
 	int ship_id;//id of the ship
-		
+
 	double threshold_health;
 	double threshold_ammo;
 	double threshold_fuel;
-	
+
 	int client_fire;
 
 	int radius;//square radius
@@ -1341,6 +1325,44 @@ public:
 	}
 	friend class graphics;
 	friend class control1;
+};
+class cannon_info//this data is used by the ships and this data has to be sent to the clients over the wire
+{
+	int cannon_id;//cannon id
+	double health;//health of the cannon
+	Greed::coords location;//current location of the cannon
+	bool is_cannon_dead;
+public:
+	cannon_info()
+	{
+
+	}
+	cannon_info(int cid, double health, Greed::coords loc, int is_cannon_dead)
+	{
+		this->cannon_id = cid;
+		this->health = health;
+		this->location = loc;
+		this->is_cannon_dead = is_cannon_dead;
+	}
+	int getCannonHealth()
+	{
+		return health;
+
+	}
+	int getCannonId()
+	{
+		return cannon_id;
+
+	}
+	Greed::coords getCannonLocation()
+	{
+		return location;
+	}
+	bool isCannonDead()
+	{
+		return is_cannon_dead;
+
+	}
 };
 class shipData_forMe
 {
@@ -1377,6 +1399,9 @@ public:
 	Direction dir;
 	int motion;
 
+	int size_cannon_data;
+	cannon_info cannon_data[5];//data of the cannon(health etc.)
+
 	int size_collided_ships;
 	int collided_ships[10];
 
@@ -1398,7 +1423,7 @@ public:
 	int size_nav_id;
 	int nav_recved[6];
 
-		friend class graphics;
+	friend class graphics;
 	friend class control1;
 };
 class shipData_exceptMe //updated data that the server will send for the client
@@ -1439,7 +1464,7 @@ public:
 	char token[20];//current token for the game
 	int s1;
 	shipData_exceptMe shipdata_exceptMe[10];
-	
+
 	shipData_forMe shipdata_forMe;
 	int gameOver;//0 for game not over, 1 for over;
 	int end;//to check the authenticity of the incoming packet
@@ -1484,7 +1509,7 @@ public:
 	{
 		timer = 0;
 	}
-	upgrade_keeping(int active, int type, int current_value, int new_val,upgrade_data udata)
+	upgrade_keeping(int active, int type, int current_value, int new_val, upgrade_data udata)
 	{
 		timer = 0;
 		this->active = active;
@@ -1511,9 +1536,9 @@ private:
 	Greed map_ob;//to use the facilities of the class Greed
 	int ship_id;//id of the ship
 	deque<timeline> time_line;
-	
-	vector<int> collided_ships;
 
+	vector<int> collided_ships;
+	vector<::cannon_info> cannon_info;//data of the cannons present in the environment
 	deque<upgrade_data> udata;
 	deque<map_cost> map_cost_data;//only to be used at the client side;
 
@@ -1555,7 +1580,7 @@ public: //this will be public the user will be able to access this object freely
 	int isShipInMotion()//this function has to be used
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		
+
 		return motion;
 	}
 	List<Greed::abs_pos> path;
@@ -1575,7 +1600,7 @@ public: //this will be public the user will be able to access this object freely
 	int passive_event_point;//pointer to getNextPassiveEvent..to tell which event to send
 private:
 	int seconds;//seconds lived
-	
+
 	deque<Greed::bullet> hit_bullet;//stores the hit bullets on the ship for that frame
 	int minutes;//minutes lived
 	int killer_ship_id;//the ship that killed you if that is the case
@@ -1671,7 +1696,7 @@ public:
 
 	}
 private:
-	void initialize_player(int ship_id,string name, Mutex* mutx, deque<shipInfo>& ob, int code[rows][columns], int power, Greed::coords tile_pos)//considering that the default direction is south
+	void initialize_player(int ship_id, string name, Mutex* mutx, deque<shipInfo>& ob, int code[rows][columns], int power, Greed::coords tile_pos)//considering that the default direction is south
 	{
 		this->ship_id = ship_id;
 		this->mutex_id = ship_id;
@@ -1876,7 +1901,7 @@ private:
 
 	Greed::path_attribute setTarget(int s_id);//overloaded function for returning the object of path_attribute
 	//Greed::path_attribute setTarget(Greed::abs_pos ob) ;//overloaded function
-	
+
 	bool setPath(List<Greed::coords> ob, int state = 1); //set the path of coords
 	bool fireCannon(cannon can, int s_id, ShipSide ship);//target is true for ships and false for cannons
 	//defining the ctor
@@ -2026,7 +2051,7 @@ public:
 	attribute whatsHere(Greed::coords ob, int m = 0);//leave this for now
 	// List<attribute> whatsHere(Map::abs_pos ob);
 
-	
+
 private:
 	//checkCollision is to check collision between a ship and the bullet
 	bool checkCollision(int sid, const Greed::bullet& ob);//sid is the ship id of  the victim ship.
@@ -2043,14 +2068,10 @@ public:
 	// armory starts from here
 
 
-	vector<Greed::cannon> getCannonList()
+	vector<::cannon_info> getCannonList()
 	{
-		vector<Greed::cannon> ret;
-		for (int i = 0; i < cannon_list.howMany(); i++)
-		{
-			ret.push_back(cannon_list[i]);
-		}
-		return ret;
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		return cannon_info;
 	}
 
 
@@ -2100,7 +2121,7 @@ public:
 	//introducing the new functions
 	void Greed_sail(Direction d, int tiles = 1)
 	{
-		
+
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (motion == 0)
 		{
@@ -2110,7 +2131,7 @@ public:
 	}
 	void Greed_setPath(int s_id)
 	{
-		
+
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (motion == 0)
 		{
@@ -2129,15 +2150,15 @@ public:
 	}
 	void Greed_chaseShip(int s_id)
 	{
-		
-			unique_lock<mutex> lk(mutx->m[ship_id]);
-			if (motion == 0)
-			{
-				navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
-				nav_data.push_back(nav);
-				lock_chase_ship = 1;
-			}
-		
+
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		if (motion == 0)
+		{
+			navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
+			nav_data.push_back(nav);
+			lock_chase_ship = 1;
+		}
+
 	}
 	void Greed_anchorShip()
 	{
@@ -2152,15 +2173,15 @@ public:
 	void Greed_fireCannon(cannon can, int s_id, ShipSide s)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		
-		bullet_info.push_back(bullet_data(0,can,s_id,s,-1));
+
+		bullet_info.push_back(bullet_data(0, can, s_id, s, -1));
 
 	}
 	void Greed_fireAtCannon(int c_id, cannon can = cannon::FRONT)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		
-		bullet_info.push_back(bullet_data(1,can,-1,ShipSide::NA,c_id));
+
+		bullet_info.push_back(bullet_data(1, can, -1, ShipSide::NA, c_id));
 	}
 
 	deque<upgrade_keeping> upgrade_queue;
@@ -2169,10 +2190,10 @@ public:
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (lock_health == 0)
 		{
-			
+
 			udata.push_back(upgrade_data(1, n));
 			lock_health = 1;
-			
+
 
 		}
 	}
@@ -2181,10 +2202,10 @@ public:
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (lock_ammo == 0)
 		{
-			
+
 			udata.push_back(upgrade_data(0, n));
 			lock_ammo = 1;
-			
+
 		}
 	}
 	void Greed_upgradeFuel(int n)
@@ -2192,10 +2213,10 @@ public:
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (lock_fuel == 0)
 		{
-			
+
 			udata.push_back(upgrade_data(2, n));
 			lock_fuel = 1;
-			
+
 		}
 	}
 
@@ -2215,24 +2236,106 @@ public:
 };
 double avg_bullet = 0;
 int no_of_times = 0;
+class Control//this class will control everything regarding the game
+{
+public:
+	mutex m1;//mutex lock for ship_list
+	mutex m2;//mutex lock for cannon_list;
+	mutex m3;//mutex for bonus
+	mutex m4;//mutex for storm
+	static deque<ship*> ship_list;
+	static List<Greed::cannon> cannon_list;
+	static List<Greed::coords> bonus;//list of the coords having bonus
+	static List<Greed::coords> storm;//list of the coords having storm right now
+	static List<Greed::coords> opaque_coords;
+
+	void setBonusList(List<Greed::coords>& bonus)
+	{
+		unique_lock<mutex> lk(m3);
+		this->bonus = bonus;
+	}
+	void setStormList(List<Greed::coords>& storm)
+	{
+		unique_lock<mutex> lk(m4);
+		this->storm = storm;
+	}
+	List<Greed::coords> getOpaqueCoords()
+	{
+		return opaque_coords;
+	}
+
+	deque<ship*>& getShipList(int key)
+	{
+		if (key == 2369)
+		{
+			unique_lock<mutex> lk(m1);
+			return ship_list;
+		}
+
+
+	}
+	List<Greed::cannon>& getCannonList(int key = 0)
+	{
+		unique_lock<mutex> lk(m2);
+		return cannon_list;
+
+
+
+	}
+	void setShipList(deque<ship*>& ob, int key)//function to set the ship List
+	{
+		if (key == 2369)
+		{
+			unique_lock<mutex> lk(m1);
+			ship_list = ob;
+
+		}
+
+	}
+
+
+	List <Greed::coords>& getBonusList()
+	{
+		unique_lock<mutex> lk(m3);
+		return bonus;
+	}
+	List<Greed::coords>& getStormList()
+	{
+		unique_lock<mutex> lk(m4);
+		return storm;
+	}
+
+
+public:
+
+	friend class ship;//declaring ship class as the friend such that mutex m1 and m2 can be used by its functions
+	friend class graphics;
+
+	friend class attribute;
+	friend int main(int argc, char* argv[]);
+	friend void filter();
+	friend class Greed::cannon;
+	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
+
+};
 class control1
 {
 public:
 	void bullet_to_data(Greed::bullet& ob, bullet_data_client& ob1)
 	{
 		ob1.id = ob.id;
-	    ob1.power=ob.id;//power of the bullet
-		ob1.damage=ob.damage;
-		ob1.launch_ship=ob.launch_ship;//if bullet is fired by ship then id of ship is stored else -1
-		ob1.launch_cannon=ob.launch_cannon;//if bullet is fired by cannon then id of the cannon is stored else -1
-		ob1.target_ship=ob.target_ship;//id of the ship that launched the bullet this is the id of the ship provided by the launch ship but the bullet might not strike at that ship since everything is in motion
-		ob1.hit_ship=ob.hit_ship;//id of the ship that really hit the bullet
-		ob1.target_cannon=ob.target_cannon;//if the target is cannon then id of cannon is stored else -1
-		ob1.hit_cannon=ob.hit_cannon;
+		ob1.power = ob.id;//power of the bullet
+		ob1.damage = ob.damage;
+		ob1.launch_ship = ob.launch_ship;//if bullet is fired by ship then id of ship is stored else -1
+		ob1.launch_cannon = ob.launch_cannon;//if bullet is fired by cannon then id of the cannon is stored else -1
+		ob1.target_ship = ob.target_ship;//id of the ship that launched the bullet this is the id of the ship provided by the launch ship but the bullet might not strike at that ship since everything is in motion
+		ob1.hit_ship = ob.hit_ship;//id of the ship that really hit the bullet
+		ob1.target_cannon = ob.target_cannon;//if the target is cannon then id of cannon is stored else -1
+		ob1.hit_cannon = ob.hit_cannon;
 		ob1.isActive = ob.isActive;//is the bullet active
-		ob1.isSuccess=ob.isSuccess;//if the bullet hit the target
-		ob1.can=ob.can;//side of the firing ship
-		ob1.s=ob.s;//side of the enemy ship
+		ob1.isSuccess = ob.isSuccess;//if the bullet hit the target
+		ob1.can = ob.can;//side of the firing ship
+		ob1.s = ob.s;//side of the enemy ship
 	}
 	void data_to_bullet(Greed::bullet& ob1, bullet_data_client& ob)
 	{
@@ -2250,7 +2353,7 @@ public:
 		ob1.can = ob.can;//side of the firing ship
 		ob1.s = ob.s;//side of the enemy ship
 	}
-	void nav_data_processor(deque<ship*>& pl1,Mutex *mutx);
+	void nav_data_processor(deque<ship*>& pl1, Mutex* mutx);
 	void packet_to_pl(shipData_exceptMe ob[20], int s, int ship_id, deque<ship*>& pl1)//from network structure to game structure
 	{
 		for (int i = 0; i < s; i++)
@@ -2261,7 +2364,7 @@ public:
 				pl1[i]->ammo = ob[i].ammo;
 				pl1[i]->died = ob[i].died;
 				pl1[i]->dir = ob[i].dir;
-				
+
 				pl1[i]->isFiring = ob[i].isFiring;
 				pl1[i]->score = ob[i].score;
 				pl1[i]->health = ob[i].health;
@@ -2276,8 +2379,8 @@ public:
 				pl1[i]->absolutePosition = ob[i].absolutePosition;
 
 				//cout << "\n position of the other ship==>" << ob[i].tile_pos_front.r << " " << ob[i].tile_pos_front.c;
-				
-				
+
+
 			}
 		}
 
@@ -2305,11 +2408,18 @@ public:
 			ob[i].absolutePosition = pl1[i]->absolutePosition;
 		}
 	}
-	
+
 	void packet_to_me(shipData_forMe& ob, int id, deque<ship*>& pl1)
 	{
 		unique_lock<mutex> lk(pl1[id]->mutx->m[id]);
 		//transfer each data member from ob to pl1
+		pl1[id]->cannon_info.clear();
+		for (int i = 0; i < ob.size_cannon_data; i++)
+		{
+			pl1[id]->cannon_info.push_back(ob.cannon_data[i]);
+		}
+
+
 		pl1[id]->seconds = ob.seconds;
 		pl1[id]->minutes = ob.minutes;
 
@@ -2355,8 +2465,8 @@ public:
 		}
 		*/
 
-	//	cout << "\n my ship position is==>" << ob.front_tile.r << " " << ob.front_tile.c;
-		
+		//	cout << "\n my ship position is==>" << ob.front_tile.r << " " << ob.front_tile.c;
+
 		if (ob.collided_size > pl1[id]->collide_count)
 		{
 			int col_size = ob.size_collided_ships - min(10, ob.collided_size - pl1[id]->collide_count);
@@ -2383,7 +2493,7 @@ public:
 			}
 			//cout << "\nafter updating the client bullet count is==>" << pl1[id]->hit_bullet_count;
 		}
-		
+
 		if (ob.size_unlock > 3)
 		{
 			cout << "\n received more than 3 unlock requests";
@@ -2399,13 +2509,13 @@ public:
 			{
 				cout << "\n lock unlocked came for health";
 				pl1[id]->lock_health = 0;
-				
+
 			}
 			else if (ob.unlock[i] == 2)
 			{
 				pl1[id]->lock_fuel = 0;
 			}
-			
+
 		}
 		//now one by one empty the resend queue based on the detail that we got:
 		if (ob.size_bullet_recved > 0)
@@ -2416,10 +2526,10 @@ public:
 				//cout << ob.bullet_recved[i] << " ";
 			}
 		}
-		
+
 		for (int i = 0; i < ob.size_bullet_recved; i++)
 		{
-			
+
 			int size = resend_bullet.size();
 			for (int j = 0; j < resend_bullet.size(); j++)
 			{
@@ -2472,13 +2582,22 @@ public:
 				{
 					resend_navigation.erase(it);
 					j--;
-				//	cout << "\n deleted with the id==>" << ob.nav_recved[i];
+					//	cout << "\n deleted with the id==>" << ob.nav_recved[i];
 				}
 			}
 		}
 	}
 	void me_to_packet(shipData_forMe& ob, int id, deque<ship*>& pl1)
 	{
+		Control control;
+		List<Greed::cannon> cannon_list = control.getCannonList();
+
+		ob.size_cannon_data = cannon_list.howMany();
+		for (int i = 0; i < ob.size_cannon_data; i++)
+		{
+			ob.cannon_data[i] = cannon_info(cannon_list[i].getCannonId(), cannon_list[i].getCannonHealth(), cannon_list[i].getCannonTile(), cannon_list[i].isCannonDead());
+		}
+
 		ob.server_fire = pl1[id]->server_fire;
 		ob.seconds = pl1[id]->seconds;
 		ob.minutes = pl1[id]->minutes;
@@ -2495,11 +2614,11 @@ public:
 		{
 			ob.killed_ships[i] = pl1[id]->killed_ships[i];
 		}
-		
+
 
 		ob.score = pl1[id]->score;
 
-	    ob.radius = pl1[id]->radius;
+		ob.radius = pl1[id]->radius;
 		ob.health = pl1[id]->health;
 		ob.gold = pl1[id]->gold;
 		ob.died = pl1[id]->died;
@@ -2517,10 +2636,10 @@ public:
 
 		ob.size_collided_ships = std::min(10, (int)pl1[id]->collided_ships.size());
 		int p = 0;
-		for (int i=0; i < pl1[id]->collided_ships.size(); i++)
+		for (int i = 0; i < pl1[id]->collided_ships.size(); i++)
 		{
 			ob.collided_ships[p] = pl1[id]->collided_ships[i];
-			
+
 			p++;
 		}
 		ob.collided_size = pl1[id]->collide_count;
@@ -2528,10 +2647,10 @@ public:
 
 		ob.size_hit_bullet = std::min(10, (int)pl1[id]->bullet_hit_tempo.size());
 		p = 0;
-		for (int i =std::max(0,(int)pl1[id]->bullet_hit_tempo.size()-10) ;i < pl1[id]->bullet_hit_tempo.size(); i++)
+		for (int i = std::max(0, (int)pl1[id]->bullet_hit_tempo.size() - 10); i < pl1[id]->bullet_hit_tempo.size(); i++)
 		{
 			bullet_data_client b;
-			bullet_to_data(pl1[id]-> bullet_hit_tempo[i], b);
+			bullet_to_data(pl1[id]->bullet_hit_tempo[i], b);
 			ob.hit_bullet[p] = b;
 			p++;
 		}
@@ -2541,7 +2660,7 @@ public:
 		if (pl1[id]->unlock.size() <= 5)
 		{
 			ob.size_unlock = pl1[id]->unlock.size();
-			
+
 		}
 		else
 		{
@@ -2550,7 +2669,7 @@ public:
 		for (int i = 0; i < ob.size_unlock; i++)
 		{
 			ob.unlock[i] = pl1[id]->unlock[i];
-			
+
 		}
 		ob.size_bullet_recved = std::min(50, (int)pl1[id]->bullet_id_count.size());
 		int k = 0;
@@ -2563,7 +2682,7 @@ public:
 		}
 
 		ob.size_upgrade_recved = std::min(10, (int)pl1[id]->upgrade_id_count.size());
-		 k = 0;
+		k = 0;
 		for (int i = max(0, (int)pl1[id]->upgrade_id_count.size() - 10); i < pl1[id]->upgrade_id_count.size(); i++)
 		{
 			auto it = pl1[id]->upgrade_id_count.begin();
@@ -2592,23 +2711,23 @@ public:
 			ob.nav_recved[k] = it->first;
 			k++;
 		}
-		
+
 	}
-	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx,int &nav_res_count,int &bullet_res_count, int &no_bullet_resend)
+	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx, int& nav_res_count, int& bullet_res_count, int& no_bullet_resend)
 	{
 		//transfer data members from pl1 to shipData_forServer
 		ob.ship_id = pl1[ship_id]->ship_id;
 
-		
+
 		ob.threshold_health = pl1[ship_id]->threshold_health;
 		ob.threshold_ammo = pl1[ship_id]->threshold_ammo;
 		ob.threshold_fuel = pl1[ship_id]->threshold_fuel;
-		
-		
+
+
 
 		ob.radius = pl1[ship_id]->radius;
 
-			
+
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		ob.size_navigation = min(4, (int)pl1[ship_id]->nav_data_final.size());
 		for (int i = 0; i < ob.size_navigation; i++)
@@ -2623,8 +2742,8 @@ public:
 			pl1[ship_id]->nav_data_final.pop_front();
 		}
 
-		
-		
+
+
 		//ob.size_bulletData = pl1[ship_id]->bullet_info.size();
 		if (pl1[ship_id]->bullet_info.size() <= 15)
 		{
@@ -2641,36 +2760,36 @@ public:
 			{
 				bullet_res_count = 1;
 			}
-					
+
 		}
-		for (int i = 0; i < ob.size_bulletData && i<15; i++)
+		for (int i = 0; i < ob.size_bulletData && i < 15; i++)
 		{
 			//the id will be pre assigned for the bullet which is being sent for a resend;
 			if (pl1[ship_id]->bullet_info[i].bullet_id == -1)//assigning the id of the bullet if the id is not preassigned
 			{
 				pl1[ship_id]->bullet_info[i].bullet_id = pl1[ship_id]->bullet_count;
 				pl1[ship_id]->bullet_count++;
-				resend_bullet.push_back(pair<bullet_data,int>(pl1[ship_id]->bullet_info[i],1));
+				resend_bullet.push_back(pair<bullet_data, int>(pl1[ship_id]->bullet_info[i], 1));
 				pl1[ship_id]->client_fire++;
 			}
 			ob.b_data[i] = pl1[ship_id]->bullet_info[i];
 
-			
+
 		}
-		
+
 		ob.client_fire = pl1[ship_id]->client_fire;
-		pl1[ship_id]->bullet_info.clear(); 
+		pl1[ship_id]->bullet_info.clear();
 
 		if (pl1[ship_id]->udata.size() <= 10)
 		{
 			ob.size_upgrade_data = pl1[ship_id]->udata.size();
-		
+
 		}
 		else
 		{
 			ob.size_upgrade_data = 10;
 		}
-	
+
 		if (pl1[ship_id]->udata.size() > 3)
 		{
 			cout << "\n sending more than 3 locks to update the stuff==>" << pl1[ship_id]->udata.size();
@@ -2684,7 +2803,7 @@ public:
 				pl1[ship_id]->count_upgrade++;
 				if (pl1[ship_id]->udata[i].type == 0)//for ammo
 				{
-					pl1[ship_id]->upgrade_queue.push_back(upgrade_keeping(1,0,pl1[ship_id]->ammo,pl1[ship_id]->ammo+pl1[ship_id]->udata[i].n,pl1[ship_id]->udata[i]));
+					pl1[ship_id]->upgrade_queue.push_back(upgrade_keeping(1, 0, pl1[ship_id]->ammo, pl1[ship_id]->ammo + pl1[ship_id]->udata[i].n, pl1[ship_id]->udata[i]));
 				}
 				if (pl1[ship_id]->udata[i].type == 1)//for ammo
 				{
@@ -2696,14 +2815,14 @@ public:
 				}
 				//add in the queue
 			}
-			cout << "\n sending request to upgrade with the id==>" << pl1[ship_id]->udata[i].id<<" with the type==>"<<pl1[ship_id]->udata[i].type;
+			cout << "\n sending request to upgrade with the id==>" << pl1[ship_id]->udata[i].id << " with the type==>" << pl1[ship_id]->udata[i].type;
 			ob.udata[i] = pl1[ship_id]->udata[i];
 		}
-		
+
 		pl1[ship_id]->udata.clear();
 		if (pl1[ship_id]->upgrade_cost.size() > 0)
 		{
-			
+
 			auto it = pl1[ship_id]->upgrade_cost.begin();
 			ob.cost_id = it->first;
 			ob.size_update_cost = min(80, (int)it->second.size());
@@ -2737,16 +2856,16 @@ public:
 			}
 			//putting in the queue for resending this stuff
 		}
-		
 
-		
-		
-		
+
+
+
+
 	}
 
-	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id,Mutex *mutx)
+	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id, Mutex* mutx)
 	{
-		
+
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
 			if (pl1[ship_id]->nav_id_count.find(ob.nav_data[i].id) == pl1[ship_id]->nav_id_count.end())
@@ -2754,9 +2873,9 @@ public:
 				pl1[ship_id]->nav_data_temp.push_back(ob.nav_data[i]);
 				pl1[ship_id]->nav_id_count[ob.nav_data[i].id] = 1;
 			}
-			
+
 		}
-		
+
 		pl1[ship_id]->ship_id = ob.ship_id;
 		pl1[ship_id]->threshold_health = ob.threshold_health;
 		pl1[ship_id]->threshold_ammo = ob.threshold_ammo;
@@ -2764,18 +2883,18 @@ public:
 		pl1[ship_id]->radius = ob.radius;
 		pl1[ship_id]->bullet_info.clear();
 		pl1[ship_id]->client_fire = ob.client_fire;
-		if (ob.size_bulletData > 0) 
+		if (ob.size_bulletData > 0)
 		{
 			avg_bullet += ob.size_bulletData;
 			no_of_times++;
-			
+
 		}
-			
+
 		for (int i = 0; i < ob.size_bulletData; i++)//it has to be merged
 		{
 			//cout << "\n in convertor, fired by=>" << ob.ship_id;
-			
-			if (pl1[ship_id]->bullet_id_count.find(ob.b_data[i].bullet_id)==pl1[ship_id]->bullet_id_count.end())
+
+			if (pl1[ship_id]->bullet_id_count.find(ob.b_data[i].bullet_id) == pl1[ship_id]->bullet_id_count.end())
 			{
 				//cout << "\n bullet fired by==>" << ship_id << " with the id==>" << ob.b_data[i].bullet_id;
 				pl1[ship_id]->bullet_id_count[ob.b_data[i].bullet_id] = 1;
@@ -2792,11 +2911,11 @@ public:
 				pl1[ship_id]->udata.push_back(ob.udata[i]);
 				if (ob.udata[i].type == 0)
 				{
-					cout << "\n update came for ammo==>" << ship_id<<" witht he id==>"<<ob.udata[i].id;
+					cout << "\n update came for ammo==>" << ship_id << " witht he id==>" << ob.udata[i].id;
 				}
 				else if (ob.udata[i].type == 1)
 				{
-					cout << "\n update came for health==>" << ship_id<<" with the id==>"<<ob.udata[i].id;
+					cout << "\n update came for health==>" << ship_id << " with the id==>" << ob.udata[i].id;
 				}
 
 				found = 1;
@@ -2815,98 +2934,15 @@ public:
 				}
 			}
 		}
-		
-		
+
+
 
 	}
 	friend class graphics;
 };
 
 void filter(List<Greed::coords>& ob);
-class Control//this class will control everything regarding the game
-{
-protected:
-	mutex m1;//mutex lock for ship_list
-	mutex m2;//mutex lock for cannon_list;
-	mutex m3;//mutex for bonus
-	mutex m4;//mutex for storm
-	 static deque<ship*> ship_list;
-	static List<Greed::cannon> cannon_list;
-	static List<Greed::coords> bonus;//list of the coords having bonus
-	static List<Greed::coords> storm;//list of the coords having storm right now
-	static List<Greed::coords> opaque_coords;
 
-	void setBonusList(List<Greed::coords>& bonus)
-	{
-		unique_lock<mutex> lk(m3);
-		this->bonus = bonus;
-	}
-	void setStormList(List<Greed::coords>& storm)
-	{
-		unique_lock<mutex> lk(m4);
-		this->storm = storm;
-	}
-	List<Greed::coords> getOpaqueCoords()
-	{
-		return opaque_coords;
-	}
-
-	deque<ship*>& getShipList(int key)
-	{
-		if (key == 2369)
-		{
-			unique_lock<mutex> lk(m1);
-			return ship_list;
-		}
-
-
-	}
-	List<Greed::cannon>& getCannonList(int key)
-	{
-		if (key == 2369)
-		{
-			unique_lock<mutex> lk(m2);
-			return cannon_list;
-		}
-
-
-	}
-	void setShipList(deque<ship*>& ob, int key)//function to set the ship List
-	{
-		if (key == 2369)
-		{
-			unique_lock<mutex> lk(m1);
-			ship_list = ob;
-
-		}
-
-	}
-
-
-	List <Greed::coords>& getBonusList()
-	{
-		unique_lock<mutex> lk(m3);
-		return bonus;
-	}
-	List<Greed::coords>& getStormList()
-	{
-		unique_lock<mutex> lk(m4);
-		return storm;
-	}
-
-
-public:
-
-	friend class ship;//declaring ship class as the friend such that mutex m1 and m2 can be used by its functions
-	friend class graphics;
-
-	friend class attribute;
-	friend int main(int argc, char* argv[]);
-	friend void filter();
-	friend class Greed::cannon;
-	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
-
-};
 /*networking libs*/
 class pack_ship
 {
@@ -2950,10 +2986,11 @@ public:
 	{
 		isthere = false;
 	}
-	
+
 	friend class graphics;
 	friend void update_frame(deque<ship*>&, pack_ship&, int);
 };
+
 class cannon_data
 {
 public:
@@ -3009,7 +3046,7 @@ public:
 		no_of_bullets = 0;
 		no_of_animation = 0;
 	}
-	
+
 
 
 };
@@ -3103,7 +3140,7 @@ public:
 		sf::Text wait;//text to tell the user to wait for others to join'.
 
 		tgui::Button::Ptr sound_button;
-		
+
 	public:
 		void sound_button_function(graphics::GuiRenderer& gui_renderer, sf::Texture& sound_on, sf::Texture& sound_off);
 		GuiRenderer()
@@ -3143,7 +3180,7 @@ public:
 		void sp2_renderer();
 		void childWindowRenderer(tgui::Gui& gui);
 		void gameOverRenderer(sf::Font& font);
-		
+
 		void waitRenderer(sf::Font& font);
 		void winner_renderer(sf::Font& font);
 		void time_line_text_renderer(tgui::Gui& gui, tgui::Font& font);
@@ -3267,17 +3304,17 @@ public:
 		}
 		int frame(double elapsed_time, sf::Sprite& sp);
 		friend graphics;
-		
+
 	};
 
 	bool checkCollision(int sid, const Greed::bullet& ob);
 	static long double getTotalTime();
 	bool check_game_over(deque<ship*>& pl1);
-	deque<ship*> findWinner(deque<ship*> &l);
-	void callable(Mutex* mutx, int code[rows][columns], Map& map_ob,int n,unordered_map<int,sockaddr_storage> &socker_id,vector<int> &socket_display);//taking the ship object so as to access the list of the player
-	void callable_client(int ship_id, Mutex* mutx, int code[rows][columns], Map& map_ob, int,ship&);
-	void callable_server(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<SOCKET>& sockets, unordered_map<SOCKET, int>& socket_id,vector<SOCKET> &socket_display);//taking the ship object so as to access the list of the player
-	
+	deque<ship*> findWinner(deque<ship*>& l);
+	void callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n, unordered_map<int, sockaddr_storage>& socker_id, vector<int>& socket_display);//taking the ship object so as to access the list of the player
+	void callable_client(int ship_id, Mutex* mutx, int code[rows][columns], Map& map_ob, int, ship&);
+	void callable_server(Mutex* mutx, int code[rows][columns], Map& map_ob, vector<SOCKET>& sockets, unordered_map<SOCKET, int>& socket_id, vector<SOCKET>& socket_display);//taking the ship object so as to access the list of the player
+
 	void callable_clientShow(Mutex* mutx, int code[rows][columns], Map& map_ob);
 
 };
