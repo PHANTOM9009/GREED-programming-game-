@@ -56,13 +56,40 @@
 class user_credentials
 {
 public:
+	int type;// type 0 for login, and type 1 for signup //2 for checking the if the username is taken or not. based on this type we will write different code that will hangle it
 	char username[20];
 	char password[20];
+	char email[30];
+	char role[30];
+	char country[30];
 	user_credentials() { }
+	user_credentials(int type, string user, string pass)
+	{
+		this->type = type;
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+	}
 	user_credentials(string user, string pass)
 	{
 		strcpy(username, user.c_str());
 		strcpy(password, pass.c_str());
+	}
+	user_credentials(string user, string pass, string email, string role, string country)
+	{
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+		strcpy(this->email, email.c_str());
+		strcpy(this->role, role.c_str());
+		strcpy(this->country, country.c_str());
+	}
+	user_credentials(int type,string user, string pass, string email, string role, string country)
+	{
+		this->type = type;
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+		strcpy(this->email, email.c_str());
+		strcpy(this->role, role.c_str());
+		strcpy(this->country, country.c_str());
 	}
 };
 class user_credentials_array

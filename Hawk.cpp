@@ -54,7 +54,7 @@
 	{
 		//setting the aim
 		
-		vector <Greed::cannon> cannonList = ob.getCannonList();
+		vector <cannon_info> cannonList = ob.getCannonList();
 		for (int j = 0; j < cannonList.size(); j++)
 		{
 
@@ -129,7 +129,7 @@
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
 						
-						vector<Greed::cannon> ls = ob.getCannonList();
+						vector<cannon_info> ls = ob.getCannonList();
 						if (ls[q[i].radiusCannon.getCannonId()[0]].isCannonDead() == 0)
 						{
 							ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);

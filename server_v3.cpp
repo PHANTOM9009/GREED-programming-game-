@@ -2580,7 +2580,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	int count = 0;
 	cout << "\n max player proxy is=>" << max_player_proxy<<" in the set are==>"<<all.fd_count;
 	int count_cross = 0;
-	while (count != max_player_proxy && count_cross < 2000)
+	while (count != max_player_proxy)
 	{
 		count_cross++;
 		read = all;
@@ -2663,7 +2663,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	FD_ZERO(&read);
 	max_socket = socket_listen;
 	count_cross = 0;
-	while (new_count != max_player_proxy && count_cross<500)
+	while (new_count != max_player_proxy )
 	{
 		count_cross++;
 		read = master1;
