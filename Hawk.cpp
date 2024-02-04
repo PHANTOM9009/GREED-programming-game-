@@ -54,12 +54,17 @@
 	{
 		//setting the aim
 		
-		vector <cannon_info> cannonList = ob.getCannonList();
+		vector <Greed::cannon> cannonList = ob.getCannonList();
 		for (int j = 0; j < cannonList.size(); j++)
 		{
 
 
 			vector<Greed::coords> arr = ob.getRadiusCoords_cannon(j);
+			cout << "\n to be upgraded are==>" << arr.size();
+			for (int i = 0; i < arr.size(); i++)
+			{
+				cout << arr[i].r << " " << arr[i].c;
+			}
 			for (int i = 0; i < arr.size(); i++)
 			{
 				ob.Greed_updateCost(arr[i], 50);
@@ -129,7 +134,7 @@
 					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
 					{
 						
-						vector<cannon_info> ls = ob.getCannonList();
+						vector<Greed::cannon> ls = ob.getCannonList();
 						if (ls[q[i].radiusCannon.getCannonId()[0]].isCannonDead() == 0)
 						{
 							ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);

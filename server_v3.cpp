@@ -261,6 +261,12 @@ public:
 		fire_cannon = fire_c;
 	}
 };
+bool gameOver_nav_process = false;
+bool gameOver_send_terminal = false;
+
+bool gameOver_send_display = false;
+bool gameOver_recv_data = false;
+
 void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 {
 	int cur_frame = -1;
@@ -273,8 +279,9 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 	{
 		
 			unique_lock<mutex> lk(mutx->gameOver_check);
-			if (gameOver == true)
+			if (gameOver_nav_process == true)
 			{
+				gameOver_nav_process = false;
 				return;
 			}
 			lk.unlock();
@@ -286,7 +293,7 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 				{
 					cond = cond || !(pl1[i]->nav_data.empty());
 				}
-				return cond;
+				return cond || gameOver_nav_process;
 				});
 			for (int i = 0; i < pl1.size(); i++)
 			{
@@ -452,20 +459,25 @@ void connector_show(vector<int>& socks, unordered_map<int,sockaddr_storage>& soc
 	 
 	
 }
+
+
+
 void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 {
 	while (1)
 	{
 		unique_lock<mutex> lk1(m->gameOver_check);
-		if (gameOver)
+		unique_lock<mutex> lk(m->send_terminal);
+		if (gameOver_send_terminal && terminal_data.empty())
 		{
 			cout << "\n breaking from the send_data_terminal..";
-			lk1.unlock();
+			gameOver_send_terminal = false;// put it back to false
+			CLOSESOCKET(socket_listen);
 			break;
 		}
 		lk1.unlock();
-		unique_lock<mutex> lk(m->send_terminal);
-		m->cond_terminal.wait(lk, [] {return !terminal_data.empty(); });
+		
+		m->cond_terminal.wait(lk, [] {return !terminal_data.empty() || gameOver_send_terminal; });
 		//terminal_data queue has data now make its copy and clear the queue
 		deque<pair<int,recv_data>> data;
 		for (int i = 0; i < terminal_data.size(); i++)
@@ -494,6 +506,17 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 				sendto(socket_listen, (char*)&sending_new, sizeof(sending_new), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
 				while (sent_bytes < sizeof(ob))
 				{
+					lk1.lock();
+					lk.lock();
+					if (gameOver_send_terminal && terminal_data.empty())
+					{
+						gameOver_send_terminal = false;
+						cout << "\n breaking from the send_terminal thread==>";
+						CLOSESOCKET(socket_listen);
+						return;
+					}
+					lk.unlock();
+					lk1.unlock();
 					int fuck = sizeof(ob) - sent_bytes;
 					int bytesToSend = min(MAX_LENGTH, fuck);
 					int bytes = sendto(socket_listen, buffer + sent_bytes, bytesToSend, 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
@@ -523,18 +546,14 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 }
 void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 {
-	
+	int end_flag = 0;//this will be on , when the last packet to be sent will contain the message that the game is over.
+	//because after that we will have no packet to be sent to the display unit
 	while (1)
 	{
-		unique_lock<mutex> lk1(m->gameOver_check);
-		if (gameOver)
-		{
-			cout << "\n breaking from send_data_display";
-			break;
-		}
-		lk1.unlock();
-		unique_lock<mutex> lk(m->send_display);
-		m->cond_display.wait(lk, [] { return !display_data.empty(); });
+		
+		unique_lock<mutex> lk3(m->send_display);
+		
+		m->cond_display.wait(lk3, [] { return !display_data.empty() || gameOver_send_display; });
 		//display_data queue has data now make its copy and clear the queue
 		deque<pair<int, top_layer>> data;
 		for (int i = 0; i < display_data.size(); i++)
@@ -542,11 +561,16 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 			data.push_back(display_data[i]);
 		}
 		display_data.clear();
-		lk.unlock();
+		lk3.unlock();
 		
 		//now sending the data using socket_listen2
 		for (int i = 0; i < data.size(); i++)
 		{
+			if (data[i].second.gameOver)
+			{
+				cout << "\n end flag is 1";
+				end_flag = 1;
+			}
 			//send the data to the client
 			data[i].second.st = 100;
 			data[i].second.end = 101;
@@ -561,6 +585,7 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 			sendto(socket_listen2, (char*)&sending_new, sizeof(sending_new), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
 			while (sent_bytes < sizeof(ob))
 			{
+				
 				int fuck = sizeof(ob) - sent_bytes;
 				int bytesToSend = min(MAX_LENGTH, fuck);
 				int bytes = sendto(socket_listen2, buffer + sent_bytes, bytesToSend, 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
@@ -583,6 +608,12 @@ void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
 			}
 			
 		}
+		if (end_flag == 1)
+		{
+			gameOver_send_display = false;
+			CLOSESOCKET(socket_listen2);
+			return;
+		}
 	}
 }
 void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
@@ -595,12 +626,20 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 	int count1 = 0;//for id=1;
 	unordered_map<int, string> id_port;//for mapping of id and port
 	int wrong = 0;//if something wrong has happened then wait for the 4 byte packet
+	
+	fd_set master;
+	FD_ZERO(&master);
+	struct timeval timeout;
+	fd_set read;
+	FD_ZERO(&read);
+	FD_SET(recver, &master);
 	while (1)
 	{
 		
 		unique_lock<mutex> lk1(m->gameOver_check);
-		if (gameOver)
+		if (gameOver_recv_data)
 		{
+			gameOver_recv_data = false;
 			cout << "\n breaking from recv_data";
 			break;
 		}
@@ -615,209 +654,217 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 			et = 0;
 			count = 0;
 		}
-		sockaddr_storage client_add;
-		socklen_t client_length = sizeof(client_add);
-		char buff[MAX_LENGTH];
-		int bytes = recvfrom(recver, buff, sizeof(buff), 0, (sockaddr*)&client_add, &client_length);
-		if (bytes < 1)
+		
+
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 500;
+		read = master;
+		select(recver+1,&read,0,0,&timeout);
+		if (FD_ISSET(recver, &read))
 		{
-			//cout << "\n cannot recv bytes=>" << GetLastErrorAsString();
-		}
-		if (bytes == 4)//new packet incoming
-		{
-			
-			//deciphering who has sent the packet
-			char ip[100];
-			char port[100];
-			getnameinfo((sockaddr*)&client_add, client_length, ip, sizeof(ip), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
-			//finding the id of the sender
-			string sip = ip;
-			string sport = port;
-			int ship_id;
-			std::memcpy((void*)&ship_id, buff, sizeof(ship_id));
-
-			if (id_port.find(ship_id) == id_port.end())
+			sockaddr_storage client_add;
+			socklen_t client_length = sizeof(client_add);
+			char buff[MAX_LENGTH];
+			int bytes = recvfrom(recver, buff, sizeof(buff), 0, (sockaddr*)&client_add, &client_length);
+			if (bytes < 1)
 			{
-				id_port[ship_id] = port;
-
-				cout << "\n port packet set for ship id====================>" << ship_id;
+				//cout << "\n cannot recv bytes=>" << GetLastErrorAsString();
 			}
-						
-			int id = -1;
-			for (auto c:id_port)
+			if (bytes == 4)//new packet incoming
 			{
-				for (int i = 0; i < id_ip_port.size(); i++)
+
+				//deciphering who has sent the packet
+				char ip[100];
+				char port[100];
+				getnameinfo((sockaddr*)&client_add, client_length, ip, sizeof(ip), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
+				//finding the id of the sender
+				string sip = ip;
+				string sport = port;
+				int ship_id;
+				std::memcpy((void*)&ship_id, buff, sizeof(ship_id));
+
+				if (id_port.find(ship_id) == id_port.end())
 				{
-					if (id_ip_port[i].first == c.first && id_ip_port[i].second.first == sip && c.second == sport)
-					{
-						id = c.first;
-						break;
-					}
-				
+					id_port[ship_id] = port;
+
+					cout << "\n port packet set for ship id====================>" << ship_id;
 				}
-			}
-			if (id != -1)
-			{
-				//checking if the buffer has the required size if yes then convert it
-				//to the send_data object and check its authenticiy if, correct then push it in the queue
-				if (total_bytes[id] == sizeof(send_data))//checking if the size of the received bytes is equal to original data to convert it to the main object
-				{
-					send_data ob;
-					std::memcpy(&ob, all_buffer[id], sizeof(ob));
-					if (ob.st == 100 && ob.end == 101)
-					{
-												
-						lk1.unlock();
-						unique_lock<mutex> lk(m->recv_terminal);
-					
-						if (ob.shipdata_forServer.ship_id == 0)
-							count++;
-						else
-							count1++;
-					}
-					else
-					{
-						//cout << "\n wrong data came in first part..";
-					}
-					
-				}
-				wrong = 0;
-				memset(all_buffer[id], 0, sizeof(all_buffer[id]));
-				total_bytes[id] = 0;
 
-			}
-			else
-			{
-				cout << "\n in the first part of recv_data, recved id =-1==>"<<sip<<" "<<sport<<endl;
-			}
-		}
-		else if (bytes > 4)
-		{
-			//check who has send the data
-			string ip, port;
-			char cip[100];
-			char cport[100];
-			getnameinfo((sockaddr*)&client_add, client_length, cip, sizeof(cip), cport, sizeof(cport), NI_NUMERICHOST | NI_NUMERICSERV);
-			ip = cip;
-			port = cport;
-			
-			int id = -1;
-			for (auto c : id_port)
-			{
-				for (int i = 0; i < id_ip_port.size(); i++)
+				int id = -1;
+				for (auto c : id_port)
 				{
-					if (id_ip_port[i].first == c.first && id_ip_port[i].second.first == ip && c.second == port)
+					for (int i = 0; i < id_ip_port.size(); i++)
 					{
-						id = c.first;
-						break;
-					}
-
-				}
-			}
-			if (id != -1)
-			{
-				//first check if the bytes are complete at this point then convert it into the packet
-				
-				std::memcpy(all_buffer[id] + total_bytes[id], buff, bytes);
-				total_bytes[id] += bytes;
-				if (total_bytes[id] == sizeof(send_data))//checking if the size of the received bytes is equal to original data to convert it to the main object
-				{
-
-					send_data ob;
-					std::memcpy(&ob, all_buffer[id], sizeof(ob));
-					if (ob.st == 100 && ob.end == 101)
-					{
-						
-						if (ob.shipdata_forServer.ship_id == 0)
-							count++;
-						else
-							count1++;
-						//checking the data now
-						/*
-						for (int i = 0; i < ob.shipdata_forServer.size_upgrade_data; i++)
+						if (id_ip_port[i].first == c.first && id_ip_port[i].second.first == sip && c.second == sport)
 						{
-							if (ob.shipdata_forServer.udata[i].type == 1)
+							id = c.first;
+							break;
+						}
+
+					}
+				}
+				if (id != -1)
+				{
+					//checking if the buffer has the required size if yes then convert it
+					//to the send_data object and check its authenticiy if, correct then push it in the queue
+					if (total_bytes[id] == sizeof(send_data))//checking if the size of the received bytes is equal to original data to convert it to the main object
+					{
+						send_data ob;
+						std::memcpy(&ob, all_buffer[id], sizeof(ob));
+						if (ob.st == 100 && ob.end == 101)
+						{
+
+							lk1.unlock();
+							unique_lock<mutex> lk(m->recv_terminal);
+
+							if (ob.shipdata_forServer.ship_id == 0)
+								count++;
+							else
+								count1++;
+						}
+						else
+						{
+							//cout << "\n wrong data came in first part..";
+						}
+
+					}
+					wrong = 0;
+					memset(all_buffer[id], 0, sizeof(all_buffer[id]));
+					total_bytes[id] = 0;
+
+				}
+				else
+				{
+					cout << "\n in the first part of recv_data, recved id =-1==>" << sip << " " << sport << endl;
+				}
+			}
+			else if (bytes > 4)
+			{
+				//check who has send the data
+				string ip, port;
+				char cip[100];
+				char cport[100];
+				getnameinfo((sockaddr*)&client_add, client_length, cip, sizeof(cip), cport, sizeof(cport), NI_NUMERICHOST | NI_NUMERICSERV);
+				ip = cip;
+				port = cport;
+
+				int id = -1;
+				for (auto c : id_port)
+				{
+					for (int i = 0; i < id_ip_port.size(); i++)
+					{
+						if (id_ip_port[i].first == c.first && id_ip_port[i].second.first == ip && c.second == port)
+						{
+							id = c.first;
+							break;
+						}
+
+					}
+				}
+				if (id != -1)
+				{
+					//first check if the bytes are complete at this point then convert it into the packet
+
+					std::memcpy(all_buffer[id] + total_bytes[id], buff, bytes);
+					total_bytes[id] += bytes;
+					if (total_bytes[id] == sizeof(send_data))//checking if the size of the received bytes is equal to original data to convert it to the main object
+					{
+
+						send_data ob;
+						std::memcpy(&ob, all_buffer[id], sizeof(ob));
+						if (ob.st == 100 && ob.end == 101)
+						{
+
+							if (ob.shipdata_forServer.ship_id == 0)
+								count++;
+							else
+								count1++;
+							//checking the data now
+							/*
+							for (int i = 0; i < ob.shipdata_forServer.size_upgrade_data; i++)
 							{
-								cout << "\n raw came for health for==>" << ob.shipdata_forServer.ship_id << " at the health==>" << pl1[ob.shipdata_forServer.ship_id]->getCurrentHealth();
+								if (ob.shipdata_forServer.udata[i].type == 1)
+								{
+									cout << "\n raw came for health for==>" << ob.shipdata_forServer.ship_id << " at the health==>" << pl1[ob.shipdata_forServer.ship_id]->getCurrentHealth();
+									auto now = std::chrono::system_clock::now();
+									auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+									auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
+									auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
+									auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+
+									cout << "\n this packet came=>" << ob.packet_id << " at the time==> " <<
+									hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
+								}
+							}
+
+							if (id == 1 && ob.shipdata_forServer.size_navigation > 0)
+							{
 								auto now = std::chrono::system_clock::now();
 								auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 								auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
 								auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
 								auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
+								cout << "\n from server in recv_data, sent for the set Path function==>" << hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 
-								cout << "\n this packet came=>" << ob.packet_id << " at the time==> " <<
-								hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
 							}
-						}
-						
-						if (id == 1 && ob.shipdata_forServer.size_navigation > 0)
-						{
-							auto now = std::chrono::system_clock::now();
-							auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-							auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()) % 60;
-							auto mins = std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()) % 60;
-							auto hours = std::chrono::duration_cast<std::chrono::hours>(now.time_since_epoch());
-							cout << "\n from server in recv_data, sent for the set Path function==>" << hours.count() << ":" << mins.count() << ":" << secs.count() << ":" << ms.count() << endl;
-
-						}
-						*/
-					//	cout << "\n packet id==>" << ob.packet_id << " previous packet is==>" << packet_id[id];
-						//cout << "\n packet recved from==>" << ob.shipdata_forServer.ship_id << " is=>" << ob.packet_id;
-						unique_lock<mutex> lk(m->recv_terminal);
-						if (id == 0)
-						{
-							if (incoming_all.find(ob.packet_id) == incoming_all.end())
-							{
-								incoming_all[ob.packet_id] = 1;
-							}
-							else
-							{
-								incoming_all[ob.packet_id]++;
-							}
-						}
-						if (ob.packet_id > packet_id[id])
-						{
-							input_data[id].push_back(ob);
-							//cout << "\n inside packet recved from==>" << ob.shipdata_forServer.ship_id << " is=>" << ob.packet_id;
-							if (ob.packet_id - packet_id[id] > 1)
-							{
-								//cout << "\n packet missing for=>"<<id<<" by ==> " << (ob.packet_id - packet_id[id]);
-							}
+							*/
+							//	cout << "\n packet id==>" << ob.packet_id << " previous packet is==>" << packet_id[id];
+								//cout << "\n packet recved from==>" << ob.shipdata_forServer.ship_id << " is=>" << ob.packet_id;
+							unique_lock<mutex> lk(m->recv_terminal);
 							if (id == 0)
 							{
-								if (incoming_selected.find(ob.packet_id) == incoming_selected.end())
+								if (incoming_all.find(ob.packet_id) == incoming_all.end())
 								{
-									incoming_selected[ob.packet_id] = 1;
+									incoming_all[ob.packet_id] = 1;
 								}
 								else
 								{
-									incoming_selected[ob.packet_id]++;
+									incoming_all[ob.packet_id]++;
 								}
 							}
-							packet_id[id] = ob.packet_id;
+							if (ob.packet_id > packet_id[id])
+							{
+								input_data[id].push_back(ob);
+								//cout << "\n inside packet recved from==>" << ob.shipdata_forServer.ship_id << " is=>" << ob.packet_id;
+								if (ob.packet_id - packet_id[id] > 1)
+								{
+									//cout << "\n packet missing for=>"<<id<<" by ==> " << (ob.packet_id - packet_id[id]);
+								}
+								if (id == 0)
+								{
+									if (incoming_selected.find(ob.packet_id) == incoming_selected.end())
+									{
+										incoming_selected[ob.packet_id] = 1;
+									}
+									else
+									{
+										incoming_selected[ob.packet_id]++;
+									}
+								}
+								packet_id[id] = ob.packet_id;
+							}
+							m->cond_input_terminal.notify_all();
 						}
-						m->cond_input_terminal.notify_all();
+						else
+						{
+							//cout << "\n wrong data came in first part..";
+						}
+						memset(all_buffer[id], 0, sizeof(all_buffer[id]));
+						total_bytes[id] = 0;
 					}
-					else
-					{
-						//cout << "\n wrong data came in first part..";
-					}
-					memset(all_buffer[id], 0, sizeof(all_buffer[id]));
-					total_bytes[id] = 0;
+
+
+
+
 				}
-				
-				
-				
+				else
+				{
+					cout << "\n someone came with id=-1-------------------------------------=>" << ip << " " << port;
+				}
+
 
 			}
-			else
-			{
-				cout << "\n someone came with id=-1-------------------------------------=>"<<ip<<" "<<port;
-			}
-
-			
 		}
-
 	}
 
 }
@@ -997,7 +1044,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 			{
+				
 				gameOver = true;
+				
 				break;
 			}
 			
@@ -1096,9 +1145,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						pl1[i]->score += 200;
 					}
 				}
-				unique_lock<mutex> lk(mutx->gameOver_check);
 				gameOver = true;
-				lk.unlock();
+				
+			
 
 			}
 			if (first_send == 0)
@@ -2140,6 +2189,17 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			
 			if (gameOver)//so that the packet reaches to everyone.
 			{
+				unique_lock<mutex> lk(mutx->gameOver_check);
+				gameOver_send_terminal = true;
+				gameOver_nav_process = true;
+
+				gameOver_send_display = true;
+				gameOver_recv_data = true;
+				lk.unlock();
+				mutx->cond_display.notify_all();
+				mutx->cond_input_terminal.notify_all();
+				mutx->cond_terminal.notify_all();
+				mutx->cond_updating_data.notify_all();
 				break;//break the loop
 			} 
 		
@@ -2163,12 +2223,10 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			cout << "\n couldn't sent bytes to the client unit";
 		}  
 	}
-	CLOSESOCKET(socket_listen);
-	CLOSESOCKET(socket_listen2);
-	CLOSESOCKET(recver);
+	
 	
 	//CLOSESOCKET(socket_display[0]);
-
+	CLOSESOCKET(recver);
 	
 	double sending0 = 0;
 	double sending1 = 0;
@@ -2250,6 +2308,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	sprintf(port_str1, "%d", (port + 1));
 	sprintf(port_str2, "%d", (port + 2));
 	cout << "\n running on port=>" << port_str;
+
 	getaddrinfo(0, port_str, &hints, &bind_address);
 	struct addrinfo* bind_address1;
 	getaddrinfo(0,port_str1, &hints, &bind_address1);
@@ -2281,17 +2340,17 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	printf("Binding socket to local address...\n");
 	if (::bind(socket_listen,
 		bind_address->ai_addr, bind_address->ai_addrlen)) {
-		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+		fprintf(stderr, "bind() failed of socket listen. (%d)\n", GETSOCKETERRNO());
 	
 	}
 	if (::bind(socket_listen2,
 		bind_address1->ai_addr, bind_address1->ai_addrlen)) {
-		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+		fprintf(stderr, "bind() failed of socket listen2. (%d)\n", GETSOCKETERRNO());
 
 	}
 	if (::bind(recver,
 		bind_address2->ai_addr, bind_address2->ai_addrlen)) {
-		fprintf(stderr, "bind() failed. (%d)\n", GETSOCKETERRNO());
+		fprintf(stderr, "bind() failed of recver. (%d)\n", GETSOCKETERRNO());
 
 	}
 	freeaddrinfo(bind_address);
@@ -2361,6 +2420,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 					int bit = recv(i, buffer, sizeof(buffer), 0);
 					if (bit < 0)//in this case the connection is broken with the client so remove that client from the master set and close its socket
 					{
+						FD_CLR(i, &master);
+						CLOSESOCKET(i);
 						/*
 						FD_CLR(i, &master);
 						CLOSESOCKET(i);
@@ -2707,15 +2768,6 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		int st = 1;
 		int bytes = send(disp_socket[i], (char*)&st, sizeof(st), 0);
 
-
-
-
-
-
-
-
-
-
 	}
 	int c = 0;
 	while (c != disp_socket.size())
@@ -2791,7 +2843,13 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	graphics cg;
 	cg.callable(&mutx, code, map1,n,socket_id, socket_display);//dont call callable function its depricated
 	//sending the message to the lobby server that i am free to start another game
+	//waiting for send_data_terminal and nav_data processor to switch off
+	while (gameOver_send_terminal || gameOver_nav_process || gameOver_send_display || gameOver_recv_data)
+	{
 
+	}
+	
+	cout << "\n successfully closed all the threads";
 	int status = 1;
 	int bytes = send(lobby_socket, (char*)&status, sizeof(status), 0);
 	if (bytes < 1)
@@ -2855,7 +2913,9 @@ int main(int argc,char* argv[])
 		cout << "\n staring the server.....";
 		unordered_map<int, sockaddr_storage> socket_id;	//just a fake thing, so that i dont have to change the signature of startup in multiple classes
 		socket_id_display.clear();//clearing the unordered map for reuse
-		
+		user_cred.clear();
+		incoming_all.clear();
+		incoming_selected.clear();
 		//resetting here some static variables
 		Control::ship_list.clear();
 		Control::cannon_list.erase();
@@ -2867,18 +2927,23 @@ int main(int argc,char* argv[])
 		input_data.clear();
 		deque<deque<send_data>> temp(10);
 		input_data = temp;
+		packet_id.clear();
+		vector<int> temp1(10, 0);
+		packet_id = temp1;
+
 		id_ip_port.clear();
 		memset((void*)&all_buffer, 0, sizeof(all_buffer));
 		vector<int> tempo(10, 0);
 		total_bytes.clear();
 		total_bytes = tempo;
 		user_found = false;
-
+		game_tick = 1;
 
 		startup(max_player, socket_id, port);
-	
+		
 		//all the sockets are closed before restarting the game'
 		cout << "\n this round of game is over";
+		Sleep(1000);
 	}
 
 #if defined(_WIN32)

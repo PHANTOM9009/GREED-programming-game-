@@ -956,13 +956,13 @@ vector<Greed::coords> ship::getRadiusCoords_cannon(int c_id)
 			c1 = columns - 1;
 		}
 		int c2 = position.c + radius;
-		if (c1 < 0)
+		if (c2 < 0)
 		{
-			c1 = 0;
+			c2 = 0;
 		}
-		else if (c1 > columns)
+		else if (c2 > columns)
 		{
-			c1 = columns - 1;
+			c2 = columns - 1;
 		}
 		int r1 = position.r - radius;
 		if (r1 < 0)
@@ -2800,13 +2800,13 @@ bool Greed::cannon::isShipInMyRadius(int s_id, ShipSide opponent_side)
 			c1 = columns - 1;
 		}
 		int c2 = position.c + radius;
-		if (c1 < 0)
+		if (c2 < 0)
 		{
 			c1 = 0;
 		}
-		else if (c1 > columns)
+		else if (c2 > columns)
 		{
-			c1 = columns - 1;
+			c2 = columns - 1;
 		}
 		int r1 = position.r - radius;
 		if (r1 < 0)

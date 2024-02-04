@@ -1599,7 +1599,7 @@ string input_password()
 		ch = _getch();
 
 		if (ch == ENTER) {
-			password[i] = '\0'; // Null-terminate the password
+			password1[i] = '\0'; // Null-terminate the password
 			break;
 		}
 		else if (ch == BACKSPACE) {
@@ -1610,11 +1610,11 @@ string input_password()
 		}
 		else if (i < MAX_PASSWORD_LENGTH - 1) {
 			std::cout << '*';
-			password[i++] = ch;
+			password1[i++] = ch;
 		}
 	}
 
-	return string(password);
+	return string(password1);
 }
 string checkEmail()
 {

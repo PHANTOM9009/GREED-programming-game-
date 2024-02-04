@@ -624,6 +624,7 @@ public:
 	friend class control1;
 
 };
+class control1;
 class Greed::cannon//no need to lock this class with any mutex, no concurrency is performed here
 {
 public:
@@ -702,7 +703,7 @@ public:
 		current_angle = 0;
 		current_ship = -1;
 	}
-
+	friend control1;
 	friend graphics;
 	friend int main(int argc, char* argv[]);
 	friend class ship;
@@ -2095,10 +2096,15 @@ public:
 	// armory starts from here
 
 
-	vector<::cannon_info> getCannonList()
+	vector<Greed::cannon> getCannonList()
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		return cannon_info;
+		vector<Greed::cannon> can;
+		for (int i = 0; i < cannon_list.howMany(); i++)
+		{
+			can.push_back(cannon_list[i]);
+		}
+		return can;
 	}
 
 
@@ -2443,7 +2449,13 @@ public:
 		pl1[id]->cannon_info.clear();
 		for (int i = 0; i < ob.size_cannon_data; i++)
 		{
-			pl1[id]->cannon_info.push_back(ob.cannon_data[i]);
+			for (int j = 0; j < pl1[id]->cannon_list.howMany(); j++)
+			{
+				if (ob.cannon_data[i].getCannonId() == pl1[id]->cannon_list[j].cannon_id)
+				{
+					pl1[id]->cannon_list[j].health = ob.cannon_data[i].getCannonHealth();
+				}
+			}
 		}
 
 

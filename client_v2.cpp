@@ -1324,7 +1324,11 @@ int main(int argc,char* argv[])//1st is port, 2nd is id, 3rd is username, 4th is
 	//extracting the data
 	
 	//setting the port number of the server that has to connected with
-	
+	cout << "\n argc=>" << argc;
+	for (int i = 0; i < argc; i++)
+	{
+		cout << argv[i]<<endl;
+	}
 	if (argc > 5)
 	{
 		strcpy(server_port, argv[1]);
