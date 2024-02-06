@@ -45,6 +45,44 @@ things i want someone else to do while i am coding:
 here the custormers are college clubs and societies
 
 someone to keep on thinking about the company when i am busy in coding. someone who will keep on managing the website work and the marketing work
+----------------------------------------------------------------------------------------------------------------
+---------------------------RESTARTING THE GAME SERVER MECHANISM------------------------------------------------
+
+the main problem was in closing the threads safely, namely send_data_terminal, send_data_display , recv_data and nav_process.
+in server_v3 file.
+due to lately closing of these threads they were hindering in re-binding the sockets, because they were keep on using it even after getting it closed.
+
+following mechanisms are used to close the threads:
+
+1. for send_data_terminal, recv_data, and nav_process.
+
+making a proxy variable like gameOver_temp, which will have the value of gameOVer, so when the game is really over, these functions will read the proxy value
+and update them at their own leisure, when they encounter that the values have been updated they just return.
+for this we also need to come out from the waiting cond variable.
+
+2. for send_data_display:
+we could've used the previous method for closing the thread, but it was not sending the game over message to the display unit, because it was closing
+before sending the value. so we are just checking if any message contains any ending message if yes then it will turn a flag on, and after sending that
+value to all the display units we can safely return from the function.
+
+potential bug: not all client display units may recv the game OVer message,we need to check if all of them have that message.
+-------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------REMEBERING the GAME SESSION AGAINST SAME USERID AND PASSWORD TWICE---------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

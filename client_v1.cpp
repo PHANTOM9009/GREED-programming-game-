@@ -67,6 +67,7 @@ string game_token;
 int my_id;//id of the player in the game
 string ip_address;//ip to which the client will connect to..
 int mode;
+SOCKET lobby_socket;//socket having the connection between lobby server and the client, this will be used to send the heartbeat messages
 SOCKET sending_socket;//socket to send data to the server
 //peer_socket is for recving data from the server
 
@@ -1706,6 +1707,10 @@ bool login_function(SOCKET lobby_socket)
 		{
 			createAccount(lobby_socket);
 		}
+		if (status_code == 3)
+		{
+			cout << "\n" << username << " is already logged in with us! please try to log in with a different username...";
+		}
 	}
 	return true;
 
@@ -1718,7 +1723,7 @@ int connect_to_lobby_server()
 	hints.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
 	getaddrinfo(ip_address.c_str(), "8080", &hints, &bind_address);
-	SOCKET lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
+	lobby_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISVALIDSOCKET(lobby_socket))
 	{
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
@@ -1769,7 +1774,36 @@ int connect_to_lobby_server()
 	cout << "\n received port and token from the lobby server..";
 	return port;
 }
-
+void heartbeat_lobby()
+{
+	//sending heartbeat messages to the lobby server
+	double elapsed_time = 0;
+	while (1)
+	{
+		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+		
+		//sending heartbeat messages to the server here..............
+		//chekcing if one second has elapsed or not 
+		//these heartbeat message are used to  tell the server that the client is active so dont close the tcp connection
+		//these heartbeat messages are set to be sent every 1 second of the tick
+		chrono::steady_clock::time_point end = chrono::steady_clock::now();
+		chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(end - begin);
+		elapsed_time += time_span.count();
+		if (elapsed_time > 10)
+		{
+			elapsed_time = 0;
+			//send the heartbeat message here
+			int beat = 1;
+			int bytes = send(lobby_socket,(char*)&beat, sizeof(beat), 0);
+			if (bytes < 1)
+			{
+				cout << "\n cannot send the byes==>" << GETSOCKETERRNO();
+			}
+			cout << "\n sent heartbeat to the lobby server...";
+			
+		}
+	}
+}
 int main(int argc,char* argv[])
 {
 	//extracting the data
@@ -1789,6 +1823,9 @@ int main(int argc,char* argv[])
 	int port = 0;//port is of the game server which the lobby server will return.
 	SOCKET socket_listen = 0;
 	 port=connect_to_lobby_server();
+	 //sending heartbeat messages to the lobby server
+	 thread t(heartbeat_lobby);
+	 t.detach();//starting the thread to send the hearbeat to the lobby server...
 	socket_listen = connect_to_server(port);   //no connection is established here only the socket initialization is done here
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;

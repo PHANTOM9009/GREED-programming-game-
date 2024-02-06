@@ -119,11 +119,13 @@ public:
 	int code;
 	user_credentials user_cred;
 };
-unordered_map<SOCKET, int> socket_pid;//socket to process id map
-unordered_map<SOCKET, string> socket_token;//token of every server. changes every time when a new game begins
+mutex logged_in_mutex;//mutex for protecting logged_in map
+unordered_map<SOCKET, string> socket_token;//token of every server. This does not changes and stays same (a potential risk)
 int max_player;
 deque<user_credentials> user_cred;//id and password of the active users.
-
+unordered_map<string, SOCKET> logged_in;//pair of username and socket of the user
+unordered_map<SOCKET, string> logged_in_rev;//reverse map of socket and username of the user
+deque<SOCKET> sock_list;//list of the sockets which are currently logged in
 
 std::string generateRandomSequence()
 {
@@ -247,6 +249,52 @@ bool createUser(user_credentials cred)
 		return true;
 	}
 }
+void isAlive()//function to check if the client is still logged in or not
+{
+	deque<SOCKET> sock_temp;
+	fd_set master;
+	FD_ZERO(&master);
+	int max_socket = 0;
+	fd_set reads;
+	FD_ZERO(&reads);
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 100;
+
+	while (1)
+	{
+		unique_lock<mutex> lk(logged_in_mutex);
+		sock_temp.clear();
+		for (int i = 0; i < sock_list.size(); i++)
+		{
+			sock_temp.push_back(sock_list[i]);
+		}
+		lk.unlock();
+		for (int i = 0; i < sock_temp.size(); i++)
+		{
+			int heartbeat = 0;
+			int bytes = recv(sock_temp[i], (char*)&heartbeat, sizeof(heartbeat), 0);
+			if (bytes < 1)
+			{
+				unique_lock<mutex> lk(logged_in_mutex);
+				cout << "\n client has disconnected==>" << logged_in_rev[sock_temp[i]];
+				//lets delete the user
+				auto it = sock_list.begin();
+				advance(it, i);
+				sock_list.erase(it);
+
+				string username = logged_in_rev[sock_temp[i]];
+				logged_in.erase(username);
+				logged_in_rev.erase(sock_temp[i]);
+				lk.unlock();
+			}
+			else
+			{
+				cout << "\n recved heartbeat from the user==>" << logged_in_rev[sock_temp[i]];
+			}
+		}
+	}
+}
 void listener()
 {
 	/*this function will listen to the incoming socket requests and only forwards them to the next section only if the requests are valid
@@ -336,12 +384,28 @@ void listener()
 						*/
 						if (cred.type == 0)//the account already exists
 						{
-							if (checkUser(cred, 0))//put the condition if the current user is verified or not
+							unique_lock<mutex> lk1(logged_in_mutex);
+							if (logged_in.find(cred.username) != logged_in.end())
+							{
+								//the user is already logged in so send a status number 3
+								cout << "\n user came who has already logged in==>" << cred.username;
+								int status_code = 3;
+								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+								
+							}
+							else if (checkUser(cred, 0))//put the condition if the current user is verified or not
 							{
 								unique_lock<mutex> lk(m->m_valid);
 								valid_connections.push_back(i);
 								user_cred.push_back(user_credentials(cred.username, cred.password));
 								m->is_data.notify_one();
+
+								
+								logged_in[cred.username] = i;
+								logged_in_rev[i] = cred.username;
+								sock_list.push_back(i);
+								lk1.unlock();
+
 								cout << "\n connected with a valid user";
 								int status_code = 1;
 								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
@@ -356,6 +420,7 @@ void listener()
 
 
 							}
+							
 							else //not authenticated then tear down the socket connection and remove it from the set of master
 							{
 								cout << "\n invalid user came..";
@@ -491,10 +556,7 @@ void transferSocket(deque<SOCKET>& player_queue, deque<user_credentials> &player
 		}
 	}
 	//close all the client sockets, since now there is no use of all those sockets
-	for (int i = st; i <= end; i++)
-	{
-		CLOSESOCKET(player_queue[i]);
-	}
+	
 		
 	//now sendint the recvr server the credentials of the incoming user
 	/*
@@ -746,10 +808,12 @@ int main()
 	thread t1(listener);
 	thread t2(assign_lobby);
 	thread t3(lobby_contact, ref(socks));
+	thread t4(isAlive);
 	
 	t1.join();
 	t2.join();
 	t3.join();
+	t4.join();
 	while(1)
 	{ }
 }

@@ -110,6 +110,7 @@ public:
 	int code;
 	user_credentials user_cred;
 	char token[20];
+	int isBot;//true if the this is a bot
 };
 int cx(int x);
 int cy(int y);
