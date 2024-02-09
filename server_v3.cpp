@@ -81,7 +81,7 @@ vector<int> packet_id(10,0);//to keep track of the current packet id of the term
 SOCKET socket_listen;//UDP socket to send data to the client terminal unit
 SOCKET socket_listen2;//UDP socket to send data to the client display unit
 SOCKET recver;//UDP socket to recv data from the client terminal unit
-
+int max_disp;//number of display units attached with the server. it has to be reset
 SOCKET lobby_socket;//TCP  socket to talk to the lobby server
 long long game_tick_global = 1;
 long long game_tick = 1;
@@ -687,7 +687,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 				{
 					id_port[ship_id] = port;
 
-					cout << "\n port packet set for ship id====================>" << ship_id;
+					cout << "\n port packet set for ship id====================>" << ship_id<<" port==>"<<port;
 				}
 
 				int id = -1;
@@ -950,9 +950,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 	thread t1(send_data_terminal, socket_id, mutx);
 	t1.detach();
-
-	thread t3(send_data_display, socket_id_display, mutx);
-	t3.detach();
+	if (max_disp > 0)
+	{
+		thread t3(send_data_display, socket_id_display, mutx);
+		t3.detach();
+	}
 	
 	thread t4(recv_data_terminal, mutx,std::ref(pl1));
 	t4.detach();
@@ -2192,8 +2194,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				unique_lock<mutex> lk(mutx->gameOver_check);
 				gameOver_send_terminal = true;
 				gameOver_nav_process = true;
+				if (max_disp > 0)
+				{
+					gameOver_send_display = true;
 
-				gameOver_send_display = true;
+				}
 				gameOver_recv_data = true;
 				lk.unlock();
 				mutx->cond_display.notify_all();
@@ -2392,7 +2397,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 	//making a max_player proxy for connecting issues
 	int max_player_proxy = max_player;
-	while (max_player > nn || max_display>curdisp)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
+	//putting the timer which will only wait for 1 minute in testing, but will wait for 10 minutes in real time.
+	while ((max_player > nn || max_display>curdisp))//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, &timeout);
@@ -2497,13 +2503,17 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 
 	}
+	::max_disp = max_display;
 	//stage 1 ends
 	/*
 	* here in stage 1 client terminal will recv the its id, and client display unit will get the max_players playing in the game
 	*/
 	cout << "\n stage 1 ends....";
 	
-	
+	//sending to theh lobby server that i have started the game and got busy
+	int data_status = 0;//means that the server is getting busy
+	int bs = send(lobby_socket, (char*)&data_status, sizeof(data_status), 0);
+	cout << "\n sent to the lobby server that i am busy with the game..";
 
 	int no_of_players = n;
 	Control control;
@@ -2925,6 +2935,7 @@ int main(int argc,char* argv[])
 		graphics::total_secs = 0;
 		user_cred.clear();
 		input_data.clear();
+		max_disp = 0;
 		deque<deque<send_data>> temp(10);
 		input_data = temp;
 		packet_id.clear();
@@ -2940,10 +2951,13 @@ int main(int argc,char* argv[])
 		game_tick = 1;
 
 		startup(max_player, socket_id, port);
-		
+		if (max_disp == 0)
+		{
+			CLOSESOCKET(socket_listen2);
+		}
 		//all the sockets are closed before restarting the game'
 		cout << "\n this round of game is over";
-		Sleep(1000);
+		
 	}
 
 #if defined(_WIN32)

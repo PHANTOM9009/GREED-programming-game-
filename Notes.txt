@@ -69,6 +69,8 @@ potential bug: not all client display units may recv the game OVer message,we ne
 -------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------REMEBERING the GAME SESSION AGAINST SAME USERID AND PASSWORD TWICE---------------------------------------------
 
+So I did it, the lobby server will remeber who are logged in, by a simple mechanism called heartbeat, it will check who all are logged in by recving a heartbeat
+from the clients, and maintains a list of logged in usernames. its just that simple, i got it checked with the VM its working fine for now.
 
 
 

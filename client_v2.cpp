@@ -340,7 +340,11 @@ SOCKET connect_to_server()//first connection to the server
 	for (int i = 0; i < 10; i++)
 	{
 		
-		send(recver_socket, (char*)&my_id, sizeof(my_id), 0);
+		int bytes=send(recver_socket, (char*)&my_id, sizeof(my_id), 0);
+		if (bytes < 1)
+		{
+			cout << "\n error in sending my id to the server==>" << GETSOCKETERRNO();
+		}
 	}
 	cout << "\n waiting for server to start the game...";
 	int flag = 0;

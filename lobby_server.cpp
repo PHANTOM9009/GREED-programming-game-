@@ -281,6 +281,7 @@ void isAlive()//function to check if the client is still logged in or not
 				//lets delete the user
 				auto it = sock_list.begin();
 				advance(it, i);
+				if(sock_list.size()>i)
 				sock_list.erase(it);
 
 				string username = logged_in_rev[sock_temp[i]];
@@ -519,6 +520,7 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 								unique_lock<mutex> lk(m->m_lobby);
 								auto it = free_lobby.begin();
 								advance(it, j);
+								if(free_lobby.size()>j)
 								free_lobby.erase(it);
 								break;
 							}
@@ -528,6 +530,7 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 					{
 						unique_lock<mutex> lk(m->m_lobby);
 						free_lobby.push_back(pair<SOCKET, int>(i, 0));
+						m->is_lobby.notify_all();
 						cout << "\n received available message from game server=>" << i;
 						//re assigning the token to the server for security purpose
 						

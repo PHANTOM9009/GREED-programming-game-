@@ -1557,6 +1557,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	cout << "\n number of bullets coming per time is==>" << (double)no_of_bullets / no_of_times;
 	CLOSESOCKET(peer_socket);
 	CLOSESOCKET(sending_socket);
+	
 	WSACleanup();
 
 	while(1)
@@ -2113,7 +2114,7 @@ int main(int argc,char* argv[])
 
 	}
 	
-
+	
 	CLOSESOCKET(tcp_socket);
 	graphics cg;
 	cg.callable_client(start_data.ship_id,&mutx, code, map1, socket_listen,player[start_data.ship_id]);
