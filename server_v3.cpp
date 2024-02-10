@@ -73,7 +73,7 @@ unordered_map<int, user_credentials> user_cred;//has to be reset
 deque<deque<send_data>> input_data(10);//data to queue to store the data from the client terminal unit
 deque<pair<int,recv_data>> terminal_data;//data queue to send data to the client terminal unit..pair of id and data
 deque<pair<int, top_layer>> display_data;//data for the display unit of the client: pair of id and top_layer data
-
+unordered_map<int, string> id_port;//has to be zeroed out.
 deque <pair<int, pair<string, string>>> id_ip_port;// pair of id of the terminal to the ip address and port of the terminal
 vector<int> packet_id(10,0);//to keep track of the current packet id of the terminal units of the clients
 
@@ -466,16 +466,8 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 {
 	while (1)
 	{
-		unique_lock<mutex> lk1(m->gameOver_check);
+		
 		unique_lock<mutex> lk(m->send_terminal);
-		if (gameOver_send_terminal && terminal_data.empty())
-		{
-			cout << "\n breaking from the send_data_terminal..";
-			gameOver_send_terminal = false;// put it back to false
-			CLOSESOCKET(socket_listen);
-			break;
-		}
-		lk1.unlock();
 		
 		m->cond_terminal.wait(lk, [] {return !terminal_data.empty() || gameOver_send_terminal; });
 		//terminal_data queue has data now make its copy and clear the queue
@@ -488,8 +480,13 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 		terminal_data.clear();//clearing the queue
 		lk.unlock();
 		//now start sending the data over the network to each individual clients..
+		int end_flag = 0;
 		for (int i = 0; i < data.size(); i++)
 		{
+			if (data[i].second.gameOver)
+			{
+				end_flag = 1;
+			}
 			if (addr_info.find(data[i].first) != addr_info.end())
 			{
 				//send the data to the client
@@ -506,17 +503,6 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 				sendto(socket_listen, (char*)&sending_new, sizeof(sending_new), 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
 				while (sent_bytes < sizeof(ob))
 				{
-					lk1.lock();
-					lk.lock();
-					if (gameOver_send_terminal && terminal_data.empty())
-					{
-						gameOver_send_terminal = false;
-						cout << "\n breaking from the send_terminal thread==>";
-						CLOSESOCKET(socket_listen);
-						return;
-					}
-					lk.unlock();
-					lk1.unlock();
 					int fuck = sizeof(ob) - sent_bytes;
 					int bytesToSend = min(MAX_LENGTH, fuck);
 					int bytes = sendto(socket_listen, buffer + sent_bytes, bytesToSend, 0, (sockaddr*)&addr_info[data[i].first], sizeof(addr_info[data[i].first]));
@@ -542,6 +528,12 @@ void send_data_terminal(unordered_map<int, sockaddr_storage> addr_info, Mutex* m
 			//cout << "\n sent bytes to==>" <<data[i].first;
 						
 		}	
+		if (end_flag == 1)
+		{
+			cout << "\n breaking from send terminal thread==>";
+			gameOver_send_terminal = false;
+			CLOSESOCKET(socket_listen);
+		}
 	}
 }
 void send_data_display(unordered_map<int, sockaddr_storage> addr_info, Mutex* m)
@@ -624,7 +616,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 	double et = 0;
 	int count = 0;//for id=0
 	int count1 = 0;//for id=1;
-	unordered_map<int, string> id_port;//for mapping of id and port
+	//for mapping of id and port
 	int wrong = 0;//if something wrong has happened then wait for the 4 byte packet
 	
 	fd_set master;
@@ -633,6 +625,11 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 	fd_set read;
 	FD_ZERO(&read);
 	FD_SET(recver, &master);
+	cout << "\n id_port is==>";
+	for (auto it:id_port)
+	{
+		cout << "\n id==>" << it.first << " port==>" << it.second;
+	}
 	while (1)
 	{
 		
@@ -683,12 +680,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 				int ship_id;
 				std::memcpy((void*)&ship_id, buff, sizeof(ship_id));
 
-				if (id_port.find(ship_id) == id_port.end())
-				{
-					id_port[ship_id] = port;
-
-					cout << "\n port packet set for ship id====================>" << ship_id<<" port==>"<<port;
-				}
+				
 
 				int id = -1;
 				for (auto c : id_port)
@@ -735,7 +727,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 				}
 				else
 				{
-					cout << "\n in the first part of recv_data, recved id =-1==>" << sip << " " << sport << endl;
+					//cout << "\n in the first part of recv_data, recved id =-1==>" << sip << " " << sport << endl;
 				}
 			}
 			else if (bytes > 4)
@@ -2231,7 +2223,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 	
 	
 	//CLOSESOCKET(socket_display[0]);
-	CLOSESOCKET(recver);
+	
 	
 	double sending0 = 0;
 	double sending1 = 0;
@@ -2770,7 +2762,43 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 		}
 	
 	}
+	FD_ZERO(&master1);
+	FD_ZERO(&read);
+	FD_SET(recver, &master1);
+	max_socket = recver;
 
+	int count_player = 0;
+	while (count_player != max_player)
+	{
+		read = master1;
+		select(max_socket + 1, &read, 0, 0, &timeout);
+		if (FD_ISSET(recver, &read))
+		{
+			id_port_class ob;
+			sockaddr_storage client_address;
+			socklen_t client_len = sizeof(client_address);
+			int bytes = recvfrom(recver, (char*)&ob, sizeof(ob), 0,(sockaddr*)&client_address, &client_len);
+			if (bytes < 1)
+			{
+				cout << "\n cannot recv bytes in id_port==>" << GETSOCKETERRNO();
+			}
+			if (bytes==sizeof(ob)&&ob.id != -1 && id_port.find(ob.id) == id_port.end())
+			{
+				//getting nameinfo
+				char cip[100];
+				char cport[100];
+				getnameinfo((sockaddr*)&client_address, client_len, cip, sizeof(cip), cport, sizeof(cport), NI_NUMERICHOST | NI_NUMERICSERV);
+				string sip = cip;
+				string sport = cport;
+				//putting into it.
+				id_port[ob.id] = sport;
+				cout << "\n port set for sid==>" << ob.id << " " << sport;
+				count_player++;
+
+			}
+		}
+
+	}
 	//completing the config process with the display unit of the game
 	//sending tcp message to all the display units to send udp req. to the server
 	for (int i = 0; i < disp_socket.size(); i++)
@@ -2858,7 +2886,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	{
 
 	}
-	
+	CLOSESOCKET(recver);
 	cout << "\n successfully closed all the threads";
 	int status = 1;
 	int bytes = send(lobby_socket, (char*)&status, sizeof(status), 0);
@@ -2935,6 +2963,7 @@ int main(int argc,char* argv[])
 		graphics::total_secs = 0;
 		user_cred.clear();
 		input_data.clear();
+		id_port.clear();
 		max_disp = 0;
 		deque<deque<send_data>> temp(10);
 		input_data = temp;

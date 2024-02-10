@@ -2096,6 +2096,17 @@ int main(int argc,char* argv[])
 			cout << "\n error in sending the final bytes==>" << GetLastErrorAsString();
 		}
 	}
+	//sending to the server from my sending socket
+	id_port_class obb(my_id, username);
+	for (int i = 1; i <= 10; i++)
+	{
+		int bytes = send(sending_socket, (char*)&obb, sizeof(obb), 0);
+		if (bytes < 1)
+		{
+			cout << "\n error in sending the final bytes==>" << GETSOCKETERRNO();
+		}
+	}
+
 	cout << "\n waiting for the server to send the final flag to start the game...";
 	int flag = 0;
 	bytes = recv(tcp_socket, (char*)&flag, sizeof(flag), 0);

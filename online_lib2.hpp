@@ -2268,6 +2268,22 @@ public:
 	friend void startup(int n, unordered_map<int, sockaddr_storage>& socket_id, int port);
 	friend int main(int argc, char* argv[]);
 };
+class id_port_class//to carry the information about the client who is giving the port
+{
+public:
+	int id;
+	char username1[20];
+
+	id_port_class()
+	{
+
+	}
+	id_port_class(int id, string username)
+	{
+		this->id = id;
+		strcpy(username1, username.c_str());
+	}
+};
 double avg_bullet = 0;
 int no_of_times = 0;
 class Control//this class will control everything regarding the game
