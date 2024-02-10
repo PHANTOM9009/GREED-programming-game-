@@ -2390,13 +2390,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	//making a max_player proxy for connecting issues
 	int max_player_proxy = max_player;
 	//putting the timer which will only wait for 1 minute in testing, but will wait for 10 minutes in real time.
-	//exiting each loop after 10 minutes in first loop(in general practice) but only if there are some real players in the loop...
-	double first_timeout = 10;
-	sf::Clock clock;
-	double elapsed_time = 0;
-	while ((max_player > nn || max_display>curdisp) && elapsed_time < 60)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
+	while ((max_player > nn || max_display>curdisp))//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
-		elapsed_time += clock.restart().asSeconds();
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, &timeout);
 		for (int i = 1; i <= max_socket; i++)
@@ -2648,12 +2643,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	int count = 0;
 	cout << "\n max player proxy is=>" << max_player_proxy<<" in the set are==>"<<all.fd_count;
 	int count_cross = 0;
-	int second_timeout = 60;//this time has to be tested, by trial and error
-	sf::Clock clock1;
-	elapsed_time = 0;
-	while (count != max_player_proxy && elapsed_time<60)
+	while (count != max_player_proxy)
 	{
-		elapsed_time += clock1.restart().asSeconds();
 		count_cross++;
 		read = all;
 		struct timeval timeout;
@@ -2735,11 +2726,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	FD_ZERO(&read);
 	max_socket = socket_listen;
 	count_cross = 0;
-	elapsed_time = 0;
-	sf::Clock clock2;
-	while (new_count != max_player_proxy && elapsed_time<60)
+	while (new_count != max_player_proxy )
 	{
-		elapsed_time += clock2.restart().asSeconds();
 		count_cross++;
 		read = master1;
 		select(max_socket + 1, &read, 0, 0, &timeout);
@@ -2780,11 +2768,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	max_socket = recver;
 
 	int count_player = 0;
-	elapsed_time = 0;
-	sf::Clock clock3;
-	while (count_player != max_player && elapsed_time<60)
+	while (count_player != max_player)
 	{
-		elapsed_time += clock3.restart().asSeconds();
 		read = master1;
 		select(max_socket + 1, &read, 0, 0, &timeout);
 		if (FD_ISSET(recver, &read))
@@ -2823,11 +2808,8 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 
 	}
 	int c = 0;
-	elapsed_time = 0;
-	sf::Clock clock4;
-	while (c != disp_socket.size() && elapsed_time<60)
+	while (c != disp_socket.size())
 	{
-		elapsed_time+=clock4.restart().asSeconds();
 		sockaddr_storage display_addr;
 		socklen_t display_addr_len = sizeof(display_addr);
 		int display_id = -1;
