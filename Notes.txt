@@ -73,6 +73,12 @@ for this we can solve this by ensuring that we are sending the message mutiple t
 So I did it, the lobby server will remeber who are logged in, by a simple mechanism called heartbeat, it will check who all are logged in by recving a heartbeat
 from the clients, and maintains a list of logged in usernames. its just that simple, i got it checked with the VM its working fine for now.
 
+------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------- UNABLE TO HANDLE WHEN A PLAYER CLOSES WHILE HANDSHAKING---------------------------------------------
+
+the handshake mechanism is too complex too touch, it will be done, when something fucking happens that's all, i know that it is a bug.
+
+
 
 
 
