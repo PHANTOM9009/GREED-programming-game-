@@ -77,6 +77,11 @@ from the clients, and maintains a list of logged in usernames. its just that sim
 ------------------------------------- UNABLE TO HANDLE WHEN A PLAYER CLOSES WHILE HANDSHAKING---------------------------------------------
 
 the handshake mechanism is too complex too touch, it will be done, when something fucking happens that's all, i know that it is a bug.
+leaving it for now.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------THE ALGORITHM IS NOT IN SYNC WITH THE SERVER AND CLIENT--------------------------------------------
+
 
 
 

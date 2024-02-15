@@ -458,6 +458,7 @@ public:
 	mutex recv_display;//to recv the data from the display client side
 
 	mutex game_tick_mutex;//mutex used to protect the game tick of the server
+	mutex game_tick_mutex_client;//this mutex is used to protect frame variables
 
 
 	Mutex()
@@ -1555,6 +1556,9 @@ class ship//this class will be used to initialize the incoming player and give i
 protected:
 	bool isAuthenticPath(List<Greed::abs_pos> ob);
 private:
+	int cur_frame;//variable to maintain the frame rate of the while loop
+	int next_frame;
+
 	Mutex* mutx;
 	Event events;// a double sided queue of the events;
 	sf::Sprite rect;//sprite of the rectangle

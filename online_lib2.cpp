@@ -995,6 +995,14 @@ vector<Greed::coords> ship::getRadiusCoords_cannon(int c_id)
 }
 bool ship::frame_rate_limiter()
 {
+
+	unique_lock<mutex> lk(mutx->game_tick_mutex_client);
+	if (next_frame != cur_frame)
+	{
+		return true;
+	}
+	return false;
+	/*
 	if (!hector)
 	{
 		starting_time_limiter = chrono::steady_clock::now();
@@ -1015,10 +1023,13 @@ bool ship::frame_rate_limiter()
 		return true;
 	}
 	return false;
+	*/
 }
 
 ship::ship()//default ctor for now
 {
+	this->cur_frame = -1;
+	this->next_frame = 0;
 	this->collide_count = 0;
 	this->hit_bullet_count = 0;
 	this->navigation_count = 0;

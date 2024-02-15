@@ -60,6 +60,9 @@
 * recv part:
 * recv the information of other ships enough to process its own algorithm
 */
+
+//these variables are updated in client_v1 loop, but they are only read in frame_rate_limiter of algorithm's loop, they are protected by a mutex ofc.
+
 void GreedMain(ship& ob);
 string username = "username";
 string password = "password";
@@ -73,7 +76,6 @@ SOCKET sending_socket;//socket to send data to the server
 
 deque<recv_data> input_data;//input data from the server to the client
 deque<send_data> terminal_data;
-
 
 
 long game_tick = 1;//this is the game tick of the server not the client
@@ -445,8 +447,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 	int frames = 0;
 	bool gameOver = false;
 	//starting the game loop that will sync the algorithm execution with the gameplay
-	int cur_frame = -1;//variable to maintain the frame rate of the while loop
-	int next_frame = 0;
+
 	control1 control_ob;
 	//THIS code is for updating the fuel of the ship
 
@@ -557,21 +558,22 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		ep += tt.asSeconds();
 		if (ep > 1)
 		{
-		//	cout << "\n effective frame rate=>" << effective_frame_rate;
+			cout << "\n effective frame rate=>" << effective_frame_rate;
 			frame_rate = 0;
 			effective_frame_rate = 0;
 			ep = 0;
 		}
 		//next_frame = ep * 60;
-		if (next_frame != cur_frame)//under this frame rate is stable
+		if (pl1[ship_id]->next_frame != pl1[ship_id]->cur_frame)//under this frame rate is stable
 		{
 			
 			frame_rate++;
 			cc++;
 			reads = master_read;
 			writes = master_write;
-			
-			cur_frame = next_frame;
+			unique_lock<mutex> poc(mutx->game_tick_mutex_client);
+			pl1[ship_id]->cur_frame =pl1[ship_id]->next_frame;
+			poc.unlock();
 			//for handling the ship
 			total_time=game_tick;
 			
@@ -1543,15 +1545,17 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		chrono::steady_clock::time_point end = chrono::steady_clock::now();
 		chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(end - begin);
 		elapsed_time += time_span.count();
+		/*
 		if (elapsed_time > 1)
 		{
 			elapsed_time = 0;
-			//cout << "\n frame rate is==>" << frame_rate;
-			//frame_rate = 0;
+			cout << "\n frame rate of game loop is==>" << frame_rate;
+			frame_rate = 0;
 			total_frames1++;
 		}
-		
-		next_frame = elapsed_time * 80;
+		*/
+		unique_lock<mutex> loc(mutx->game_tick_mutex_client);
+		pl1[ship_id]->next_frame = elapsed_time * 80;
 		
 			
 	}
