@@ -27,24 +27,14 @@ void GreedMain(ship& ob)
 	vector<Greed::cannon> clist=ob.getCannonList();
 	int dest = 0;
 	int i = 0;
-	sf::Clock clock;
-	double elapsed_time = 0;
-	int frameRate = 0;
 	Greed::coords desti = ob.getCurrentTile();
 	while (1)
 	{
-		elapsed_time += clock.restart().asSeconds();
-		if (elapsed_time > 1)
-		{
-			cout << "\n the frame rate is==>" << frameRate;
-			frameRate = 0;
-			elapsed_time = 0;
-		}
+
 		if (ob.frame_rate_limiter())
 		{//this is anchit rana talking to the world and i want ot know the difference between
 			cout << "\n motion of the ship is==>" << ob.isShipInMotion();
-			frameRate++;
-			if (ob.isShipInMotion()==0 && ob.getCurrentTile()==desti && i<3)
+			if (ob.isShipInMotion()==0 && i<3)
 			{
 				 desti = ob.getRadiusCoords_cannon(clist[i].getCannonId())[0];
 				cout << "\n entity at==>" << desti.r << " " << desti.c << " is==>" << (int)ob.whatsHere(desti).getEntity();
