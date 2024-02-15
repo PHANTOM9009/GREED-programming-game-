@@ -8,3 +8,8 @@ cl /EHsc /MT /MD -I"C:\\SFML visual c++\\SFML-2.5.1\\include" -I"C:\\TGUI-1.0-ni
 
 
 F:\visual studio setup\VC\Auxiliary\Build
+
+sindhanisiya@gmail.com
+
+
+cl /O2 /EHsc /MD /I"C:\Python310\include" /I"C:\pybind11-2.11.1\pybind11-2.11.1\include" q2.cpp /link /DLL /OUT:example.pyd /LIBPATH:"C:\Python310\libs" python310.lib

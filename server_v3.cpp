@@ -1372,9 +1372,9 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						for (int j = 0; j < pl1[i]->nav_data_temp.size(); j++)
 						{
 
-							if (pl1[i]->motion==0|| pl1[i]->nav_data_temp[i].type == 3)//add only in the queue if the ship is in motion..
+							if (pl1[i]->motion==0|| pl1[i]->nav_data_temp[j].type == 3)//add only in the queue if the ship is in motion..
 							{
-								//cout << "\n in game loop recved value==>" << pl1[i]->nav_data_temp[j].type;
+								cout << "\n recved the value of navigation with the type==>"<< pl1[i]->nav_data_temp[j].type<<" at the time stamp=>"<<game_tick;
 								pl1[i]->nav_data.push_back(pl1[i]->nav_data_temp[j]);
 
 							}
@@ -1430,7 +1430,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							{
 								// cout << "\n fuel " << i << " now=>" << pl1[i]->fuel;
 								pl1[i]->motion = 1;
-
+								cout << "\n motion set to one==>" << game_tick;
 								pl1[i]->update_pointPath(pl1[i]->getPointPath(2369) + 2, 2369);
 
 								pl1[i]->rect.setPosition(::cx(l1[pl1[i]->getPointPath(2369)].x + origin_x), ::cy(l1[pl1[i]->getPointPath(2369)].y + origin_y));

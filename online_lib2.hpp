@@ -2156,51 +2156,60 @@ public:
 	{
 
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (motion == 0)
-		{
 			navigation nav(1, Greed::coords(-1, -1), -1, tiles, d);
 			nav_data.push_back(nav);
-		}
+		
 	}
 	void Greed_setPath(int s_id)
 	{
 
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (motion == 0)
-		{
+		
+		
 			navigation nav(0, Greed::coords(-1, -1), s_id, -1, Direction::NA);
 			nav_data.push_back(nav);
-		}
+		
 	}
-	void Greed_setPath(Greed::coords ob)
+	bool Greed_setPath(Greed::coords ob)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (motion == 0)
+		
+		if (motion == 0 && fuel>0)
 		{
 			navigation nav(0, ob, -1, -1, Direction::NA);
+			cout << "\n pushing in data for navigation==>";
 			nav_data.push_back(nav);
+
 		}
+		return true;
 	}
-	void Greed_chaseShip(int s_id)
+	bool Greed_chaseShip(int s_id)
 	{
 
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (motion == 0)
+		
+		if (motion == 0 && fuel>0)
 		{
 			navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
 			nav_data.push_back(nav);
 			lock_chase_ship = 1;
+			return true;
 		}
+		return false;
+		
 
 	}
-	void Greed_anchorShip()
+	bool Greed_anchorShip()
 	{
-		unique_lock<mutex> lk(mutx->m[ship_id]);
 		if (motion == 1)
 		{
+			unique_lock<mutex> lk(mutx->m[ship_id]);
 			navigation nav(3, Greed::coords(-1, -1), -1, -1, Direction::NA);
 			nav_data.push_back(nav);
+			return true;
 		}
+		return false;
+		
 	}
 	//entity conversion functions
 	void Greed_fireCannon(cannon can, int s_id, ShipSide s)

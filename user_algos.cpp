@@ -1,30 +1,21 @@
-#include <iostream>
-#include <conio.h> // For _getch()
+#include<iostream>
+#include<vector>
+#include<pybind11/pybind11.h>
+#include<pybind11/stl.h>
 
-int main() {
-    const int MAX_PASSWORD_LENGTH = 20;
-    char password[MAX_PASSWORD_LENGTH + 1]; // +1 for null terminator
+using namespace std;
+int a;
+vector<int> return_vector(int size,vector<int> &vec)
+{
+	vector<int> ans;
+	for (int i = 0; i < vec.size(); i++)
+	{
+		ans.push_back(vec[i]);
+	}
+	a = 10;
+	return ans;
+}
 
-    std::cout << "Enter your password: ";
-
-   
-
-    int i = 0;
-    char ch;
-    while (i < MAX_PASSWORD_LENGTH) {
-        ch = _getch();
-
-        if (ch == 13 || ch == 10) { // Enter key
-            break;
-        }
-
-        std::cout << '*';
-        password[i++] = ch;
-    }
-
-    password[i] = '\0'; // Null-terminate the password
-
-    std::cout << "\nPassword entered: " << password << std::endl;
-
-    return 0;
+PYBIND11_MODULE(example, m) {
+	m.def("return_vector", &return_vector, pybind11::arg("size"), pybind11::arg("vec"));
 }

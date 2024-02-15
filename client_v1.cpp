@@ -38,7 +38,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "hawk.cpp"
+#include "testing.cpp"
 #include<ctime>
 #include<chrono>
 #include<conio.h>
@@ -677,7 +677,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 
 						pl1[ship_id]->nav_data_final.push_back(resend_navigation[i]);
 					}
-
+					
 
 								
 						for (int i = 0; i < resend_bullet.size() && i < 5; i++)
@@ -734,13 +734,13 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						if (current_health < pl1[ship_id]->health)
 						{
 							pl1[ship_id]->lock_health = 0;
-							cout << "\n lock unlocked manually for health";
+							//cout << "\n lock unlocked manually for health";
 							
 						}
 						if (current_ammo < pl1[ship_id]->ammo)
 						{
 							pl1[ship_id]->lock_ammo = 0;
-							cout << "\n lock unloced manually for ammo";
+							//cout << "\n lock unloced manually for ammo";
 						}
 						if (current_fuel < pl1[ship_id]->fuel)
 						{
@@ -774,6 +774,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 								for (int i = 0; i < pl1[ship_id]->nav_data.size(); i++)
 								{
 									pl1[ship_id]->nav_data_final.push_back(pl1[ship_id]->nav_data[i]);
+						
 								}
 								pl1[ship_id]->nav_data.clear();
 							}

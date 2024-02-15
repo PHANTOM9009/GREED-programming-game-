@@ -268,3 +268,13 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  increase the size for firing, make it alteast  30, 20 for reattempt.
  also i have reduced the frame rate of the game to 30 this lets me increase the waiting time for each client's packet. and also help reduce the
  cpu consumption of the server
+ --------------------------------------------------------------------------------
+
+ A problem:
+
+ 1. delayed response of server is causing the client in executing that statement many times, if goes unobserved.
+
+ like motion is not getting 1 just after calling navigation, so if you are keep on checking if motion is 0 then call navigation function, then
+ it will call it many times, and hence giving many commands together, and only the first one gets executed, due to that the consecutive commands are fucked up
+just say in the docs, that it is not recomended to check the game state using the direct variables, coz it may take some cycles to update them
+so rather go for the events, check the events only.

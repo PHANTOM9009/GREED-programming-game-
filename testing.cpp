@@ -24,13 +24,28 @@ void GreedMain(ship& ob)
 {
 	//setting the aim
 
-	
+	vector<Greed::cannon> clist=ob.getCannonList();
+	int dest = 0;
+	int i = 0;
+	Greed::coords desti = ob.getCurrentTile();
 	while (1)
 	{
 
 		if (ob.frame_rate_limiter())
 		{//this is anchit rana talking to the world and i want ot know the difference between
-			
+			cout << "\n motion of the ship is==>" << ob.isShipInMotion();
+			if (ob.isShipInMotion()==0 && i<3)
+			{
+				 desti = ob.getRadiusCoords_cannon(clist[i].getCannonId())[0];
+				cout << "\n entity at==>" << desti.r << " " << desti.c << " is==>" << (int)ob.whatsHere(desti).getEntity();
+				ob.Greed_setPath(desti);
+				i++;
+				dest = 1;
+			}
+			for (int j = 0; j < ob.cannonsInMyRadius().size(); j++)
+			{
+				//cout << "\n cannon in my radius is==>" << ob.cannonsInMyRadius()[j];
+			}
 			
 		}
 

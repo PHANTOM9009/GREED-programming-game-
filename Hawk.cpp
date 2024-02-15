@@ -75,17 +75,19 @@
 		deque<shipInfo> shipList = ob.getShipList();
 		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
 		cout << "\n index returned is==>" << index;
-		ob.Greed_chaseShip(index);
+		//ob.Greed_chaseShip(index);
 		int frame_rate = 0;
 		
 		double elapsed_time = 0;
 		sf::Clock clock;
+		ob.threshold_health = 20;
 		while (1)
 		{
 			elapsed_time += clock.restart().asSeconds();
 			if (ob.frame_rate_limiter())
 			{//this is anchit rana talking to the world and i want ot know the difference between
 				//cout<<"\n my health is==>"<<ob.getCurrentHealth();
+				/*
 				frame_rate++;
 				
 				if (elapsed_time > 1)
@@ -111,7 +113,7 @@
 					}
 				}
 				//ob.Greed_fireCannon(cannon::FRONT, 0, ShipSide::REAR);
-				if (ob.getCurrentHealth() <= 10)
+				if (e.eventType == Event::EventType::LowHealth)
 				{
 					ob.Greed_upgradeHealth(10);
 				}
@@ -151,7 +153,7 @@
 
 				}
 							
-				
+				*/
 
 
 			}
