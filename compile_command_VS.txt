@@ -12,4 +12,4 @@ F:\visual studio setup\VC\Auxiliary\Build
 sindhanisiya@gmail.com
 
 
-cl /O2 /EHsc /MD /I"C:\Python310\include" /I"C:\pybind11-2.11.1\pybind11-2.11.1\include" q2.cpp /link /DLL /OUT:example.pyd /LIBPATH:"C:\Python310\libs" python310.lib
+cl /O2 /EHsc /MD /I"C:\Python310\include" /I"C:\pybind11-2.11.1\pybind11-2.11.1\include" user_algos.cpp /link /DLL /OUT:example.pyd /LIBPATH:"C:\Python310\libs" python310.lib

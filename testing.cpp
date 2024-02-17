@@ -28,16 +28,28 @@ void GreedMain(ship& ob)
 	int dest = 0;
 	int i = 0;
 	Greed::coords desti = ob.getCurrentTile();
+	sf::Clock clock;
+	double elapsed_time = 0;
+	int frame_rate = 0;
 	while (1)
 	{
+		elapsed_time += clock.restart().asSeconds();
+		if (elapsed_time > 1)
+		{
+			cout << "\n the frame rate of the algorithm is==>" << frame_rate;
+			elapsed_time = 0;
+			frame_rate = 0;
 
+		}
 		if (ob.frame_rate_limiter())
+
 		{//this is anchit rana talking to the world and i want ot know the difference between
-			cout << "\n motion of the ship is==>" << ob.isShipInMotion();
+			
+			frame_rate++;
 			if (ob.isShipInMotion()==0 && i<3)
 			{
 				 desti = ob.getRadiusCoords_cannon(clist[i].getCannonId())[0];
-				cout << "\n entity at==>" << desti.r << " " << desti.c << " is==>" << (int)ob.whatsHere(desti).getEntity();
+				 cout << "\n entity at==>" << desti.r << " " << desti.c;
 				ob.Greed_setPath(desti);
 				i++;
 				dest = 1;
@@ -45,6 +57,10 @@ void GreedMain(ship& ob)
 			for (int j = 0; j < ob.cannonsInMyRadius().size(); j++)
 			{
 				//cout << "\n cannon in my radius is==>" << ob.cannonsInMyRadius()[j];
+			}
+			if (ob.getCurrentHealth() <= 10)
+			{
+				ob.Greed_upgradeHealth(10);
 			}
 			
 		}

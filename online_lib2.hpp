@@ -458,6 +458,8 @@ public:
 	mutex recv_display;//to recv the data from the display client side
 
 	mutex game_tick_mutex;//mutex used to protect the game tick of the server
+	mutex game_tick_mutex_client;
+
 
 
 	Mutex()
@@ -1324,7 +1326,7 @@ class shipData_forServer
 	*/
 public:
 	int ship_id;//id of the ship
-
+	bool navigation_promise;
 	double threshold_health;
 	double threshold_ammo;
 	double threshold_fuel;
@@ -1399,6 +1401,8 @@ class shipData_forMe
 	* it has data like after getting hit by a bullet
 	*/
 public:
+	bool navigation_promise;
+	int autopilot;
 	int ship_id;
 	int seconds;
 	int minutes;
@@ -1555,6 +1559,10 @@ class ship//this class will be used to initialize the incoming player and give i
 protected:
 	bool isAuthenticPath(List<Greed::abs_pos> ob);
 private:
+	bool navigation_promise;//a variable that tells upon checking all the conditions if the ship can move or not, if yes, then we send a premature promise to
+	//the client that your ship is now in motion, but it will be upon 2-3 cycles,this way client can stay live with the server and abstain from making false decisions.
+	bool anchor_promise;//promise to get anchored..
+	
 	Mutex* mutx;
 	Event events;// a double sided queue of the events;
 	sf::Sprite rect;//sprite of the rectangle
@@ -1564,6 +1572,12 @@ private:
 	Greed map_ob;//to use the facilities of the class Greed
 	int ship_id;//id of the ship
 	deque<timeline> time_line;
+
+	//these variables are used to track the frame count of the algorithm of the user, the algorithm will only run if these variables mismatch
+	//initially these values will be 0, the client game loop will update the value of current_count, and prev_count will be increased by algorithm game loop
+	//these variables will be protected by a mutex.
+	int prev_count;
+	int current_count;
 
 	vector<int> collided_ships;
 	vector<::cannon_info> cannon_info;//data of the cannons present in the environment
@@ -2165,19 +2179,23 @@ public:
 
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		
-		
+		if (motion == 0 && fuel > 0 && s_id != -1 && s_id != ship_id && getShipList()[s_id].getDiedStatus() == 0)
+		{
 			navigation nav(0, Greed::coords(-1, -1), s_id, -1, Direction::NA);
 			nav_data.push_back(nav);
-		
+			motion = 1;
+			this->navigation_promise = true;
+		}
 	}
 	bool Greed_setPath(Greed::coords ob)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		
-		if (motion == 0 && fuel>0)
+		if (motion == 0 && fuel>0 && ob.r!=-1 && ob.c!=-1 && whatsHere(ob).entity!=Entity::CANNON && whatsHere(ob).entity != Entity::LAND)
 		{
 			navigation nav(0, ob, -1, -1, Direction::NA);
-			cout << "\n pushing in data for navigation==>";
+			motion = 1;
+			this->navigation_promise = true;
 			nav_data.push_back(nav);
 
 		}
@@ -2467,7 +2485,7 @@ public:
 		}
 	}
 
-	void packet_to_me(shipData_forMe& ob, int id, deque<ship*>& pl1)
+	void packet_to_me(shipData_forMe& ob, int id, deque<ship*>& pl1)//recved by the client from the server
 	{
 		unique_lock<mutex> lk(pl1[id]->mutx->m[id]);
 		//transfer each data member from ob to pl1
@@ -2508,10 +2526,20 @@ public:
 
 		pl1[id]->tile_pos_front = ob.front_tile;
 		pl1[id]->tile_pos_rear = ob.rear_tile;
+		if (ob.front_abs_pos.x != pl1[id]->front_abs_pos.x || ob.front_abs_pos.y != pl1[id]->front_abs_pos.y)
+		{
+			cout << "\n getting navigation promise to false";
+			pl1[id]->navigation_promise = false;
+		}
 		pl1[id]->front_abs_pos = ob.front_abs_pos;
 		pl1[id]->rear_abs_pos = ob.rear_abs_pos;
 		pl1[id]->dir = ob.dir;
-		pl1[id]->motion = ob.motion;
+
+		
+		if (!pl1[id]->navigation_promise)
+		{
+			pl1[id]->motion = ob.motion;
+		}
 		pl1[id]->absolutePosition = ob.absolute_position;
 
 		pl1[id]->collided_ships.clear();
@@ -2653,9 +2681,11 @@ public:
 	}
 	void me_to_packet(shipData_forMe& ob, int id, deque<ship*>& pl1)
 	{
+		unique_lock<mutex> lk(pl1[id]->mutx->mchase[id]);
+		ob.autopilot = pl1[id]->autopilot;
+		lk.unlock();
 		Control control;
 		List<Greed::cannon> cannon_list = control.getCannonList();
-
 		ob.size_cannon_data = cannon_list.howMany();
 		for (int i = 0; i < ob.size_cannon_data; i++)
 		{
@@ -2777,9 +2807,11 @@ public:
 		}
 
 	}
+	// from client to the server
 	void mydata_to_server(deque<ship*>& pl1, int ship_id, shipData_forServer& ob, vector<Greed::bullet>& newBullets, Mutex* mutx, int& nav_res_count, int& bullet_res_count, int& no_bullet_resend)
 	{
 		//transfer data members from pl1 to shipData_forServer
+		unique_lock<mutex> lk(mutx->m[ship_id]);
 		ob.ship_id = pl1[ship_id]->ship_id;
 
 
@@ -2790,9 +2822,6 @@ public:
 
 
 		ob.radius = pl1[ship_id]->radius;
-
-
-		unique_lock<mutex> lk(mutx->m[ship_id]);
 		ob.size_navigation = min(4, (int)pl1[ship_id]->nav_data_final.size());
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
@@ -2939,7 +2968,7 @@ public:
 			}
 
 		}
-
+		
 		pl1[ship_id]->ship_id = ob.ship_id;
 		pl1[ship_id]->threshold_health = ob.threshold_health;
 		pl1[ship_id]->threshold_ammo = ob.threshold_ammo;

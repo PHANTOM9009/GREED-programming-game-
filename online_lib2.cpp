@@ -995,7 +995,17 @@ vector<Greed::coords> ship::getRadiusCoords_cannon(int c_id)
 }
 bool ship::frame_rate_limiter()
 {
-	if (!hector)
+
+	unique_lock<mutex> lk(mutx->game_tick_mutex_client);
+
+	
+	if (current_count > prev_count)
+	{
+		prev_count++;
+		return true;
+	}
+	return false;
+	/*if (!hector)
 	{
 		starting_time_limiter = chrono::steady_clock::now();
 		hector = true;
@@ -1015,10 +1025,15 @@ bool ship::frame_rate_limiter()
 		return true;
 	}
 	return false;
+	*/
 }
 
 ship::ship()//default ctor for now
 {
+	this->navigation_promise = false;
+	this->anchor_promise = false;
+	this->current_count = 0;
+	this->prev_count = 0;
 	this->collide_count = 0;
 	this->hit_bullet_count = 0;
 	this->navigation_count = 0;
@@ -1287,6 +1302,7 @@ void ship::update_tile_pos(double x, double y)//this function is called under th
 {
 
 	//getting the current+1 position from the list
+	
 	Direction d = Direction::NA;
 
 	absolutePosition.x = x;
@@ -1909,6 +1925,8 @@ bool ship::setPath(List<Greed::coords> ob, int state)  //for adding the supplied
 
 
 		}
+		
+		
 		//mutx->m[ship_id].unlock();
 		return true;
 	}
@@ -1936,6 +1954,7 @@ bool ship::setPath(List<Greed::coords> ob, int state)  //for adding the supplied
 		}
 		pointPath = 0;
 	}
+
 	return false;
 
 }

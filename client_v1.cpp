@@ -60,6 +60,7 @@
 * recv part:
 * recv the information of other ships enough to process its own algorithm
 */
+long game_tick = 1;//this is the game tick of the server not the client
 void GreedMain(ship& ob);
 string username = "username";
 string password = "password";
@@ -76,7 +77,7 @@ deque<send_data> terminal_data;
 
 
 
-long game_tick = 1;//this is the game tick of the server not the client
+
 
 bool SEND(SOCKET sock, char* buff, int length)
 {
@@ -557,7 +558,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		ep += tt.asSeconds();
 		if (ep > 1)
 		{
-		//	cout << "\n effective frame rate=>" << effective_frame_rate;
+			cout << "\n effective frame rate=>" << effective_frame_rate;
 			frame_rate = 0;
 			effective_frame_rate = 0;
 			ep = 0;
@@ -566,6 +567,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		if (next_frame != cur_frame)//under this frame rate is stable
 		{
 			
+
 			frame_rate++;
 			cc++;
 			reads = master_read;
@@ -672,13 +674,23 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						}
 					}
 				//check if navigation and firing commands reached the server properly, if not then resend them
+					
 					for (int i = 0; i < resend_navigation.size(); i++)
 					{
 
 						pl1[ship_id]->nav_data_final.push_back(resend_navigation[i]);
 					}
 					
+					unique_lock<mutex> pk(mutx->game_tick_mutex_client);
+					if (pl1[ship_id]->current_count >= 30)
+					{
+						pl1[ship_id]->prev_count = 0;
+						//pl1[ship_id]->prev_count -= pl1[ship_id]->current_count;
+						pl1[ship_id]->current_count = 0;
+					}
+					pl1[ship_id]->current_count++;
 
+					pk.unlock();
 								
 						for (int i = 0; i < resend_bullet.size() && i < 5; i++)
 						{
@@ -774,7 +786,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 								for (int i = 0; i < pl1[ship_id]->nav_data.size(); i++)
 								{
 									pl1[ship_id]->nav_data_final.push_back(pl1[ship_id]->nav_data[i]);
-						
+//									cout << "\n sending navigation request to the server at==============================>" << game_tick;
 								}
 								pl1[ship_id]->nav_data.clear();
 							}
