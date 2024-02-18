@@ -84,6 +84,13 @@ issue: whenever setPath is called by the client, it takes atmost 5 cycles of alg
 just write in the docs that to check if the ship is in motion just after calling any navigation function is not the best method, to check if the command
 succeeded or not, the best way is to check if the command returned true or false, if it returned true, then it will happen, no need to take tension in that
 
+So I solved this problem
+turn on the motion and navigation_promise, if the conditions satisfy for the motion. don;t listen to server's motion until the navigation_promise is true
+make it false by checking if ship's absolute position changed, if yes then make navigation_promise to false, after this the client will listen to the
+server's motion state
+
+sail function is depricated due to its incompetancy.....
+
 
 
 -------------------temp

@@ -323,41 +323,68 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 							{
 								pl1[i]->motion = 1;
 								Greed::path_attribute path = pl1[i]->setTarget(temp[i][0].target);
-								
+								if (path.getPath().howMany() > 0)
+								{
+									unique_lock<mutex> lk(mutx->m[i]);
+									pl1[i]->solid_motion = 1;
+									pl1[i]->navigation_promise = 1;
+
+								}
 								pl1[i]->setPath(path.getPath());
 								
 									//cout << "\n in type 0 in target=>" << temp[i][0].target.r << " " << temp[i][0].target.c;
 							}
 							else if (temp[i][0].s_id != -1 && pl1[temp[i][0].s_id]->getDiedStatus() == 0)
 							{
+							
+								unique_lock<mutex> lk1(mutx->m[i]);
 								pl1[i]->motion = 1;
 								Greed::path_attribute path = pl1[i]->setTarget(temp[i][0].s_id);
+								if (path.getPath().howMany() > 0)
+								{
+									
+									pl1[i]->solid_motion = 1;
+									pl1[i]->navigation_promise = 1;
+								}
+								lk1.unlock();
 								pl1[i]->setPath(path.getPath());
-								//cout << "\n in type 0 for ship_id=>" << temp[i][0].s_id;
+								//cout << "\n in type 0 for ship_id=>" << temp[i][0].s_id;/
 								
 							}
 
 						}
 						else if (temp[i][0].type == 1 && temp[i][0].n > 0 && temp[i][0].dir != Direction::NA)
 						{
-							pl1[i]->motion = 1;
+							
 							pl1[i]->sail(temp[i][0].dir, temp[i][0].n);
 							//cout << "\n in sail";
 							
 						}
 						else if (temp[i][0].type == 2 && temp[i][0].s_id >= 0 && pl1[temp[i][0].s_id]->getDiedStatus()==0)
 						{
-							pl1[i]->motion = 1;
+							
 							pl1[i]->chaseShip(temp[i][0].s_id);
+							if (temp[i][0].s_id != -1 && temp[i][0].s_id != pl1[i]->ship_id)
+							{
+								unique_lock<mutex> lk(mutx->m[i]);
+								pl1[i]->solid_motion = 1;
+								pl1[i]->navigation_promise = 1;
+								pl1[i]->motion = 1;
+							}
 								//cout << "\n " << i << " ship is chasing=>" << temp[i][0].s_id;
 							
 							
 						}
 						else if (temp[i][0].type == 3)
 						{
-							pl1[i]->motion = 0;
+							
 							//cout << "\n anchor ship is called by==>" << i;
 							pl1[i]->anchorShip();
+							unique_lock<mutex> lk(mutx->m[i]);
+							pl1[i]->solid_motion = 0;
+							pl1[i]->motion = 0;
+							
+							
 							
 						}
 						
@@ -1384,12 +1411,16 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						for (int j = 0; j < pl1[i]->nav_data_temp.size(); j++)
 						{
 
-							if (pl1[i]->motion==0|| pl1[i]->nav_data_temp[j].type == 3)//add only in the queue if the ship is in motion..
+							if (pl1[i]->solid_motion==0 && pl1[i]->nav_data_temp[j].type != 3)//add only in the queue if the ship is in motion..
 							{
 								//cout << "\n recved the value of navigation with the type==>"<< pl1[i]->nav_data_temp[j].type<<" at the time stamp=>"<<game_tick;
 								//cout << "\n navigation is to==>" << pl1[i]->nav_data_temp[j].target.r << " " << pl1[i]->nav_data_temp[j].target.c;
 								pl1[i]->nav_data.push_back(pl1[i]->nav_data_temp[j]);
 								
+							}
+							else if (pl1[i]->solid_motion == 1 && pl1[i]->nav_data_temp[j].type == 3)
+							{
+								pl1[i]->nav_data.push_back(pl1[i]->nav_data_temp[j]);
 							}
 						}
 						lk.unlock();
@@ -1430,6 +1461,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 									pl1[j]->collide_count++;
 									pl1[i]->anchorShip_collision();
 									pl1[j]->anchorShip_collision();//collision is called on both the objects...
+									pl1[i]->solid_motion = 0;
+									pl1[j]->solid_motion = 0;
 
 
 								}
@@ -1438,8 +1471,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 					
 						mutx->m[i].lock();
 							List<Greed::abs_pos>& l1 = pl1[i]->getPathList(2369);
-
-							if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 2 != pl1[i]->getPointPath(2369) && pl1[i]->tile_path.howMany() > 0)
+							if (pl1[i]->fuel <= 0)
+							{
+								pl1[i]->solid_motion = 0;
+							}
+							if (pl1[i]->fuel > 0 && l1.howMany() > 0 && l1.howMany() - 1 != pl1[i]->getPointPath(2369) && pl1[i]->tile_path.howMany() > 0)
 							{
 								// cout << "\n fuel " << i << " now=>" << pl1[i]->fuel;
 								if (pl1[i]->navigation_promise)
@@ -1447,6 +1483,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 									pl1[i]->navigation_promise = false;
 								}
 								pl1[i]->motion = 1;
+								
 								//cout << "\n motion set to one==>" << game_tick;
 								pl1[i]->update_pointPath(::min(pl1[i]->getPointPath(2369) + 2,l1.howMany()-1), 2369);//this sets the speed of the ship here 2 represents the number of pixels to be skipped by the pointer 
 
@@ -1473,6 +1510,8 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							{
 								
 								pl1[i]->motion = 0;
+								if(!pl1[i]->navigation_promise)
+								pl1[i]->solid_motion = 0;
 							}
 
 							mutx->m[i].unlock();

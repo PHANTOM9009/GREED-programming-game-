@@ -1562,7 +1562,8 @@ private:
 	bool navigation_promise;//a variable that tells upon checking all the conditions if the ship can move or not, if yes, then we send a premature promise to
 	//the client that your ship is now in motion, but it will be upon 2-3 cycles,this way client can stay live with the server and abstain from making false decisions.
 	bool anchor_promise;//promise to get anchored..
-	
+	bool solid_motion;//a variable which is used because the ship moves to complete the tile whenver halt is called in that time motion is still 1 so 
+	//we need to keep a proxy a fucking proxy....
 	Mutex* mutx;
 	Event events;// a double sided queue of the events;
 	sf::Sprite rect;//sprite of the rectangle
@@ -1619,11 +1620,11 @@ public: //this will be public the user will be able to access this object freely
 	int server_fire;
 	bool gameOver;
 	bool isFiring;
-	int isShipInMotion()//this function has to be used
+	bool isShipInMotion()//this function has to be used
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 
-		return motion;
+		return solid_motion;
 	}
 	List<Greed::abs_pos> path;
 	bool frame_rate_limiter();//function to maintain the frame rate of the user function
@@ -2093,12 +2094,27 @@ public:
 	attribute whatsHere(Greed::coords ob, int m = 0);//leave this for now
 	// List<attribute> whatsHere(Map::abs_pos ob);
 
-
+	
 private:
 	//checkCollision is to check collision between a ship and the bullet
 	bool checkCollision(int sid, const Greed::bullet& ob);//sid is the ship id of  the victim ship.
+	
 public:
 	// bool updateCost(Greed::abs_pos ob,double new_cost);
+	bool Greed_sail(Direction d, int tiles = 1)
+	{
+
+		unique_lock<mutex> lk(mutx->m[ship_id]);
+		if (solid_motion == 0 && tiles > 0 && fuel > 0 && d != Direction::NA)
+		{
+			navigation nav(1, Greed::coords(-1, -1), -1, tiles, d);
+			nav_data.push_back(nav);
+			solid_motion = 1;
+			navigation_promise = true;
+			return true;
+		}
+		return false;
+	}
 	int count_upgrade;//number of times the agent has sent the upgrading request
 	bool isCannonInRadius(int c_id, ShipSide side = ShipSide::FRONT);
 
@@ -2166,50 +2182,48 @@ public:
 	double getDistance(int s_id);//returns the distance of s_id ship from the this->ship
 
 	//introducing the new functions
-	void Greed_sail(Direction d, int tiles = 1)
-	{
-
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-			navigation nav(1, Greed::coords(-1, -1), -1, tiles, d);
-			nav_data.push_back(nav);
-		
-	}
-	void Greed_setPath(int s_id)
+	
+	bool Greed_setPath(int s_id)
 	{
 
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		
-		if (motion == 0 && fuel > 0 && s_id != -1 && s_id != ship_id && getShipList()[s_id].getDiedStatus() == 0)
+		if (solid_motion == 0 && fuel > 0 && s_id != -1 && s_id != ship_id && getShipList()[s_id].getDiedStatus() == 0)
 		{
 			navigation nav(0, Greed::coords(-1, -1), s_id, -1, Direction::NA);
 			nav_data.push_back(nav);
-			motion = 1;
+			solid_motion = 1;
 			this->navigation_promise = true;
+			return true;
 		}
+		return false;
 	}
 	bool Greed_setPath(Greed::coords ob)
 	{
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		
-		if (motion == 0 && fuel>0 && ob.r!=-1 && ob.c!=-1 && whatsHere(ob).entity!=Entity::CANNON && whatsHere(ob).entity != Entity::LAND)
+		if (solid_motion == 0 && fuel>0 && ob.r!=-1 && ob.c!=-1 && whatsHere(ob).entity!=Entity::CANNON && whatsHere(ob).entity != Entity::LAND)
 		{
 			navigation nav(0, ob, -1, -1, Direction::NA);
-			motion = 1;
+			solid_motion = 1;
 			this->navigation_promise = true;
 			nav_data.push_back(nav);
-
+			return true;
 		}
-		return true;
+		return false;
+		
 	}
 	bool Greed_chaseShip(int s_id)
 	{
 
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		
-		if (motion == 0 && fuel>0)
+		if (this->solid_motion == 0 && fuel>0 && s_id!=ship_id && s_id!=-1 && autopilot==0)
 		{
 			navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
 			nav_data.push_back(nav);
+			solid_motion = 1;
+			navigation_promise = true;
 			lock_chase_ship = 1;
 			return true;
 		}
@@ -2219,7 +2233,7 @@ public:
 	}
 	bool Greed_anchorShip()
 	{
-		if (motion == 1)
+		if (solid_motion == 1)
 		{
 			unique_lock<mutex> lk(mutx->m[ship_id]);
 			navigation nav(3, Greed::coords(-1, -1), -1, -1, Direction::NA);
@@ -2445,7 +2459,7 @@ public:
 				pl1[i]->score = ob[i].score;
 				pl1[i]->health = ob[i].health;
 				pl1[i]->gold = ob[i].gold;
-				pl1[i]->motion = ob[i].motion;
+				pl1[i]->solid_motion = ob[i].motion;
 				pl1[i]->fuel = ob[i].fuel;
 				pl1[i]->invisible = ob[i].invisible;
 				pl1[i]->tile_pos_front = ob[i].tile_pos_front;
@@ -2474,7 +2488,7 @@ public:
 			ob[i].score = pl1[i]->score;
 			ob[i].health = pl1[i]->health;
 			ob[i].gold = pl1[i]->gold;
-			ob[i].motion = pl1[i]->motion;
+			ob[i].motion = pl1[i]->solid_motion;
 			ob[i].fuel = pl1[i]->fuel;
 			ob[i].invisible = pl1[i]->invisible;
 			ob[i].tile_pos_front = pl1[i]->tile_pos_front;
@@ -2528,17 +2542,17 @@ public:
 		pl1[id]->tile_pos_rear = ob.rear_tile;
 		if (ob.front_abs_pos.x != pl1[id]->front_abs_pos.x || ob.front_abs_pos.y != pl1[id]->front_abs_pos.y)
 		{
-			cout << "\n getting navigation promise to false";
+			
 			pl1[id]->navigation_promise = false;
 		}
 		pl1[id]->front_abs_pos = ob.front_abs_pos;
 		pl1[id]->rear_abs_pos = ob.rear_abs_pos;
 		pl1[id]->dir = ob.dir;
-
+		pl1[id]->autopilot = ob.autopilot;
 		
 		if (!pl1[id]->navigation_promise)
 		{
-			pl1[id]->motion = ob.motion;
+			pl1[id]->solid_motion = ob.motion;
 		}
 		pl1[id]->absolutePosition = ob.absolute_position;
 
@@ -2725,7 +2739,7 @@ public:
 		ob.front_abs_pos = pl1[id]->front_abs_pos;
 		ob.rear_abs_pos = pl1[id]->rear_abs_pos;
 		ob.dir = pl1[id]->dir;
-		ob.motion = pl1[id]->motion;
+		ob.motion = pl1[id]->solid_motion;
 		ob.absolute_position = pl1[id]->absolutePosition;
 
 		ob.size_collided_ships = std::min(10, (int)pl1[id]->collided_ships.size());

@@ -558,7 +558,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 		ep += tt.asSeconds();
 		if (ep > 1)
 		{
-			cout << "\n effective frame rate=>" << effective_frame_rate;
+			//cout << "\n effective frame rate=>" << effective_frame_rate;
 			frame_rate = 0;
 			effective_frame_rate = 0;
 			ep = 0;

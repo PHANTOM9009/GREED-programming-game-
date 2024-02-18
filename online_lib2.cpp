@@ -1030,6 +1030,7 @@ bool ship::frame_rate_limiter()
 
 ship::ship()//default ctor for now
 {
+	this->solid_motion = false;
 	this->navigation_promise = false;
 	this->anchor_promise = false;
 	this->current_count = 0;
@@ -1141,13 +1142,13 @@ vector<Greed::coords> ship::getRadiusCoords_ship(int s_id)
 		c1 = columns - 1;
 	}
 	int c2 = position.c + radius;
-	if (c1 < 0)
+	if (c2 < 0)
 	{
-		c1 = 0;
+		c2 = 0;
 	}
-	else if (c1 > columns)
+	else if (c2 > columns)
 	{
-		c1 = columns - 1;
+		c2 = columns - 1;
 	}
 	int r1 = position.r - radius;
 	if (r1 < 0)
@@ -2166,7 +2167,18 @@ bool ship::sail(Direction d, int tiles = 1)//number of tiles to be moved at a pa
 			cout << tile_path[i].r << " " << tile_path[i].c << endl;
 		}
 		*/
-	
+		if (tile_path.howMany() > 0)
+		{
+			solid_motion = true;
+			motion = true;
+			navigation_promise = true;
+		}
+		else
+		{
+			solid_motion = false;
+			motion = false;
+			navigation_promise = false;
+		}
 		setPath(tile_path);
 		return true;
 	}
@@ -2821,7 +2833,7 @@ bool Greed::cannon::isShipInMyRadius(int s_id, ShipSide opponent_side)
 		int c2 = position.c + radius;
 		if (c2 < 0)
 		{
-			c1 = 0;
+			c2 = 0;
 		}
 		else if (c2 > columns)
 		{
