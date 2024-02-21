@@ -363,9 +363,10 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 						else if (temp[i][0].type == 2 && temp[i][0].s_id >= 0 && pl1[temp[i][0].s_id]->getDiedStatus()==0)
 						{
 							
-							pl1[i]->chaseShip(temp[i][0].s_id);
-							if (temp[i][0].s_id != -1 && temp[i][0].s_id != pl1[i]->ship_id)
+							
+							if (temp[i][0].s_id != -1 && temp[i][0].s_id != pl1[i]->ship_id && !pl1[i]->isInShipRadius(temp[i][0].s_id))
 							{
+								pl1[i]->chaseShip(temp[i][0].s_id);
 								unique_lock<mutex> lk(mutx->m[i]);
 								pl1[i]->solid_motion = 1;
 								pl1[i]->navigation_promise = 1;

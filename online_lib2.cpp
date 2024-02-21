@@ -1189,13 +1189,13 @@ vector<Greed::coords> ship::getRadiusCoords_ship(int s_id)
 		c1 = columns - 1;
 	}
 	c2 = position.c + radius;
-	if (c1 < 0)
+	if (c2 < 0)
 	{
-		c1 = 0;
+		c2 = 0;
 	}
-	else if (c1 > columns)
+	else if (c2 > columns)
 	{
-		c1 = columns - 1;
+		c2 = columns - 1;
 	}
 	r1 = position.r - radius;
 	if (r1 < 0)
@@ -1797,16 +1797,30 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 
 	deque<shipInfo> l = ob.getShipList();
 	Greed::path_attribute path;
+	Greed::coords temp = l[s_id].getCurrentTile();
+	
 	path = ob.setTarget(l[s_id].getCurrentTile());
 	ob.setPath(path.target);
-	Greed::coords temp = l[s_id].getCurrentTile();
+	
 	while (1)
 	{
+		unique_lock<mutex> lk(ob.mutx->gameOver_check);
 		if (ob.gameOver)
 		{
 			cout << "\n from chaseShip, breaking because of ob.gameOver is true";
 			break;
 		}
+		lk.unlock();
+
+		if (ob.getShipList()[s_id].getDiedStatus() == 1)
+		{
+			cout << "\n breaking from chaseship because the ship i was chasing died...................";
+			unique_lock<mutex> lk(ob.mutx->mchase[ob.ship_id]);
+			ob.autopilot = 0;
+
+			break;
+		}
+
 		if (ob.mutx->mchase[ob.ship_id].try_lock())
 		{
 			if (!ob.isInShipRadius(s_id, temp) && ob.autopilot == 1)//not in the ships radius now
@@ -1821,6 +1835,11 @@ void chaseShip1(int s_id, ship& ob)//the famous chasing  a ship function
 			{
 				ob.mutx->mchase[ob.ship_id].unlock();
 				cout << "\n breaking because autopilot is false";
+				break;
+			}
+			if (ob.died == 1)
+			{
+				ob.mutx->mchase[ob.ship_id].unlock();
 				break;
 			}
 			ob.mutx->mchase[ob.ship_id].unlock();
@@ -2330,13 +2349,13 @@ bool ship::isInShipRadius(int s_id, Greed::coords ob, ShipSide opponent_side)//s
 		c1 = columns - 1;
 	}
 	int c2 = position.c + radius;
-	if (c1 < 0)
+	if (c2 < 0)
 	{
-		c1 = 0;
+		c2 = 0;
 	}
-	else if (c1 > columns)
+	else if (c2 > columns)
 	{
-		c1 = columns - 1;
+		c2 = columns - 1;
 	}
 	int r1 = position.r - radius;
 	if (r1 < 0)

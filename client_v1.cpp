@@ -38,7 +38,7 @@
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
-#include "testing.cpp"
+#include "hawk.cpp"
 #include<ctime>
 #include<chrono>
 #include<conio.h>
@@ -1794,6 +1794,7 @@ void heartbeat_lobby()
 	double elapsed_time = 0;
 	while (1)
 	{
+		Sleep(1000);
 		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 		
 		//sending heartbeat messages to the server here..............
@@ -1803,7 +1804,7 @@ void heartbeat_lobby()
 		chrono::steady_clock::time_point end = chrono::steady_clock::now();
 		chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(end - begin);
 		elapsed_time += time_span.count();
-		if (elapsed_time > 10)
+		if (elapsed_time > 60)
 		{
 			elapsed_time = 0;
 			//send the heartbeat message here

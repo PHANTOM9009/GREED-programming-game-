@@ -578,7 +578,7 @@ public:
 		target_ship = -1;
 		isActive = false;//a bullet will become active soon after its initialized
 		slope = -1;
-		isSuccess = -1;
+		isSuccess = false;
 		bullet_entity.setRadius((this->cx(5) + this->cy(5)) / 2);
 		bullet_entity.setFillColor(sf::Color::Black);
 		hit_ship = -1;
@@ -588,12 +588,12 @@ public:
 
 	bool isBulletActive()
 	{
-		unique_lock<mutex> lk(mutx->m[mid]);
+		
 		return isActive;
 	}
 	bool didBulletHit()
 	{
-		unique_lock<mutex> lk(mutx->m[mid]);
+		
 		return isSuccess;
 	}
 
@@ -608,7 +608,7 @@ public:
 	}
 	double getBulletDamage()
 	{
-		unique_lock<mutex> lk(mutx->m[mid]);
+		
 		return damage;
 	}
 	int getLaunchShipId()
@@ -2218,14 +2218,19 @@ public:
 
 		unique_lock<mutex> lk(mutx->m[ship_id]);
 		
-		if (this->solid_motion == 0 && fuel>0 && s_id!=ship_id && s_id!=-1 && autopilot==0)
+		if (this->solid_motion == 0 && fuel>0 && s_id!=ship_id && s_id!=-1 && autopilot==0 )
 		{
-			navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
-			nav_data.push_back(nav);
-			solid_motion = 1;
-			navigation_promise = true;
-			lock_chase_ship = 1;
-			return true;
+			lk.unlock();
+			if (!isInShipRadius(s_id))
+			{
+				lk.lock();
+				navigation nav(2, Greed::coords(-1, -1), s_id, -1, Direction::NA);
+				nav_data.push_back(nav);
+				solid_motion = 1;
+				navigation_promise = true;
+				lock_chase_ship = 1;
+				return true;
+			}
 		}
 		return false;
 		

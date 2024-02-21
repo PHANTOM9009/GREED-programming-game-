@@ -1,0 +1,8 @@
+Master username:
+admin
+
+Master password:
+GkXeJRfvQ45JIyp2DQPc
+
+Endpoint:
+greedtest.cjes8o0woh4e.ap-south-1.rds.amazonaws.com

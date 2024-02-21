@@ -278,3 +278,10 @@ speed should be atleast 10 mbps, then only the game will fucking work. thats all
  it will call it many times, and hence giving many commands together, and only the first one gets executed, due to that the consecutive commands are fucked up
 just say in the docs, that it is not recomended to check the game state using the direct variables, coz it may take some cycles to update them
 so rather go for the events, check the events only.
+
+---------------------------------------------------------19-02-2024------------------------------------------
+I have tested the complete API, there was some work to be done in navigation API, because of the response of isShipInMotion, else is fine
+the firing is proper, and now i can say that the API is working for approx 80% of all the cases, now think of the database rest is ready
+prepare for the launch.........
+
+

@@ -72,10 +72,7 @@
 		}
 		
 		
-		deque<shipInfo> shipList = ob.getShipList();
-		int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
-		cout << "\n index returned is==>" << index;
-		//ob.Greed_chaseShip(index);
+		
 		int frame_rate = 0;
 		
 		double elapsed_time = 0;
@@ -87,74 +84,40 @@
 			if (ob.frame_rate_limiter())
 			{//this is anchit rana talking to the world and i want ot know the difference between
 				//cout<<"\n my health is==>"<<ob.getCurrentHealth();
-				/*
-				frame_rate++;
-				
-				if (elapsed_time > 1)
+				if (ob.isShipInMotion() == 0)
 				{
-					//cout << "\n algorithms frame rate is==>" << frame_rate;
-					frame_rate = 0;
-					elapsed_time = 0;
+					deque<shipInfo> shipList = ob.getShipList();
+					int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
+					cout << "\n index returned is==>" << index;
+					ob.Greed_chaseShip(index);
 				}
-			//	cout << "\n my health  is=>" << ob.getCurrentHealth();
-				//ob.chaseShip(2);
-				deque<shipInfo> shipList = ob.getShipList();
+				cout << "\n motion of the ship is==>" << ob.isShipInMotion();
 				Event e;
-				//cout << "\n position of alternate ship==>" << shipList[0].getCurrentTile().r << " " << shipList[0].getCurrentTile().c;
-				//cout << "\n position of my ship==>" <<ob.getCurrentTile().r<<" "<<ob.getCurrentTile().c;//anchit rana is the greatest man in the whole wold and we all know that cheers
 				ob.getNextCurrentEvent(e);
-												
 				if (e.eventType == Event::EventType::ShipFire)
 				{
-					for (auto it : e.shipFire.getShipId())
+					for (auto it: e.shipFire.getShipId())
 					{
-						ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::FRONT);
-						
+						ob.Greed_fireCannon(cannon::FRONT,it.first, ShipSide::FRONT);
 					}
-				}
-				//ob.Greed_fireCannon(cannon::FRONT, 0, ShipSide::REAR);
-				if (e.eventType == Event::EventType::LowHealth)
-				{
-					ob.Greed_upgradeHealth(10);
-				}
-				if (ob.getCurrentAmmo() <= 5)
-				{
-					ob.Greed_upgradeAmmo(10);
 				}
 				if (e.eventType == Event::EventType::ShipsInMyRadius)
 				{
-					ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[0], ShipSide::FRONT);
-		//			ob.Greed_setPath(Greed::coords(0, 0));
-					cout << "\n firing";
+					for (int i = 0; i < e.radiusShip.getShipId().size(); i++)
+					{
+						ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[i], ShipSide::FRONT);
+					}
 				}
-				
-				deque<Event> q = ob.getPassiveEvent();
-
-				for (int i = 0; i < q.size(); i++)
+				if (ob.getCurrentHealth() <= 10)
 				{
-					
-					if (q[i].eventType == Event::EventType::CannonsInMyRadius)
-					{
-						
-						vector<Greed::cannon> ls = ob.getCannonList();
-						if (ls[q[i].radiusCannon.getCannonId()[0]].isCannonDead() == 0)
-						{
-							ob.Greed_fireAtCannon(q[i].radiusCannon.getCannonId()[0], cannon::FRONT);
-						}
-					}
-					if (q[i].eventType == Event::EventType::ShipsInMyRadius)
-					{
-						//cout << "\n firing";
-						for (auto it : q[i].radiusShip.getShipId())
-						{
-						//ob.Greed_fireCannon(cannon::FRONT, it, ShipSide::FRONT);
-						}
-					}
-
+					ob.Greed_upgradeHealth(10);
 				}
-							
-				*/
+				if (ob.getCurrentAmmo() <= 10)
+				{
+					ob.Greed_upgradeAmmo(10);
+				}
 
+			
 
 			}
 

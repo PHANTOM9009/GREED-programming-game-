@@ -490,7 +490,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	//sf::RenderWindow window(sf::VideoMode(1970, 1190), "graphics testing");
 	tgui::Gui gui(window);
 
-	window.setFramerateLimit(60);
+	window.setFramerateLimit(30);
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	sf::Texture explosion_tex;
 	explosion_tex.loadFromFile("map_1 attributes/explosion_set.png");//loading the animation for the explosion

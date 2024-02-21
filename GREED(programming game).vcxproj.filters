@@ -159,6 +159,9 @@
     <ClCompile Include="java_class.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mysql.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">

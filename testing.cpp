@@ -1,4 +1,6 @@
+
 #include "online_lib2.hpp"
+
 
 int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob, int hate_id)
 {
@@ -6,7 +8,7 @@ int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob, int hate_id
 	int index = -1;
 	for (int i = 0; i < shipList.size(); i++)
 	{
-		if (shipList[i].getDiedStatus() == 0 && i != myid && i != hate_id)
+		if (shipList[i].getDiedStatus() == 0 && i != myid)
 		{
 			int score = 0.6 * shipList[i].getCurrentHealth() + 0.4 * ob.getDistance(i);
 			if (score < mini)
@@ -19,87 +21,100 @@ int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob, int hate_id
 	return index;
 
 }
+Greed::coords runAway(vector<int> ship_id, ship& ob)
+{
+	Greed::coords address(0, 0);
+	int distance = 0;
+	deque<shipInfo> shipList = ob.getShipList();
+	for (int i = 0; i < 12; i++)
+	{
+		for (int j = 0; j < 24; j++)
+		{
+			if (ob.whatsHere(Greed::coords(i, j)).getEntity() == Entity::WATER)
+			{
+				for (int k = 0; k < ship_id.size(); k++)
+				{
+					if (!ob.isInShipRadius(ship_id[k], Greed::coords(i, j)))
+					{
+						int temp = abs(i - shipList[ship_id[k]].getCurrentTile().r) + abs(j - shipList[ship_id[k]].getCurrentTile().c);
+						if (distance < temp)
+						{
+							distance = temp;
+							address = Greed::coords(i, j);
+						}
+					}
+				}
+			}
+		}
+	}
+	return address;
+}
 
 void GreedMain(ship& ob)
 {
 	//setting the aim
 
-	vector<Greed::cannon> clist=ob.getCannonList();
-	int dest = 0;
-	int i = 0;
-	Greed::coords desti = ob.getCurrentTile();
-	sf::Clock clock;
-	double elapsed_time = 0;
+	vector <Greed::cannon> cannonList = ob.getCannonList();
+	for (int j = 0; j < cannonList.size(); j++)
+	{
+
+
+		vector<Greed::coords> arr = ob.getRadiusCoords_cannon(j);
+		cout << "\n to be upgraded are==>" << arr.size();
+		for (int i = 0; i < arr.size(); i++)
+		{
+			cout << arr[i].r << " " << arr[i].c;
+		}
+		for (int i = 0; i < arr.size(); i++)
+		{
+			ob.Greed_updateCost(arr[i], 50);
+		}
+	}
+
+
+
 	int frame_rate = 0;
-	ob.Greed_chaseShip(0);
-	//ob.Greed_setPath(Greed::coords(3,9));
+
+	double elapsed_time = 0;
+	sf::Clock clock;
+	ob.threshold_health = 20;
 	while (1)
 	{
 		elapsed_time += clock.restart().asSeconds();
-		if (elapsed_time > 1)
-		{
-			//cout << "\n the frame rate of the algorithm is==>" << frame_rate;
-			elapsed_time = 0;
-			frame_rate = 0;
-
-		}
 		if (ob.frame_rate_limiter())
-
 		{//this is anchit rana talking to the world and i want ot know the difference between
-			
-			frame_rate++;
-			cout << "\n motion is==>" << ob.isShipInMotion();
-			
+			//cout<<"\n my health is==>"<<ob.getCurrentHealth();
+			if (ob.isShipInMotion() == 0)
+			{
+				cout << "\n ship motion is off...............";
+			}
 			Event e;
 			ob.getNextCurrentEvent(e);
-			if (e.eventType == Event::EventType::ShipsInMyRadius)
+			if (e.eventType == Event::EventType::ShipFire)
 			{
-				cout << "\n active event ship is in my radius==>" << e.radiusShip.getShipId()[0];
-			}
-			if (e.eventType == Event::EventType::CannonsInMyRadius)
-			{
-				
-			}
-			if (e.eventType == Event::EventType::ShipCollision)
-			{
-				cout << "\n collided with==>" << e.shipCollision.getShipId()[0];
-				ob.Greed_setPath(Greed::coords(3, 9));
-			}
-			if (!ob.isShipInMotion())
-			{
-				ob.Greed_chaseShip(0);
-				cout << "\n chasing the sh ip===?";
-			}
-			if (ob.getCurrentFuel() <= 5)
-			{
-				ob.Greed_upgradeFuel(10);
-			}
-			deque<Event> passive = ob.getPassiveEvent();
-			for (int i = 0; i < passive.size(); i++)
-			{
-				if (passive[i].eventType == Event::EventType::ShipsInMyRadius)
+				for (auto it : e.shipFire.getShipId())
 				{
-					//cout << "\n passive event ship is in my radius==>" << passive[i].radiusShip.getShipId()[0];
-						
+					ob.Greed_fireCannon(cannon::FRONT, it.first, ShipSide::FRONT);
 				}
 			}
-			/*
-			for (int j = 0; j < ob.cannonsInMyRadius().size(); j++)
+			if (e.eventType == Event::EventType::ShipsInMyRadius)
 			{
-				//cout << "\n cannon in my radius is==>" << ob.cannonsInMyRadius()[j];
-				cout << "\n calling anchorship=====================================?>";
-				ob.Greed_anchorShip();
+				for (int i = 0; i < e.radiusShip.getShipId().size(); i++)
+				{
+					ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[i], ShipSide::FRONT);
+				}
 			}
-			if (!ob.isShipInMotion())
-			{
-				ob.Greed_chaseShip(0);
-			}
-			*/	
 			if (ob.getCurrentHealth() <= 10)
 			{
 				ob.Greed_upgradeHealth(10);
 			}
-			
+			if (ob.getCurrentAmmo() <= 10)
+			{
+				ob.Greed_upgradeAmmo(10);
+			}
+
+
+
 		}
 
 	}
@@ -107,4 +122,5 @@ void GreedMain(ship& ob)
 
 
 }
+
 

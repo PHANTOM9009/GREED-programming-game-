@@ -1,4 +1,9 @@
 //this file contains the classes that have to be written in java
+
+
+
+
+
 #define len 80
 enum class map
 {
@@ -9,7 +14,7 @@ enum class Direction
 {
 	NORTH, SOUTH, EAST, WEST, NORTH_WEST, NORTH_EAST, SOUTH_EAST, SOUTH_WEST, NA = -1
 };
-enum class cannon
+enum class cannon_side
 {
 	FRONT, REAR, NA = -1
 };
