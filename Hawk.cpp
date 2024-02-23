@@ -1,7 +1,16 @@
 
 #include "online_lib2.hpp"
+#include<random>
 
+int generateRandomInt(int lowerLimit, int upperLimit) {
+	std::random_device rd; // Obtain a random number from hardware
+	std::mt19937 eng(rd()); // Seed the generator
 
+	// Define the distribution
+	std::uniform_int_distribution<> distr(lowerLimit, upperLimit);
+
+	return distr(eng); // Generate a random number within the specified range
+}
 	int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob,int hate_id)
 	{
 		int mini = INT_MAX;
@@ -21,33 +30,20 @@
 		return index;
 
 	}
-	Greed::coords runAway(vector<int> ship_id,ship &ob)
+	Greed::coords runAway(ship &ob)
 	{
-		Greed::coords address(0,0);
-		int distance = 0;
-		deque<shipInfo> shipList = ob.getShipList();
-		for (int i = 0; i < 12; i++)
+		//generate a random number between 0 and 11
+		//generate a random number between 0 and 23
+		while (1)
 		{
-			for (int j = 0; j < 24; j++)
+			int r = generateRandomInt(0, 11);
+			int c = generateRandomInt(0, 23);
+			if (ob.whatsHere(Greed::coords(r, c)).getEntity() == Entity::WATER)
 			{
-				if (ob.whatsHere(Greed::coords(i, j)).getEntity() == Entity::WATER)
-				{
-					for (int k = 0; k < ship_id.size(); k++)
-					{
-						if (!ob.isInShipRadius(ship_id[k],Greed::coords(i,j)))
-						{
-							int temp = abs(i - shipList[ship_id[k]].getCurrentTile().r) + abs(j - shipList[ship_id[k]].getCurrentTile().c);
-							if (distance < temp)
-							{
-								distance = temp;
-								address = Greed::coords(i, j);
-							}
-						}
-					}
-				}
+				return Greed::coords(r, c);
 			}
 		}
-		return address;
+		
 	}
 
 	void GreedMain(ship& ob)
@@ -82,15 +78,10 @@
 		{
 			elapsed_time += clock.restart().asSeconds();
 			if (ob.frame_rate_limiter())
-			{//this is anchit rana talking to the world and i want ot know the difference between
+			{    //this is anchit rana talking to the world and i want ot know the difference between
 				//cout<<"\n my health is==>"<<ob.getCurrentHealth();
-				if (ob.isShipInMotion() == 0)
-				{
-					deque<shipInfo> shipList = ob.getShipList();
-					int index = find_ship_to_kill(shipList, ob.getShipId(), ob, ob.getShipId());
-					cout << "\n index returned is==>" << index;
-					ob.Greed_chaseShip(index);
-				}
+				
+				
 				cout << "\n motion of the ship is==>" << ob.isShipInMotion();
 				Event e;
 				ob.getNextCurrentEvent(e);
@@ -103,10 +94,12 @@
 				}
 				if (e.eventType == Event::EventType::ShipsInMyRadius)
 				{
+					cout << "\n ship is in my radius..........";
 					for (int i = 0; i < e.radiusShip.getShipId().size(); i++)
 					{
 						ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[i], ShipSide::FRONT);
 					}
+					ob.Greed_setPath(Greed::coords(10, 0));
 				}
 				if (ob.getCurrentHealth() <= 10)
 				{

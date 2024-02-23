@@ -2,7 +2,7 @@
 #include "online_lib2.hpp"
 
 
-int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob, int hate_id)
+int find_ship_to_kill(deque<shipInfo> shipList, int myid, ship& ob, int hate_id)
 {
 	int mini = INT_MAX;
 	int index = -1;
@@ -78,16 +78,17 @@ void GreedMain(ship& ob)
 	double elapsed_time = 0;
 	sf::Clock clock;
 	ob.threshold_health = 20;
+	int ind = find_ship_to_kill(ob.getShipList(), ob.getShipId(), ob, ob.getShipId());
+	cout << "\n gonig to chase==>" << ind;
+	ob.Greed_chaseShip(ind);
+	cout << "\n ship motion is off...............";
 	while (1)
 	{
 		elapsed_time += clock.restart().asSeconds();
 		if (ob.frame_rate_limiter())
 		{//this is anchit rana talking to the world and i want ot know the difference between
 			//cout<<"\n my health is==>"<<ob.getCurrentHealth();
-			if (ob.isShipInMotion() == 0)
-			{
-				cout << "\n ship motion is off...............";
-			}
+			
 			Event e;
 			ob.getNextCurrentEvent(e);
 			if (e.eventType == Event::EventType::ShipFire)

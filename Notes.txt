@@ -91,6 +91,51 @@ server's motion state
 
 sail function is depricated due to its incompetancy.....
 
+----------------------------------------------------------------------------------------------------------------------------------------
+------------------------------MODIFIED THE FUNCTIONS OF CHASE SHIP FUNCTION--------------------------------
+it will break in the following conditions:
+1. target of the ship died.
+2. the ship collides with something, (probably other ship)
+3. game is over
+
+you can call the chaseShip function only when you are not in the radius of the target ship, chaseSHip is used to get near the target ship if you 
+are already in the radius of the ship it won't be called.
+
+But assume that you had called the function but you stopped when you reached your target(the location of the ship) the chaseShip function will continue to
+function untill the following events happen
+1. target dies
+2. your ship collides with something.
+-----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------SCHEMA OF DATABASE-------------------------------------------------------------------
+
+Schema of the userdata:
+
+ID ( INT ) ( primarky key)
+username (string) (unique)
+password(string)
+country(string)
+designation (string)
+email (string) (has to be derived from sign up using Oauth)
+
+Schema of rankings (both tournaments and normal ranked matches)
+
+ID (int) (foreign key)
+Total_Matches (int)
+T_ID (string) tournament ID 
+Total_score(int)
+
+Logs of the total games played:
+
+ID (int) foreign key
+ 
+Date (date format with time) //
+
+Type (string) (RANKED, UNRANKED, T_ID)
+
+
+
+
+
 
 
 -------------------temp
