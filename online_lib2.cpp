@@ -622,7 +622,7 @@ void Map::intialize_graphics(sf::Texture& tex)
 {
 	if (map_id == 0)
 	{
-		tex.loadFromFile("map_1 attributes/map_set.png");
+		tex.loadFromFile("map_1 attributes/water_set.png");
 		resizeTexture(tex);
 	}
 }
@@ -4050,8 +4050,8 @@ void graphics::GuiRenderer::fuel_value_renderer()
 		fuel_value.push_back(p);
 	}
 }
-void graphics::tileMap::setScene(int w, int h, int xx, int yy, sf::Texture& tex, int code[rows][columns])//here xx and yy are the coordinates
-{//this is not complete and final
+void graphics::tileMap::setScene(int w, int h, int xx, int yy, sf::Texture& tex, int code[rows][columns],int img_num)//here xx and yy are the coordinates
+{//img_num is for water animation which tells which image has to be displayed.
 
 	//w is number of columns, h is number of rows
 	sf::Vertex* temp;
@@ -4075,10 +4075,22 @@ void graphics::tileMap::setScene(int w, int h, int xx, int yy, sf::Texture& tex,
 			temp[2].position = sf::Vector2f(::cx(x + len), ::cy(y + len));
 			temp[3].position = sf::Vector2f(::cx(x), ::cy(y + len));
 
-			temp[0].texCoords = sf::Vector2f(tex.getSize().x / 2 * code[i][j], 0);
-			temp[1].texCoords = sf::Vector2f(tex.getSize().x / 2 * code[i][j] + tex.getSize().x / 2, 0);
-			temp[2].texCoords = sf::Vector2f(tex.getSize().x / 2 * code[i][j] + tex.getSize().x / 2, tex.getSize().y);
-			temp[3].texCoords = sf::Vector2f(tex.getSize().x / 2 * code[i][j], tex.getSize().y);
+			if (code[i][j] == 0)//this is for land
+			{
+				temp[0].texCoords = sf::Vector2f(0, 0);
+				temp[1].texCoords = sf::Vector2f(len, 0);
+				temp[2].texCoords = sf::Vector2f(len, len);
+				temp[3].texCoords = sf::Vector2f(0, len);
+
+			}
+			else if (code[i][j] == 1)//for water
+			{
+				temp[0].texCoords = sf::Vector2f((len * img_num)+len, 0);
+				temp[1].texCoords = sf::Vector2f((len * img_num) + 2*len, 0);
+				temp[2].texCoords = sf::Vector2f((len * img_num) + 2*len, len);
+				temp[3].texCoords = sf::Vector2f((len * img_num)+len, len);
+
+			}
 			if (showPatterns)
 			{
 				temp[0].color = sf::Color::Blue;

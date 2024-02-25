@@ -44,8 +44,15 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
-#include"sqlite3.h"
+
 #include<stdlib.h>
+
+
+#include <cppconn/driver.h> 
+#include <cppconn/exception.h> 
+#include <cppconn/statement.h> 
+#include <mysql_connection.h> 
+#include <mysql_driver.h> 
 
 //#include "online_lib2.hpp"
 //#include "online_lib2.cpp"
@@ -57,19 +64,8 @@
 #define GAME_SERVER_COUNT 1
 using namespace std;
 
-sqlite3* db;
-int rc = sqlite3_open("Greed.db", &db);
-bool user_found = false;
-static int callback(void* NotUsed, int argc, char** argv, char** azColName)
-{
-	//argc is the number of rows in the resultant query
-	cout << "\n i am inside callback";
-	if (argc > 0)
-	{
-		user_found = true;
-	}
-	return 0;
-}
+sql::mysql::MySQL_Driver* driver;
+sql::Connection* con;
 
 class user_credentials
 {
@@ -80,13 +76,22 @@ public:
 	char email[30];
 	char role[30];
 	char country[30];
+	char match_type_id[30];//this is the id of the tournament if there, if empty it is a normal ranked match.
 	user_credentials() { }
-	user_credentials(int type, string user, string pass)
+	user_credentials(int type, string user, string pass, string mid)
 	{
 		this->type = type;
 		strcpy(username, user.c_str());
 		strcpy(password, pass.c_str());
+		strcpy(match_type_id, mid.c_str());
 	}
+	user_credentials(string user, string pass,string mid)
+	{
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+		strcpy(match_type_id, mid.c_str());
+	}
+
 	user_credentials(string user, string pass)
 	{
 		strcpy(username, user.c_str());
@@ -203,50 +208,55 @@ bool checkUser(user_credentials& cred,int mode)//here it has 2 modes
 	string username = cred.username;
 	string password = cred.password;
 	string query;
+	sql::Statement* stmt;
+	stmt = con->createStatement();
 	if (mode == 0)
 	{
-		query = "SELECT * FROM USER_DATA WHERE USERNAME='" + username + "' AND PASSWORD='" + password + "';";
+		query = "SELECT * FROM Greed.USER_DATA WHERE USERNAME='" + username + "' AND PASSWORD='" + password + "';";
 	}
 	else if (mode == 1)
 	{
-		query = "SELECT * FROM USER_DATA WHERE USERNAME='" + username+"';";
+		query = "SELECT * FROM Greed.USER_DATA WHERE USERNAME='" + username+"';";
 	}
-	char* zErrMsg = 0;
-	int rc = sqlite3_exec(db, query.c_str(), callback, 0, &zErrMsg);
-
-	if (rc != SQLITE_OK) {
-		fprintf(stderr, "SQL error: %s\n", zErrMsg);
-		sqlite3_free(zErrMsg);
-		return false;
-	}
-	if (user_found == true)
+	try
 	{
-		user_found = false;
-		return true;
+		sql::ResultSet* res = stmt->executeQuery(query);
+		while (res->next())
+		{
+			delete res;
+			delete stmt;
+			return true;
+		}
+	}
+	catch (sql::SQLException& e) {
+		
+		delete stmt;
+		std::cerr << "SQL Error: " << e.what() << std::endl;
 	}
 	return false;
 }
 bool createUser(user_credentials cred)
 {
 	
-	std::string s = "INSERT INTO USER_DATA(ID,USERNAME,PASSWORD,EMAIL,ROLE,COUNTRY)" \
-		"VALUES((SELECT IFNULL(MAX(id), 0) + 1 FROM USER_DATA),'" +
+	std::string s = "INSERT INTO Greed.USER_DATA(ID,USERNAME,PASSWORD,EMAIL,designation,COUNTRY)" \
+		"SELECT IFNULL(MAX(id), 0) + 1,'" +
 		string(cred.username) + "','" + string(cred.password) + "','" + string(cred.email) +
-		"'," + std::to_string(0) + ",'" + string(cred.country) + "')";
+		"','" + string(cred.role) + "','" + string(cred.country) + "' FROM Greed.USER_DATA;";
 
 	cout << "\n the query is==>" << s;
-	char* zErrMsg;
-	rc = sqlite3_exec(db, s.c_str(), callback, 0, &zErrMsg);
 
-	if (rc != SQLITE_OK) {
-		fprintf(stderr, "SQL error: %s\n", zErrMsg);
-		sqlite3_free(zErrMsg);
-		return false;
-	}
-	else 
+	sql::Statement* stmt;
+	stmt = con->createStatement();
+	try
 	{
-		
+		stmt->execute(s);
+		delete stmt;
 		return true;
+	}
+	catch (sql::SQLException& e) {
+		std::cerr << "SQL Error: " << e.what() << std::endl;
+		delete stmt;
+		return false;
 	}
 }
 void isAlive()//function to check if the client is still logged in or not
@@ -398,7 +408,7 @@ void listener()
 							{
 								unique_lock<mutex> lk(m->m_valid);
 								valid_connections.push_back(i);
-								user_cred.push_back(user_credentials(cred.username, cred.password));
+								user_cred.push_back(user_credentials(cred.username, cred.password,cred.match_type_id));
 								m->is_data.notify_one();
 
 								
@@ -406,8 +416,9 @@ void listener()
 								logged_in_rev[i] = cred.username;
 								sock_list.push_back(i);
 								lk1.unlock();
-
+								
 								cout << "\n connected with a valid user";
+								cout << "\n this user has entered the following tournament id==>" << cred.match_type_id;
 								int status_code = 1;
 								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
 								FD_CLR(i, &master);
@@ -694,6 +705,14 @@ int main()
 #endif // defined
 	//we need 2 connections to game servers
 
+	
+
+	driver = sql::mysql::get_mysql_driver_instance();
+	con = driver->connect("greedtest.cjes8o0woh4e.ap-south-1.rds.amazonaws.com",
+		"admin", "GkXeJRfvQ45JIyp2DQPc");
+
+	con->setSchema("Greed");
+
 	std::srand(static_cast<unsigned int>(std::time(nullptr)));
 	
 	cout << "\n input the number of players=>";
@@ -813,10 +832,13 @@ int main()
 	thread t3(lobby_contact, ref(socks));
 	thread t4(isAlive);
 	
+	
 	t1.join();
 	t2.join();
 	t3.join();
 	t4.join();
+	delete driver;
+	delete con;
 	while(1)
 	{ }
 }

@@ -7,7 +7,14 @@ starting client_v1 will automatically start the client_v2 unit so no need to sta
 
 */
 #pragma once
+
+#include <cppconn/driver.h> 
+#include <cppconn/exception.h> 
+#include <cppconn/statement.h> 
+#include <mysql_connection.h> 
+#include <mysql_driver.h>
 #include<SFML/Graphics.hpp>
+
 #include<conio.h>
 
 #if defined(_WIN32)
@@ -45,13 +52,14 @@ starting client_v1 will automatically start the client_v2 unit so no need to sta
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
 
-#include "sqlite3.h" 
+
 #include<stdlib.h>
 #include<math.h>
 #include<stdio.h>
 #include<map>
 
 
+ 
 #define MAX_LENGTH 1000
 int max_player=0;
 string my_token;//token of the current game instance
@@ -87,28 +95,15 @@ long long game_tick_global = 1;
 long long game_tick = 1;
 bool gameOver = false;//making it public so that the running theads of chaseShip1 and nav_data_processor can check its status and closes themselves.
 
-sqlite3* db;
-char* zErrMsg = 0;
-int rc = sqlite3_open("Greed.db", &db);
+
 
 char all_buffer[10][sizeof(send_data)];//buffer that is used to recv the data from the clients
 vector<int> total_bytes(10, 0);//has to be reset
 /* Open database */
 bool user_found = false;
-static int callback(void* NotUsed, int argc, char** argv, char** azColName)
-{
-	/*
-	* this thing is running for every row, argc is the number of columns in the database,
-	* argv is the value at that column
-	* azColName is the name of the column
-	*/
-	if (argc > 0)
-	{
-		user_found = true;
-	}
-	return 0;
 
-}
+sql::Driver* driver;
+sql::Connection* con;
 
 std::string GetLastErrorAsString()
 {
@@ -900,20 +895,7 @@ void recv_data_terminal(Mutex* m,deque<ship*> &pl1)
 	}
 
 }
-bool checkUser(user_credentials& cred)
-{
-	string username = cred.username;
-	string password = cred.password;
-	string query = "SELECT * FROM USER_DATA WHERE USERNAME=" + username + " AND PASSWORD=" + password + ";";
-	char* zErrMsg = 0;
-	int rc = sqlite3_exec(db, query.c_str(), callback, 0, &zErrMsg);
-	if (user_found == true)
-	{
-		user_found = false;
-		return true;
-	}
-	return false;
-}
+
 
 void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n,unordered_map<int,sockaddr_storage>& socket_id,vector<int> &socket_display)//taking the ship object so as to access the list of the player
 {
@@ -1060,6 +1042,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 		// print or use the buffer size
 		cout << "\n size of the recv buffer is==>" << recv_size;
 	}
+	graphics::animator water_animation(graphics::animator(0, graphics::ANIMATION_TYPE::WATER_ANIMATION));//this animation will never be removed from the queue
 
 	while (1)
 	{
@@ -1181,8 +1164,58 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				}
 				gameOver = true;
 				
-			
+				//updating the scores of the every user
+				for (int i = 0; i < pl1.size(); i++)
+				{
+					cout << "\n score of " << user_cred[pl1[i]->ship_id].username << " score is=>" << pl1[i]->score;
+					sql::Statement* stmt;
+					sql::ResultSet* res;
+					try
+					{
+						string query1 = "select * from Greed.MATCH_DATA where T_ID=\"" + string(user_cred[pl1[i]->ship_id].match_type_id) + "\" AND ID = (Select ID from Greed.USER_DATA where USERNAME = \"" + string(user_cred[pl1[i]->ship_id].username) + "\"); ";
+						cout << "\n query 1 to find the id of the person is==>" << query1;
+						//exxecuting this query and getting the id of that user
+						
+						stmt = ::con->createStatement();
+						
+						res = stmt->executeQuery(query1);
+						int id = -1;
+						while (res->next())
+						{
+							id = res->getInt("ID");
+						}
+						if (id == -1)//that means the user has not entry in the database so we need to make him a new entry
+						{
+							string query2 = "INSERT INTO Greed.MATCH_DATA SELECT id, 1,\"" + string(user_cred[pl1[i]->ship_id].match_type_id) + "\"," + to_string(pl1[i]->score) + " from Greed.USER_DATA where USERNAME = '" + string(user_cred[pl1[i]->ship_id].username) + "';";
+							cout << "\n query2 to insert a new score row is==>" << query2;
+							stmt->execute(query2);
+						}
+						else
+						{
+							string query2 = "UPDATE Greed.MATCH_DATA SET TOTAL_MATCHES=TOTAL_MATCHES+1, TOTAL_SCORE=TOTAL_SCORE+" + to_string(pl1[i]->score) + " WHERE ID=" + to_string(id) + " AND T_ID= '" + user_cred[pl1[i]->ship_id].match_type_id + "';";
+							cout << "\n query to update the values of total matches the net score is==>" << query2;
+							stmt->execute(query2);
+						}
+						
+						string query = "INSERT INTO Greed.MATCH_LOGS VALUES(" + to_string(id) + ",'" + string(user_cred[pl1[i]->ship_id].match_type_id) + "',CONVERT_TZ(NOW(), 'UTC', 'Asia/Kolkata')," + to_string(pl1[i]->score) + ");";
+						cout << "\n the query used to upgrade logs is==>" << query;
+						stmt->execute(query);
+					}
+					catch (sql::SQLException& e) {
 
+						cout << "# ERR: SQLException in " << __FILE__;
+						cout << "(" << __FUNCTION__ << ") on line "
+							<< __LINE__ << endl;
+						cout << "# ERR: " << e.what();
+						cout << " (MySQL error code: " << e.getErrorCode();
+						cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+						
+					}
+					delete stmt;
+					delete res;
+
+				}
+				
 			}
 			if (first_send == 0)
 			{
@@ -2196,8 +2229,11 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 				* this is a connection to the display unit of the client
 				*
 				*/
+				//setting which animation has to be sent for water animation
+				sf::Sprite water_sprite;
+				//cout << "\n frame to be executed for water animation is==>" << water_animation.frame(elapsed_time, water_sprite);
 				sending.restart();
-			
+				ship_packet.water_image = water_animation.frame(elapsed_time, water_sprite);//sending the image of water that has to be displayed
 				if (flag == 1)
 				{
 					for (int i = 0; i < socket_id_display.size(); i++)
@@ -3018,7 +3054,11 @@ int main(int argc,char* argv[])
 	}
 #endif
 
-	
+	driver = get_driver_instance();
+	con = driver->connect("greedtest.cjes8o0woh4e.ap-south-1.rds.amazonaws.com",
+		"admin", "GkXeJRfvQ45JIyp2DQPc");
+	/* Connect to the MySQL test database */
+	con->setSchema("Greed");
 
 	cout << "\n enter the number of players=>";
 	cin >> max_player;

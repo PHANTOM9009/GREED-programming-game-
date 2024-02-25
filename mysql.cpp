@@ -1,65 +1,64 @@
-#include <cppconn/driver.h> 
-#include <cppconn/exception.h> 
-#include <cppconn/statement.h> 
-#include <iostream> 
-#include <mysql_connection.h> 
-#include <mysql_driver.h> 
+/* Standard C++ includes */
+#include <stdlib.h>
+#include <iostream>
+
+/*
+  Include directly the different
+  headers from cppconn/ and mysql_driver.h + mysql_util.h
+  (and mysql_connection.h). This will reduce your build time!
+*/
+#include "mysql_connection.h"
+
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
 
 using namespace std;
-int main()
+
+int main(void)
 {
-	try {
-		sql::mysql::MySQL_Driver* driver;
-		sql::Connection* con;
+    cout << endl;
+    
 
-		driver = sql::mysql::get_mysql_driver_instance();
-		con = driver->connect("greedtest.cjes8o0woh4e.ap-south-1.rds.amazonaws.com",
-			"admin", "GkXeJRfvQ45JIyp2DQPc");
+        try {
+        sql::Driver* driver;
+        sql::Connection* con;
+        sql::Statement* stmt;
+        sql::ResultSet* res;
 
-		con->setSchema("Greed"); // your database name 
+        /* Create a connection */
+        driver = get_driver_instance();
+        con = driver->connect("greedtest.cjes8o0woh4e.ap-south-1.rds.amazonaws.com",
+            "admin", "GkXeJRfvQ45JIyp2DQPc");
+        /* Connect to the MySQL test database */
+        con->setSchema("Greed");
 
-		sql::Statement* stmt;
-		stmt = con->createStatement();
+        stmt = con->createStatement();
+        res = stmt->executeQuery("SELECT 'Hello World!' AS _message");
+        while (res->next()) {
+            cout << "\t... MySQL replies: ";
+            /* Access column data by alias or column name */
+            cout << res->getString("_message") << endl;
+            cout << "\t... MySQL says it again: ";
+            /* Access column data by numeric offset, 1 is the first column */
+            cout << res->getString(1) << endl;
+        }
+        delete res;
+        delete stmt;
+        delete con;
 
-		// SQL query to create a table 
-		string createTableSQL
-			= "CREATE TABLE IF NOT EXISTS GFGCourses ("
-			"id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
-			"courses VARCHAR(255) NOT NULL"
-			")";
+    }
+    catch (sql::SQLException& e) {
+        cout << "# ERR: SQLException in " << __FILE__;
+        cout << "(" << __FUNCTION__ << ") on line "
+            << __LINE__ << endl;
+        cout << "# ERR: " << e.what();
+        cout << " (MySQL error code: " << e.getErrorCode();
+        cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+    }
 
-		stmt->execute(createTableSQL);
+    cout << endl;
 
-		string insertDataSQL
-			= "INSERT INTO GFGCourses (courses) VALUES "
-			"('DSA'),('C++'),('JAVA'),('PYTHON')";
-
-		stmt->execute(insertDataSQL);
-
-		// SQL query to retrieve data from the table 
-		string selectDataSQL = "SELECT * FROM GFGCourses";
-
-		sql::ResultSet* res
-			= stmt->executeQuery(selectDataSQL);
-
-		// Loop through the result set and display data 
-		int count = 0;
-		while (res->next()) {
-			cout << " Course " << ++count << ": "
-				<< res->getString("courses") << endl;
-		}
-
-		delete res;
-		delete stmt;
-		delete con;
-	}
-	catch (sql::SQLException& e) {
-		std::cerr << "SQL Error: " << e.what() << std::endl;
-	}
-
-	return 0;
+    return EXIT_SUCCESS;
 }
-
-
-
-

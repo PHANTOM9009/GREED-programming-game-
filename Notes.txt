@@ -131,7 +131,11 @@ ID (int) foreign key
 Date (date format with time) //
 
 Type (string) (RANKED, UNRANKED, T_ID)
-
+-------------------------------------------------------------------------------------------------------------
+-------------------------------INTRODUCING TOURNAMENTS-------------------------------------------------------
+each tournament will have its id, this id will be given to lobby server by the client, and the lobby srver
+will only return those servers those who are hosting for that tournament, so the update will be at the server
+end only.
 
 
 

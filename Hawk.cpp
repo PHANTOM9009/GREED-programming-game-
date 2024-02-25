@@ -11,7 +11,7 @@ int generateRandomInt(int lowerLimit, int upperLimit) {
 
 	return distr(eng); // Generate a random number within the specified range
 }
-	int find_ship_to_kill(deque<shipInfo>& shipList, int myid, ship& ob,int hate_id)
+	int find_ship_to_kill(deque<shipInfo> shipList, int myid, ship& ob,int hate_id)
 	{
 		int mini = INT_MAX;
 		int index = -1;
@@ -81,8 +81,13 @@ int generateRandomInt(int lowerLimit, int upperLimit) {
 			{    //this is anchit rana talking to the world and i want ot know the difference between
 				//cout<<"\n my health is==>"<<ob.getCurrentHealth();
 				
+				if (ob.isShipInMotion() == 0)
+				{
+					int ind = find_ship_to_kill(ob.getShipList(), ob.getShipId(), ob, ob.getShipId());
+					cout << "\n gonig to chase==>" << ind;
+					ob.Greed_chaseShip(ind);
+				}
 				
-				cout << "\n motion of the ship is==>" << ob.isShipInMotion();
 				Event e;
 				ob.getNextCurrentEvent(e);
 				if (e.eventType == Event::EventType::ShipFire)
@@ -99,7 +104,7 @@ int generateRandomInt(int lowerLimit, int upperLimit) {
 					{
 						ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[i], ShipSide::FRONT);
 					}
-					ob.Greed_setPath(Greed::coords(10, 0));
+					//ob.Greed_setPath(Greed::coords(10, 0));
 				}
 				if (ob.getCurrentHealth() <= 10)
 				{

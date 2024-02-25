@@ -61,12 +61,28 @@ public:
 	char email[30];
 	char role[30];
 	char country[30];
+	char match_type_id[30];//this is the id of the tournament if there, if empty it is a normal ranked match.
 	user_credentials() { }
+	user_credentials(int type, string user, string pass,string mid)
+	{
+		this->type = type;
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+		strcpy(match_type_id, mid.c_str());
+	}
 	user_credentials(int type, string user, string pass)
 	{
 		this->type = type;
 		strcpy(username, user.c_str());
 		strcpy(password, pass.c_str());
+		
+	}
+
+	user_credentials(string user, string pass,string mid)
+	{
+		strcpy(username, user.c_str());
+		strcpy(password, pass.c_str());
+		strcpy(match_type_id, mid.c_str());
 	}
 	user_credentials(string user, string pass)
 	{
@@ -3149,7 +3165,8 @@ public:
 	//for cannons
 	cannon_data cannon_ob[3];//object for cannon
 	int no_of_animation;
-	animation_data animation_ob[50];
+	animation_data animation_ob[50];//only for explosion 
+	int water_image;//which number image has to be shown of the water.
 	int gameOver;//0 for no, 1 for yes;
 	int end;
 
@@ -3195,7 +3212,7 @@ public:
 	}
 	enum class ANIMATION_TYPE
 	{
-		EXPLOSION, CANNON_FIRE, NA = -1
+		EXPLOSION, CANNON_FIRE, WATER_ANIMATION, NA = -1
 	};
 
 	class GuiRenderer//class for rendering gui
@@ -3335,7 +3352,7 @@ public:
 		*/
 
 
-		void setScene(int w, int h, int xx, int yy, sf::Texture& tex, int code[rows][columns]);//here xx and yy are the coordinates
+		void setScene(int w, int h, int xx, int yy, sf::Texture& tex, int code[rows][columns],int img_num);//here xx and yy are the coordinates
 	};
 	class animator
 	{
@@ -3353,6 +3370,17 @@ public:
 		animator()
 		{
 
+		}
+		animator(double s_time, ANIMATION_TYPE type)//this is made for animating water tiles
+		{
+			if (type == ANIMATION_TYPE::WATER_ANIMATION)
+			{
+				starting_time = s_time;
+				total_time = 0;
+				no_of_frames = 6;
+				animation_time = 1;
+				width = 80;
+			}
 		}
 		animator(sf::Vector2f anipos, double st, ANIMATION_TYPE type, int cid = -1)//to be called to show explosion on cannon
 		{
@@ -3381,6 +3409,7 @@ public:
 				this->cid = cid;
 
 			}
+			
 		}
 		animator(sf::Vector2f anipos, double st, ANIMATION_TYPE type, sf::Vector2f ship_position, int s, int cid = -1)
 		{

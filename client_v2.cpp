@@ -501,31 +501,9 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	List<graphics::animator> animation_list;
 	//sf::Sprite rect[2];
-	sf::Texture tex_s;
-	tex_s.loadFromFile("map_1 attributes/ship_s.png");
-	resizeTexture(tex_s);
-	cout << "\n size is==>" << tex_s.getSize().x << " " << tex_s.getSize().y;
-	sf::Texture tex_n;//texture of north
-	tex_n.loadFromFile("map_1 attributes/ship_n.png");
-	resizeTexture(tex_n);
-	sf::Texture tex_e;
-	tex_e.loadFromFile("map_1 attributes/ship_e.png");
-	resizeTexture(tex_e);
-	sf::Texture tex_w;
-	tex_w.loadFromFile("map_1 attributes/ship_w.png");
-	resizeTexture(tex_w);
-	sf::Texture tex_ne;
-	tex_ne.loadFromFile("map_1 attributes/ship_ne.png");
-	resizeTexture(tex_ne);
-	sf::Texture tex_nw;
-	tex_nw.loadFromFile("map_1 attributes/ship_nw.png");
-	resizeTexture(tex_nw);
-	sf::Texture tex_se;
-	tex_se.loadFromFile("map_1 attributes/ship_se.png");
-	resizeTexture(tex_se);
-	sf::Texture tex_sw;
-	tex_sw.loadFromFile("map_1 attributes/ship_sw.png");
-	resizeTexture(tex_sw);
+	sf::Texture ship_tex[10];
+	
+	
 	sf::Texture cannon_tex;
 	cannon_tex.loadFromFile("map_1 attributes/c0.png");//defualt cannon texture
 	resizeTexture(cannon_tex);
@@ -541,7 +519,9 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 	for (int i = 0; i < pl1.size(); i++)//graphic initializer for the ship of the user
 	{
-		pl1[i]->graphics_initializer(tex_n);
+		string file_name = "map_1 attributes/ship" + to_string(i + 1) + "_set.png";
+		ship_tex[i].loadFromFile(file_name);
+		pl1[i]->graphics_initializer(ship_tex[i]);
 	}
 
 
@@ -550,7 +530,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 	sf::RenderStates s;
 	s.texture = &tex;
 	tileMap ob;
-	ob.setScene(columns, rows, origin_x, origin_y, tex, code);
+	ob.setScene(columns, rows, origin_x, origin_y, tex, code,0);
 
 	//working on player now
 
@@ -725,6 +705,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 	thread t(&recv_data, mutx);
 	t.detach();
+	int water_image = 0;//this will be updated many times, used for animating water sprite
 
 	while (window.isOpen())
 	{
@@ -857,7 +838,7 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 			
 				bytes_received = 1;
 				
-				
+				water_image = ship_data.water_image;
 					if (abs(ship_data.ob[1].absolutePosition.x - prev_x) > 2 || abs(ship_data.ob[1].absolutePosition.y - prev_y) > 2)
 					{
 						cout << "\n discrepency in position of the ship at==>" << ship_data.packet_no << " packet difference is==>" << ship_data.packet_no - previous;
@@ -919,36 +900,36 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 
 				if (pl1[i]->dir == Direction::NORTH)
 				{
-					pl1[i]->rect.setTexture(tex_n);
+					pl1[i]->rect.setTextureRect(sf::IntRect(0,0,::cx(len),::cy(len)));
 				}
 				else if (pl1[i]->dir == Direction::SOUTH)
 				{
-					pl1[i]->rect.setTexture(tex_s);
+					pl1[i]->rect.setTextureRect(sf::IntRect(::cx(len), 0, ::cx(len), ::cy(len)));
 				}
 				else if (pl1[i]->dir == Direction::EAST)
 				{
-					pl1[i]->rect.setTexture(tex_e);
+					pl1[i]->rect.setTextureRect(sf::IntRect(2*::cx(len), 0, ::cx(len), ::cy(len)));
 				}
 				else if (pl1[i]->dir == Direction::WEST)
 				{
-					pl1[i]->rect.setTexture(tex_w);
+					pl1[i]->rect.setTextureRect(sf::IntRect(3 * ::cx(len), 0, ::cx(len), ::cy(len)));
 				}
 				else if (pl1[i]->dir == Direction::NORTH_EAST)
 				{
-					pl1[i]->rect.setTexture(tex_ne);
+					pl1[i]->rect.setTextureRect(sf::IntRect(4 * ::cx(len), 0, ::cx(len), ::cy(len)));
 				}
 				else if (pl1[i]->dir == Direction::SOUTH_EAST)
 				{
-					pl1[i]->rect.setTexture(tex_se);
+					pl1[i]->rect.setTextureRect(sf::IntRect(5 * ::cx(len), 0, ::cx(len), ::cy(len)));
 
 				}
 				else if (pl1[i]->dir == Direction::NORTH_WEST)
 				{
-					pl1[i]->rect.setTexture(tex_nw);
+					pl1[i]->rect.setTextureRect(sf::IntRect(6 * ::cx(len), 0, ::cx(len), ::cy(len)));
 				}
 				else if (pl1[i]->dir == Direction::SOUTH_WEST)
 				{
-					pl1[i]->rect.setTexture(tex_sw);
+					pl1[i]->rect.setTextureRect(sf::IntRect(7 * ::cx(len), 0, ::cx(len), ::cy(len)));
 				}
 				if (pl1[i]->died == 1)
 				{
@@ -1173,14 +1154,14 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				}
 				gui_renderer.m.unlock();
 			}//for updating the timeline boxes
-
+			
 
 
 			//drawing and animation part starts here
 			//cout << "\n testing hello";
 			window.clear();
 
-			window.draw(ob.tile, s);
+			window.draw(ob.tile,s);
 			for (int i = 0; i < pl1.size(); i++)
 			{
 				if (pl1[i]->died == 0)
@@ -1243,7 +1224,8 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 				explosion_sprite.setTextureRect(sf::IntRect(::cx(ship_data.animation_ob[i].picture * 30), 0, ::cx(30), ::cy(30)));
 				window.draw(explosion_sprite);
 			}
-			ob.setScene(columns, rows, origin_x, origin_y, tex, code);
+
+			ob.setScene(columns, rows, origin_x, origin_y, tex, code,water_image);
 			if (gui_renderer.showRadius)//to show radius of all the ships
 			{
 

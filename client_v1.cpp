@@ -76,7 +76,7 @@ deque<recv_data> input_data;//input data from the server to the client
 deque<send_data> terminal_data;
 
 
-
+string tournament_id;
 
 
 bool SEND(SOCKET sock, char* buff, int length)
@@ -1690,7 +1690,7 @@ bool login_function(SOCKET lobby_socket)
 	cout << "\n enter you username==>";
 	cin >> username;
 	password = input_password();
-	user_credentials ob(0, username, password);
+	user_credentials ob(0, username, password,tournament_id);
 	int bytes = send(lobby_socket, (char*)&ob, sizeof(ob), 0);
 	if (bytes < 0)
 	{
@@ -1754,6 +1754,18 @@ int connect_to_lobby_server()
 	cout << "\n connected with the lobby server..";
 	//sending hi to the server
 	//sending my credentials to the server
+	cout << "\n Do you a specific tournament ID?\n press 1 if you have it, else press 2==>";
+	int have;
+	cin >> have;
+	if (have == 1)
+	{
+		cout << "\n enter the tournament id==>";
+		cin >> tournament_id;
+	}
+	else
+	{
+		tournament_id = "RANKED";
+	}
 	cout << "\n Enter 1 to login ( if you have a username and password) \n Enter 2 to signup (if you don't have any username)";
 	int choice = 0;
 	cin >> choice;
@@ -1897,7 +1909,7 @@ int main(int argc,char* argv[])
 	}
 	greet_client gc;
 	gc.code = msg;
-	gc.user_cred = user_credentials(username, password);
+	gc.user_cred = user_credentials(username, password,tournament_id);
 	strcpy(gc.token, game_token.c_str());
 
 
