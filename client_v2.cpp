@@ -203,7 +203,7 @@ SOCKET connect_to_server()//first connection to the server
 	hints1.ai_family = AF_INET;
 	hints1.ai_socktype = SOCK_STREAM;
 	struct addrinfo* bind_address;
-	int port2 = 8081 + 3;
+	int port2 = atoi(server_port) + 3;
 	char port2_str[10];
 	sprintf(port2_str, "%d", port2);
 	//cout << "\n port of the server2 is==>" << port2_str;
@@ -1248,13 +1248,8 @@ void graphics::callable_clientShow(Mutex* mutx, int code[rows][columns], Map& ma
 		
 			if (gameOver && ran == 0)
 			{
-				for (int i = 0; i < pl1.size(); i++)
-				{
-					if (pl1[i]->minutes == INT_MAX && pl1[i]->seconds == INT_MAX)
-					{
-						pl1[i]->score += 100;
-					}
-				}
+				
+				
 				findWinner(pl1);
 				
 				gui_renderer.final_window->setVisible(true);

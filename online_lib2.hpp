@@ -1299,8 +1299,8 @@ public:
 	friend class control1;
 };
 
-deque<navigation> resend_navigation;//to store the navigation requests that has be resent
-deque<pair<bullet_data, int>> resend_bullet;//firing data that has to be resent
+extern deque<navigation> resend_navigation;//to store the navigation requests that has be resent
+extern deque<pair<bullet_data, int>> resend_bullet;//firing data that has to be resent
 class map_cost//class to send updateCost of the map tile data to the server over the network
 {
 public:
@@ -1979,51 +1979,7 @@ public:
 	vector<Greed::coords> getRadiusCoords_ship(int s_id);//function to return the tiles that are in the radius of a particular entity, just pass the id of the ship
 	vector<Greed::coords> getRadiusCoords_cannon(int c_id);//function to return the tiles that are in the radius of the cannon
 	ship();
-	List<Greed::bullet>& getBulletHitList()
-	{
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-		return bullet_hit;
-	}
-	int getTotalBulletsHit()
-	{
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-		return bullet_hit.howMany();
-	}
-	/*
-	int getTotalBulletsFired()
-	{
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-		return cannon_ob.allBullets.howMany();
-	}
-	*/
-
-	Greed::bullet getLastHitBullet()//returns the last bullet that had hit the ship
-	{
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-		return bullet_hit[bullet_hit.howMany() - 1];
-	}
-	Greed::bullet getLastBulletFired()//returns the last fired bullet
-	{
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-		return cannon_ob.activeBullets[cannon_ob.activeBullets.size() - 1];
-	}
-	vector<Greed::bullet> getHitBulletList()//list of the bullets that had hit the ship
-	{
-		unique_lock<mutex> lk(mutx->m[ship_id]);
-		vector<Greed::bullet> ret;
-		for (int i = 0; i < bullet_hit.howMany(); i++)
-		{
-			ret.push_back(bullet_hit[i]);
-		}
-		return ret;
-	}
-	void ceaseFire()//this function when called deletes all entries in the activeBulletList
-	{
-		mutx->m[ship_id].lock();
-		cannon_ob.activeBullets.clear();
-		bullet_pointer = -1;
-		mutx->m[ship_id].unlock();
-	}
+	
 	//this class will have the API for  the user, some functions will be inaccessible to the user, inaccessible functions will be protected by an id
 	///functions for returning things.
 	deque<shipInfo> getShipList()
@@ -2114,7 +2070,10 @@ public:
 private:
 	//checkCollision is to check collision between a ship and the bullet
 	bool checkCollision(int sid, const Greed::bullet& ob);//sid is the ship id of  the victim ship.
-	
+	bool anchorShip();//function to halt the ship
+
+	bool chaseShip(int s_id);//driver for calling chaseShip1 in a thread
+
 public:
 	// bool updateCost(Greed::abs_pos ob,double new_cost);
 	bool Greed_sail(Direction d, int tiles = 1)
@@ -2191,10 +2150,7 @@ public:
 		return motion;
 
 	}
-	bool anchorShip();//function to halt the ship
-
-	bool chaseShip(int s_id);//driver for calling chaseShip1 in a thread
-
+	
 	double getDistance(int s_id);//returns the distance of s_id ship from the this->ship
 
 	//introducing the new functions
@@ -3378,7 +3334,7 @@ public:
 				starting_time = s_time;
 				total_time = 0;
 				no_of_frames = 6;
-				animation_time = 1;
+				animation_time = 3;
 				width = 80;
 			}
 		}

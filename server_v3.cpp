@@ -85,7 +85,9 @@ unordered_map<int, string> id_port;//has to be zeroed out.
 deque <pair<int, pair<string, string>>> id_ip_port;// pair of id of the terminal to the ip address and port of the terminal
 vector<int> packet_id(10,0);//to keep track of the current packet id of the terminal units of the clients
 
-
+int bot_count = 0;//counting the number of bots that are in the lobby
+int original_count = 0;//counting the number of original players that are in the lobby
+//both of these variables have to be reset
 SOCKET socket_listen;//UDP socket to send data to the client terminal unit
 SOCKET socket_listen2;//UDP socket to send data to the client display unit
 SOCKET recver;//UDP socket to recv data from the client terminal unit
@@ -1184,15 +1186,16 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						{
 							id = res->getInt("ID");
 						}
+						cout << "\n id of the player==>" << id;
 						if (id == -1)//that means the user has not entry in the database so we need to make him a new entry
 						{
-							string query2 = "INSERT INTO Greed.MATCH_DATA SELECT id, 1,\"" + string(user_cred[pl1[i]->ship_id].match_type_id) + "\"," + to_string(pl1[i]->score) + " from Greed.USER_DATA where USERNAME = '" + string(user_cred[pl1[i]->ship_id].username) + "';";
+							string query2 = "INSERT INTO Greed.MATCH_DATA SELECT id, 1,\"" + string(user_cred[pl1[i]->ship_id].match_type_id) + "\"," + to_string(pl1[i]->score) +","+to_string((int)pl1[i]->score / 100) + " from Greed.USER_DATA where USERNAME = '" + string(user_cred[pl1[i]->ship_id].username) + "';";
 							cout << "\n query2 to insert a new score row is==>" << query2;
 							stmt->execute(query2);
 						}
 						else
 						{
-							string query2 = "UPDATE Greed.MATCH_DATA SET TOTAL_MATCHES=TOTAL_MATCHES+1, TOTAL_SCORE=TOTAL_SCORE+" + to_string(pl1[i]->score) + " WHERE ID=" + to_string(id) + " AND T_ID= '" + user_cred[pl1[i]->ship_id].match_type_id + "';";
+							string query2 = "UPDATE Greed.MATCH_DATA SET TOTAL_MATCHES=TOTAL_MATCHES+1, TOTAL_SCORE=TOTAL_SCORE+" + to_string(pl1[i]->score) +", RATING=RATING+"+to_string((int)pl1[i]->score/100)+ " WHERE ID=" + to_string(id) + " AND T_ID= '" + user_cred[pl1[i]->ship_id].match_type_id + "';";
 							cout << "\n query to update the values of total matches the net score is==>" << query2;
 							stmt->execute(query2);
 						}
@@ -1923,7 +1926,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 
 								}
 
-								pl1[cannon_list[j].bullet_list[k].hit_ship]->getBulletHitList().add_rear(cannon_list[j].bullet_list[k]);
+								
 								pl1[cannon_list[j].bullet_list[k].hit_ship]->hit_bullet_count++;
 								pl1[cannon_list[j].bullet_list[k].hit_ship]->bullet_hit_tempo.push_back(cannon_list[j].bullet_list[k]);
 
@@ -2488,9 +2491,12 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	double first_timeout = 10;
 	sf::Clock clock;
 	double elapsed_time = 0;
-	while ((max_player > nn || max_display>curdisp) && elapsed_time < 10*60)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
+	while ((max_player > nn || max_display>curdisp) && elapsed_time < 2*60)//this is when we are  using 2 computers for testing, so if there are n clients so the total clients including display unit is=>2*n
 	{
-		elapsed_time += clock.restart().asSeconds();
+		if (original_count != 0)
+		{
+			elapsed_time += clock.restart().asSeconds();
+		}
 		reads = master;
 		select(max_socket + 1, &reads, 0, 0, &timeout);
 		for (int i = 1; i <= max_socket; i++)
@@ -2541,6 +2547,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 					greet_client gc;
 					if (bit == sizeof(gc))
 					{
+						
 						memcpy((void*)&gc, buffer, sizeof(gc));
 
 						int read;
@@ -2550,6 +2557,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 						if (strcmp(gc.token, my_token.c_str()) == 0)//checking the correct code of the current game instance
 						{
 							read = gc.code;
+							
 							string sread = to_string(read);
 							//here the code will be 0 for client algorithm unit, and 1 for display unit, after 1 we will have the id of the client
 							cout << "\n code recved is=>" << read;
@@ -2561,6 +2569,14 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 								user_cred[idc] = gc.user_cred;//setting the user credential
 								idc++;
 								nn++;
+								if (gc.isBot)
+								{
+									bot_count++;
+								}
+								else
+								{
+									original_count++;
+								}
 								tcp_socket_storage.push_back(i);
 
 							}
@@ -2600,14 +2616,17 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	* here in stage 1 client terminal will recv the its id, and client display unit will get the max_players playing in the game
 	*/
 	cout << "\n stage 1 ends....";
+	cout << "\n now the max player is==>" << nn;
+	max_player = nn;
 	
 	//sending to theh lobby server that i have started the game and got busy
 	int data_status = 0;//means that the server is getting busy
 	int bs = send(lobby_socket, (char*)&data_status, sizeof(data_status), 0);
 	cout << "\n sent to the lobby server that i am busy with the game..";
 
-	int no_of_players = n;
+	int no_of_players = max_player;
 	Control control;
+	n = max_player;
 	//creating an object of class Mutex: this object will be passed to every class using mutex
 	Mutex mutx;
 
@@ -2745,7 +2764,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	int second_timeout = 60;//this time has to be tested, by trial and error
 	sf::Clock clock1;
 	elapsed_time = 0;
-	while (count != max_player_proxy && elapsed_time<30)
+	while (count != max_player && elapsed_time<30)
 	{
 		elapsed_time += clock1.restart().asSeconds();
 		count_cross++;
@@ -2831,7 +2850,7 @@ void startup(int n,unordered_map<int,sockaddr_storage> &socket_id, int port)//he
 	count_cross = 0;
 	elapsed_time = 0;
 	sf::Clock clock2;
-	while (new_count != max_player_proxy && elapsed_time<30)
+	while (new_count != max_player && elapsed_time<30)
 	{
 		elapsed_time += clock2.restart().asSeconds();
 		count_cross++;
@@ -3077,6 +3096,8 @@ int main(int argc,char* argv[])
 		terminal_data.clear();
 		display_data.clear();
 		gameOver = 0;
+		bot_count = 0;
+		original_count = 0;
 		graphics::total_secs = 0;
 		user_cred.clear();
 		input_data.clear();

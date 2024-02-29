@@ -34,7 +34,7 @@
 #define GETSOCKETERRNO() (errno)
 #endif
 #define MAX_LENGTH 1000
-
+#define ISBOT true
 
 #include "online_lib2.hpp"
 #include "online_lib2.cpp"
@@ -1816,7 +1816,7 @@ void heartbeat_lobby()
 		chrono::steady_clock::time_point end = chrono::steady_clock::now();
 		chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(end - begin);
 		elapsed_time += time_span.count();
-		if (elapsed_time > 60)
+		if (elapsed_time > 10)
 		{
 			elapsed_time = 0;
 			//send the heartbeat message here
@@ -1910,6 +1910,7 @@ int main(int argc,char* argv[])
 	greet_client gc;
 	gc.code = msg;
 	gc.user_cred = user_credentials(username, password,tournament_id);
+	gc.isBot = ISBOT;
 	strcpy(gc.token, game_token.c_str());
 
 
@@ -1947,7 +1948,7 @@ int main(int argc,char* argv[])
 
 		string commandLine = path + port_str + " " + id + " " + username + " " + password + " " + game_token + " " + ip_address;
 		//cout << "\n command line is==>" << commandLine;
-		char str[100];
+		char str[500];
 		strcpy(str, commandLine.c_str());
 
 		//char commandLine[] = "\"F:\\current projects\\GREED(programming game)\\GREED(programming game)\\client_v2_new.exe\" 8080";

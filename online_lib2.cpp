@@ -18,6 +18,10 @@ long double graphics::total_secs = 0;
 bool graphics::showPatterns = false;
 long double Greed::shipCannon::current_bullet = 0;
 
+
+deque<navigation> resend_navigation;//to store the navigation requests that has be resent
+deque<pair<bullet_data, int>> resend_bullet;//firing data that has to be resent
+
 //for moving entites over the screen
 template<typename T>
 class mover_tgui
@@ -622,7 +626,7 @@ void Map::intialize_graphics(sf::Texture& tex)
 {
 	if (map_id == 0)
 	{
-		tex.loadFromFile("map_1 attributes/water_set.png");
+		tex.loadFromFile("map_1 attributes/water_set2.png");
 		resizeTexture(tex);
 	}
 }
@@ -4078,17 +4082,17 @@ void graphics::tileMap::setScene(int w, int h, int xx, int yy, sf::Texture& tex,
 			if (code[i][j] == 0)//this is for land
 			{
 				temp[0].texCoords = sf::Vector2f(0, 0);
-				temp[1].texCoords = sf::Vector2f(len, 0);
-				temp[2].texCoords = sf::Vector2f(len, len);
-				temp[3].texCoords = sf::Vector2f(0, len);
+				temp[1].texCoords = sf::Vector2f(::cx(len), 0);
+				temp[2].texCoords = sf::Vector2f(::cx(len), ::cy(len));
+				temp[3].texCoords = sf::Vector2f(0, ::cy(len));
 
 			}
 			else if (code[i][j] == 1)//for water
 			{
-				temp[0].texCoords = sf::Vector2f((len * img_num)+len, 0);
-				temp[1].texCoords = sf::Vector2f((len * img_num) + 2*len, 0);
-				temp[2].texCoords = sf::Vector2f((len * img_num) + 2*len, len);
-				temp[3].texCoords = sf::Vector2f((len * img_num)+len, len);
+				temp[0].texCoords = sf::Vector2f(::cx((len * img_num)+len), 0);
+				temp[1].texCoords = sf::Vector2f(::cx((len * img_num) + 2*len), 0);
+				temp[2].texCoords = sf::Vector2f(::cx((len * img_num) + 2*len), ::cy(len));
+				temp[3].texCoords = sf::Vector2f(::cx((len * img_num)+len), ::cy(len));
 
 			}
 			if (showPatterns)

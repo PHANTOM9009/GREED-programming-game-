@@ -136,6 +136,10 @@ Type (string) (RANKED, UNRANKED, T_ID)
 each tournament will have its id, this id will be given to lobby server by the client, and the lobby srver
 will only return those servers those who are hosting for that tournament, so the update will be at the server
 end only.
+-------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------LOAD BALANCING OF SERVERS----------------------------------------------
+greed_5 is having a static ip now, and so do will have every other VM which will run the servers.
+initially only one server will run continously, which can host atmost 6 ships at one time. so just engrave the ip of the greed_5 instance in the client
 
 
 

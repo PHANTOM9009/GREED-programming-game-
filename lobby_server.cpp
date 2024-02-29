@@ -1,5 +1,5 @@
 #pragma once
-
+#define NOMINMAX
 #if defined(_WIN32)
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
@@ -31,8 +31,12 @@
 #define SOCKET int
 #define GETSOCKETERRNO() (errno)
 #endif
+
+
+
 #include<iostream>
 #include<string>
+#include<SFML/Graphics.hpp>
 #include<Windows.h>
 #include<thread>
 #include<condition_variable>
@@ -44,6 +48,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
+
 
 #include<stdlib.h>
 
@@ -60,7 +65,7 @@
 //#define max_player 3 //number of maximum players that can play simultaneously in a lobby
 
 //runs on the port 8080
-
+#define FRAME_RATE 20
 #define GAME_SERVER_COUNT 1
 using namespace std;
 
@@ -238,10 +243,10 @@ bool checkUser(user_credentials& cred,int mode)//here it has 2 modes
 bool createUser(user_credentials cred)
 {
 	
-	std::string s = "INSERT INTO Greed.USER_DATA(ID,USERNAME,PASSWORD,EMAIL,designation,COUNTRY)" \
+	std::string s = "INSERT INTO Greed.USER_DATA(ID,USERNAME,PASSWORD,EMAIL,designation,COUNTRY,GREED_POINTS)" \
 		"SELECT IFNULL(MAX(id), 0) + 1,'" +
 		string(cred.username) + "','" + string(cred.password) + "','" + string(cred.email) +
-		"','" + string(cred.role) + "','" + string(cred.country) + "' FROM Greed.USER_DATA;";
+		"','" + string(cred.role) + "','" + string(cred.country) + "',"+to_string(1000)+" FROM Greed.USER_DATA; ";
 
 	cout << "\n the query is==>" << s;
 
@@ -270,40 +275,49 @@ void isAlive()//function to check if the client is still logged in or not
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 100;
-
+	
+	int cur_frame = -1;
+	int next_frame = 0;
+	double elapsed_time = 0;
+	sf::Clock clock;
+	int count = 0;
 	while (1)
 	{
-		unique_lock<mutex> lk(logged_in_mutex);
-		sock_temp.clear();
-		for (int i = 0; i < sock_list.size(); i++)
-		{
-			sock_temp.push_back(sock_list[i]);
-		}
-		lk.unlock();
-		for (int i = 0; i < sock_temp.size(); i++)
-		{
-			int heartbeat = 0;
-			int bytes = recv(sock_temp[i], (char*)&heartbeat, sizeof(heartbeat), 0);
-			if (bytes < 1)
+		
+			count++;
+			cur_frame = next_frame;
+			unique_lock<mutex> lk(logged_in_mutex);
+			sock_temp.clear();
+			for (int i = 0; i < sock_list.size(); i++)
 			{
-				unique_lock<mutex> lk(logged_in_mutex);
-				cout << "\n client has disconnected==>" << logged_in_rev[sock_temp[i]];
-				//lets delete the user
-				auto it = sock_list.begin();
-				advance(it, i);
-				if(sock_list.size()>i)
-				sock_list.erase(it);
+				sock_temp.push_back(sock_list[i]);
+			}
+			lk.unlock();
+			for (int i = 0; i < sock_temp.size(); i++)
+			{
+				int heartbeat = 0;
+				int bytes = recv(sock_temp[i], (char*)&heartbeat, sizeof(heartbeat), 0);
+				if (bytes < 1)
+				{
+					unique_lock<mutex> lk(logged_in_mutex);
+					cout << "\n client has disconnected==>" << logged_in_rev[sock_temp[i]];
+					//lets delete the user
+					auto it = sock_list.begin();
+					advance(it, i);
+					if (sock_list.size() > i)
+						sock_list.erase(it);
 
-				string username = logged_in_rev[sock_temp[i]];
-				logged_in.erase(username);
-				logged_in_rev.erase(sock_temp[i]);
-				lk.unlock();
+					string username = logged_in_rev[sock_temp[i]];
+					logged_in.erase(username);
+					logged_in_rev.erase(sock_temp[i]);
+					lk.unlock();
+				}
+				else
+				{
+					cout << "\n recved heartbeat from the user==>" << logged_in_rev[sock_temp[i]];
+				}
 			}
-			else
-			{
-				cout << "\n recved heartbeat from the user==>" << logged_in_rev[sock_temp[i]];
-			}
-		}
+		
 	}
 }
 void listener()
@@ -346,137 +360,149 @@ void listener()
 	int count = 0;
 	fd_set reads;
 	FD_ZERO(&reads);
+
+	int next_frame = 0;
+	int cur_frame = -1;
+	sf::Clock clock;
+	double elapsed_time = 0;
+	int count1 = 0;
+
 	while (1)
 	{
-		count++;
 		
-		reads = master;
-		timeval timeout;
-		timeout.tv_sec = 0;
-		timeout.tv_usec = 0;
-		select(max_socket + 1, &reads, 0, 0, &timeout);
-		for (int i = 1; i <= max_socket; i++)
-		{
-			if (FD_ISSET(i, &reads))
+			count1++;
+
+			cur_frame = next_frame;
+			count++;
+
+			reads = master;
+			timeval timeout;
+			timeout.tv_sec = 0;
+			timeout.tv_usec = 0;
+			select(max_socket + 1, &reads, 0, 0, &timeout);
+			for (int i = 1; i <= max_socket; i++)
 			{
-				if (i == socket_listen)
+				if (FD_ISSET(i, &reads))
 				{
-					struct sockaddr_storage client_address;
-					socklen_t client_len = sizeof(client_address);
-					SOCKET socket_ = accept(socket_listen, (sockaddr*)&client_address, &client_len);
-					temp_socket.push_back(pair<SOCKET, int>(socket_, count));
-
-					FD_SET(socket_, &master);
-					if (socket_ > max_socket)
+					if (i == socket_listen)
 					{
-						max_socket = socket_;
+						struct sockaddr_storage client_address;
+						socklen_t client_len = sizeof(client_address);
+						SOCKET socket_ = accept(socket_listen, (sockaddr*)&client_address, &client_len);
+						temp_socket.push_back(pair<SOCKET, int>(socket_, count));
+
+						FD_SET(socket_, &master);
+						if (socket_ > max_socket)
+						{
+							max_socket = socket_;
+						}
+
+						//}				
+						//else//asking for username and passowrd
+						//{
+					}
+					else
+					{
+						user_credentials cred;
+						int bytes = recv(i, (char*)&cred, sizeof(cred), 0);
+						if (bytes < 1)//in this case the client has disconnected the connection so remove this  socket and remove from the master socket
+						{
+
+							FD_CLR(i, &master);
+							CLOSESOCKET(i);//closing this socket
+						}
+						if (bytes > 0)
+						{
+							/*following are the status code that will be sent to the client to intimate him about is his login status
+							-1: account does not exist( this will happen only when both username and password does'nt exist in the database
+							2: username exists but the password is wrong
+							1: everything is fine
+							*/
+							if (cred.type == 0)//the account already exists
+							{
+								unique_lock<mutex> lk1(logged_in_mutex);
+								if (logged_in.find(cred.username) != logged_in.end())
+								{
+									//the user is already logged in so send a status number 3
+									cout << "\n user came who has already logged in==>" << cred.username;
+									int status_code = 3;
+									int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+
+								}
+								else if (checkUser(cred, 0))//put the condition if the current user is verified or not
+								{
+									unique_lock<mutex> lk(m->m_valid);
+									valid_connections.push_back(i);
+									user_cred.push_back(user_credentials(cred.username, cred.password, cred.match_type_id));
+									m->is_data.notify_one();
+
+
+									logged_in[cred.username] = i;
+									logged_in_rev[i] = cred.username;
+									sock_list.push_back(i);
+									lk1.unlock();
+
+									cout << "\n connected with a valid user";
+									cout << "\n this user has entered the following tournament id==>" << cred.match_type_id;
+									int status_code = 1;
+									int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+									FD_CLR(i, &master);
+								}
+								else if (checkUser(cred, 1))
+								{
+									//if it comes to this this means that the password entered is wrong and needs to be re-entered
+									cout << "\n user entered the wrong password...";
+									int status_code = 2;
+									int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+
+
+								}
+
+								else //not authenticated then tear down the socket connection and remove it from the set of master
+								{
+									cout << "\n invalid user came..";
+									int status_code = -1;
+									int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+								}
+							}
+							else if (cred.type == 2)//to check if the username is taken or not
+							{
+								/* here -1 for taken and 1 for ok*/
+								int status_code;
+								if (!checkUser(cred, 1))
+								{
+									status_code = 1;
+									int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+
+								}
+								else
+								{
+									status_code = -1;
+									int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
+								}
+							}
+
+							else if (cred.type == 1)//making a new account for the user
+							{
+								bool res = createUser(cred);
+								if (res)
+								{
+									cout << "\n created a new user==>" << cred.username;
+								}
+								else
+								{
+									cout << "\n cannot create a new user";
+								}
+							}
+
+						}
+
 					}
 
-					//}				
-					//else//asking for username and passowrd
-					//{
 				}
-				else
-				{
-					user_credentials cred;
-					int bytes = recv(i, (char*)&cred, sizeof(cred), 0);
-					if (bytes < 1)//in this case the client has disconnected the connection so remove this  socket and remove from the master socket
-					{
 
-						FD_CLR(i, &master);
-						CLOSESOCKET(i);//closing this socket
-					}
-					if (bytes > 0)
-					{
-						/*following are the status code that will be sent to the client to intimate him about is his login status
-						-1: account does not exist( this will happen only when both username and password does'nt exist in the database
-						2: username exists but the password is wrong
-						1: everything is fine
-						*/
-						if (cred.type == 0)//the account already exists
-						{
-							unique_lock<mutex> lk1(logged_in_mutex);
-							if (logged_in.find(cred.username) != logged_in.end())
-							{
-								//the user is already logged in so send a status number 3
-								cout << "\n user came who has already logged in==>" << cred.username;
-								int status_code = 3;
-								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
-								
-							}
-							else if (checkUser(cred, 0))//put the condition if the current user is verified or not
-							{
-								unique_lock<mutex> lk(m->m_valid);
-								valid_connections.push_back(i);
-								user_cred.push_back(user_credentials(cred.username, cred.password,cred.match_type_id));
-								m->is_data.notify_one();
-
-								
-								logged_in[cred.username] = i;
-								logged_in_rev[i] = cred.username;
-								sock_list.push_back(i);
-								lk1.unlock();
-								
-								cout << "\n connected with a valid user";
-								cout << "\n this user has entered the following tournament id==>" << cred.match_type_id;
-								int status_code = 1;
-								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
-								FD_CLR(i, &master);
-							}
-							else if (checkUser(cred, 1))
-							{
-								//if it comes to this this means that the password entered is wrong and needs to be re-entered
-								cout << "\n user entered the wrong password...";
-								int status_code = 2;
-								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
-
-
-							}
-							
-							else //not authenticated then tear down the socket connection and remove it from the set of master
-							{
-								cout << "\n invalid user came..";
-								int status_code = -1;
-								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
-							}
-						}
-						else if (cred.type == 2)//to check if the username is taken or not
-						{
-							/* here -1 for taken and 1 for ok*/
-							int status_code;
-							if (!checkUser(cred, 1))
-							{
-								status_code = 1;
-								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
-
-							}
-							else
-							{
-								status_code = -1;
-								int bytes = send(i, (char*)&status_code, sizeof(status_code), 0);
-							}
-						}
-
-						else if (cred.type == 1)//making a new account for the user
-						{
-							bool res = createUser(cred);
-							if (res)
-							{
-								cout << "\n created a new user==>" << cred.username;
-							}
-							else
-							{
-								cout << "\n cannot create a new user";
-							}
-						}
-						
-					}
-
-				}
-				
 			}
-
-		}
+		
 	}
 }
 bool comparator(pair<SOCKET, int>& one, pair<SOCKET, int>& two)
@@ -507,48 +533,59 @@ void lobby_contact(vector<SOCKET> &sockets)//sockets are the socket connection t
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 0;
+
+	int next_frame = 0;
+	int cur_frame = -1;
+
+	double elapsed_time = 0;
+	sf::Clock clock;
+	int count = 0;
 	while (1)
 	{
-		reads = master;
-	
-		select(max_socket + 1, &reads, 0, 0, &timeout);
-		for (int i = 1;i<=max_socket; i++)
-		{
-			if (FD_ISSET(i, &reads))
+		
+			count++;
+			cur_frame = next_frame;
+			reads = master;
+
+			select(max_socket + 1, &reads, 0, 0, &timeout);
+			for (int i = 1; i <= max_socket; i++)
 			{
-				int data;//pair of socket,bool(in int)
-				int byes = recv(i, (char*)&data, sizeof(data), 0);
-				
-				if (byes > 1)
+				if (FD_ISSET(i, &reads))
 				{
-					cout << "\n received data is==>" << data;
-					if (data == 0)//0 means that the server is busy
+					int data;//pair of socket,bool(in int)
+					int byes = recv(i, (char*)&data, sizeof(data), 0);
+
+					if (byes > 1)
 					{
-						for (int j = 0; j < free_lobby.size(); j++)
+						cout << "\n received data is==>" << data;
+						if (data == 0)//0 means that the server is busy
 						{
-							if (free_lobby[j].first == i)
+							for (int j = 0; j < free_lobby.size(); j++)
 							{
-								unique_lock<mutex> lk(m->m_lobby);
-								auto it = free_lobby.begin();
-								advance(it, j);
-								if(free_lobby.size()>j)
-								free_lobby.erase(it);
-								break;
+								if (free_lobby[j].first == i)
+								{
+									unique_lock<mutex> lk(m->m_lobby);
+									auto it = free_lobby.begin();
+									advance(it, j);
+									if (free_lobby.size() > j)
+										free_lobby.erase(it);
+									break;
+								}
 							}
 						}
-					}
-					else if (data == 1)
-					{
-						unique_lock<mutex> lk(m->m_lobby);
-						free_lobby.push_back(pair<SOCKET, int>(i, 0));
-						m->is_lobby.notify_all();
-						cout << "\n received available message from game server=>" << i;
-						//re assigning the token to the server for security purpose
-						
+						else if (data == 1)
+						{
+							unique_lock<mutex> lk(m->m_lobby);
+							free_lobby.push_back(pair<SOCKET, int>(i, 0));
+							m->is_lobby.notify_all();
+							cout << "\n received available message from game server=>" << i;
+							//re assigning the token to the server for security purpose
+
+						}
 					}
 				}
 			}
-		}
+		
 	}
 }
 void transferSocket(deque<SOCKET>& player_queue, deque<user_credentials> &player_cred,const int st,const int end, SOCKET& recvr)//potential problem in this when the number of players in a game lobby increases

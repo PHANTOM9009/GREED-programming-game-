@@ -1,6 +1,7 @@
 
-#include "online_lib2.hpp"
+#include "greed_offline.hpp"
 #include<random>
+//#include "online_lib2.hpp"
 
 int generateRandomInt(int lowerLimit, int upperLimit) {
 	std::random_device rd; // Obtain a random number from hardware
@@ -71,12 +72,11 @@ int generateRandomInt(int lowerLimit, int upperLimit) {
 		
 		int frame_rate = 0;
 		
-		double elapsed_time = 0;
-		sf::Clock clock;
+	
 		ob.threshold_health = 20;
 		while (1)
 		{
-			elapsed_time += clock.restart().asSeconds();
+			
 			if (ob.frame_rate_limiter())
 			{    //this is anchit rana talking to the world and i want ot know the difference between
 				//cout<<"\n my health is==>"<<ob.getCurrentHealth();
