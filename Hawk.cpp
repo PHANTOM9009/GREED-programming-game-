@@ -1,7 +1,7 @@
 
-#include "greed_offline.hpp"
+//#include "greed_offline.hpp"
 #include<random>
-//#include "online_lib2.hpp"
+#include "online_lib2.hpp"
 
 int generateRandomInt(int lowerLimit, int upperLimit) {
 	std::random_device rd; // Obtain a random number from hardware
@@ -95,7 +95,7 @@ int generateRandomInt(int lowerLimit, int upperLimit) {
 					for (auto it: e.shipFire.getShipId())
 					{
 						ob.Greed_fireCannon(cannon::FRONT,it.first, ShipSide::FRONT);
-					}
+					}   
 				}
 				if (e.eventType == Event::EventType::ShipsInMyRadius)
 				{

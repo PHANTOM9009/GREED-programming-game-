@@ -1,14 +1,1 @@
-﻿  lobby_server.cpp
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(383,29): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(394,22): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(561,29): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(567,22): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(705,10): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(712,68): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(714,46): warning C4267: '+=': conversion from 'size_t' to '_Ty2', possible loss of data
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(714,46): warning C4267:         with
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(714,46): warning C4267:         [
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(714,46): warning C4267:             _Ty2=int
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(714,46): warning C4267:         ]
-F:\current projects\GREED(programming game)\GREED(programming game)\lobby_server.cpp(818,21): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
-  GREED(programming game).vcxproj -> F:\current projects\GREED(programming game)\x64\Debug\GREED(programming game).exe
+﻿  GREED(programming game).vcxproj -> F:\current projects\GREED(programming game)\x64\Debug\GREED(programming game).exe
