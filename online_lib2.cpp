@@ -999,7 +999,7 @@ vector<Greed::coords> ship::getRadiusCoords_cannon(int c_id)
 }
 bool ship::frame_rate_limiter()
 {
-
+	
 	unique_lock<mutex> lk(mutx->game_tick_mutex_client);
 
 	
@@ -1034,6 +1034,10 @@ bool ship::frame_rate_limiter()
 
 ship::ship()//default ctor for now
 {
+	this->buffer_time_move = 0;
+	this->cannot_move = 0;
+	last_executed_id = -1;
+	buffer_count_sail = 0;
 	this->solid_motion = false;
 	this->navigation_promise = false;
 	this->anchor_promise = false;
@@ -2108,8 +2112,10 @@ bool ship::sail(Direction d, int tiles = 1)//number of tiles to be moved at a pa
 	//no need to lock any mutex here
 	unique_lock<mutex> lk(mutx->m[ship_id]);
 	dir = d;
-	if (d != Direction::NA && tiles >= 1)
+	if (tiles > 0 && fuel > 0 && d != Direction::NA && ((d == Direction::NORTH && tile_pos_front.r - 1 >= 0 && tile_pos_front.r - 1 <= rows - 1 && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c)).getShipId() == -1)
+		|| (d == Direction::SOUTH && tile_pos_front.r + 1 >= 0 && tile_pos_front.r + 1 <= rows - 1 && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c)).getShipId() == -1) || (d == Direction::EAST && tile_pos_front.c + 1 >= 0 && tile_pos_front.c + 1 <= columns - 1 && whatsHere(Greed::coords(tile_pos_front.r, tile_pos_front.c + 1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r, tile_pos_front.c + 1)).getShipId() == -1) || (d == Direction::WEST && tile_pos_front.c - 1 >= 0 && tile_pos_front.c - 1 <= columns - 1 && whatsHere(Greed::coords(tile_pos_front.r, tile_pos_front.c - 1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r, tile_pos_front.c - 1)).getShipId() == -1) || (d == Direction::NORTH_EAST && tile_pos_front.r - 1 >= 0 && tile_pos_front.r - 1 <= rows - 1 && tile_pos_front.c + 1 >= 0 && tile_pos_front.c + 1 < columns && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c + 1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c + 1)).getShipId() == -1) || (d == Direction::SOUTH_EAST && tile_pos_front.r + 1 >= 0 && tile_pos_front.r + 1 <= rows - 1 && tile_pos_front.c + 1 >= 0 && tile_pos_front.c + 1 < columns && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c + 1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c + 1)).getShipId() == -1) || (d == Direction::NORTH_WEST && tile_pos_front.r - 1 >= 0 && tile_pos_front.r - 1 <= rows - 1 && tile_pos_front.c - 1 >= 0 && tile_pos_front.c - 1 < columns && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c - 1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c - 1)).getShipId() == -1) || (d == Direction::SOUTH_WEST && tile_pos_front.r + 1 >= 0 && tile_pos_front.r + 1 <= rows - 1 && tile_pos_front.c - 1 >= 0 && tile_pos_front.c - 1 < columns && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c - 1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c - 1)).getShipId() == -1)))//we need to check direction per direction if the move  is valid move or not, since it can go to some obstacle
 	{
+	
 		//deleting the old coords path
 		List<Greed::coords> tile_path;
 		tile_path.add_rear(tile_pos_front);

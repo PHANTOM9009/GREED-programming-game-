@@ -43,6 +43,7 @@
 #include<chrono>
 #include<conio.h>
 #include<regex>
+#include<queue>
 /*
 * what am i doing here?sssssssssssssssss
 * the entire template is in lib2.hpp and its cpp counterpart
@@ -674,7 +675,10 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 						}
 					}
 				//check if navigation and firing commands reached the server properly, if not then resend them
-					
+					if (pl1[ship_id]->navigation_promise)
+					{
+						pl1[ship_id]->buffer_time_move++;
+					}
 					for (int i = 0; i < resend_navigation.size(); i++)
 					{
 
@@ -1503,6 +1507,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 								//cout << "\n sending firing data at==>" << game_tick;
 							}
 							
+
 							no_of_bullets += pl1[ship_id]->bullet_info.size();
 							no_of_times++;
 							control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx,nav_res_count,bullet_res_count,no_bullet_resend);

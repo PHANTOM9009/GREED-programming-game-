@@ -20,7 +20,7 @@
 #include<TGUI/TGUI.hpp>
 #include<chrono>
 #include<condition_variable>
-
+#include<queue>
 
 #pragma once
 
@@ -1181,6 +1181,7 @@ public:
 };
 class navigation
 {
+public:
 	int id;
 	int type;
 	/*
@@ -1193,7 +1194,7 @@ class navigation
 	int s_id;//for target type and chasing
 	int n;//number of tiles
 	Direction dir;
-public:
+
 	navigation() {
 		id = -1;
 	}
@@ -1349,11 +1350,11 @@ public:
 	double threshold_fuel;
 
 	int client_fire;
-
+	int cannot_move;
 	int radius;//square radius
 
 	int size_navigation;
-	navigation nav_data[4];//to be merged
+	navigation nav_data[15];//to be merged
 
 	int size_bulletData;
 	bullet_data b_data[15];//to be merged
@@ -1440,6 +1441,8 @@ public:
 	int collided_size;
 	int bullet_hit_size;
 
+	int cannot_move;
+
 	Greed::coords front_tile;
 	Greed::coords rear_tile;
 	Greed::abs_pos front_abs_pos;
@@ -1470,7 +1473,7 @@ public:
 	int cost_recved[3];
 
 	int size_nav_id;
-	int nav_recved[6];
+	int nav_recved[25];
 
 	friend class graphics;
 	friend class control1;
@@ -1569,7 +1572,14 @@ public:
 	}
 
 };
-
+class Compare
+{
+public:
+	bool operator()(const navigation& a, const navigation& b)
+	{
+		return a.id > b.id;
+	}
+};
 class ship//this class will be used to initialize the incoming player and give it a ship. and then keep tracking of that ship
 {
 
@@ -1591,6 +1601,7 @@ private:
 	int ship_id;//id of the ship
 	deque<timeline> time_line;
 
+	int buffer_time_move;//buffer time used, to turn the motion to false when the ship cannot move
 	//these variables are used to track the frame count of the algorithm of the user, the algorithm will only run if these variables mismatch
 	//initially these values will be 0, the client game loop will update the value of current_count, and prev_count will be increased by algorithm game loop
 	//these variables will be protected by a mutex.
@@ -1619,6 +1630,8 @@ private:
 	int lock_fuel;
 	int lock_health;
 	int lock_chase_ship;
+	int last_executed_id;//for sail function of navigation such that, the order of the commands remain same, or that the order remains atleast.
+	int buffer_count_sail;//buffer count for sail function to check if we can continue or not
 
 public: //this will be public the user will be able to access this object freely
 	//object 
@@ -1670,7 +1683,11 @@ private:
 	string name;
 	int current_event_point;//pointer to current_event
 	deque<navigation> nav_data;
+
 	deque<navigation> nav_data_temp;//to store the nav_data temorarily
+	
+	priority_queue<navigation,vector<navigation>,Compare> nav_data_temp_sail;//only
+    
 	deque<navigation> nav_data_final;//data that will be sent
 	List<Greed::bullet> bullet_hit;//the list of the bullets that had ever hit the ship
 	deque<Greed::bullet> bullet_hit_tempo;//made solely for the purpose of events, here the objects will be deleted as they are inserted into the events
@@ -2077,6 +2094,7 @@ private:
 
 public:
 	// bool updateCost(Greed::abs_pos ob,double new_cost);
+	int cannot_move;
 	bool Greed_sail(Direction d)
 	{
 		//now by default the number of tiles will be 1
@@ -2169,6 +2187,7 @@ public:
 			nav_data.push_back(nav);
 			solid_motion = 1;
 			this->navigation_promise = true;
+			this->buffer_time_move++;
 			return true;
 		}
 		return false;
@@ -2183,6 +2202,7 @@ public:
 			solid_motion = 1;
 			this->navigation_promise = true;
 			nav_data.push_back(nav);
+			this->buffer_time_move++;
 			return true;
 		}
 		return false;
@@ -2204,6 +2224,7 @@ public:
 				solid_motion = 1;
 				navigation_promise = true;
 				lock_chase_ship = 1;
+				this->buffer_time_move++;
 				return true;
 			}
 		}
@@ -2495,7 +2516,7 @@ public:
 			}
 		}
 
-
+		
 		pl1[id]->seconds = ob.seconds;
 		pl1[id]->minutes = ob.minutes;
 
@@ -2520,10 +2541,18 @@ public:
 
 		pl1[id]->tile_pos_front = ob.front_tile;
 		pl1[id]->tile_pos_rear = ob.rear_tile;
-		if (ob.front_abs_pos.x != pl1[id]->front_abs_pos.x || ob.front_abs_pos.y != pl1[id]->front_abs_pos.y)
+		if (ob.cannot_move == 1)
+		{
+			pl1[id]->navigation_promise = false;
+			cout << "\n cannot move came in...............";
+			ob.cannot_move = 10;//to reset it at the server end.
+		}
+		if ((ob.front_abs_pos.x != pl1[id]->front_abs_pos.x || ob.front_abs_pos.y != pl1[id]->front_abs_pos.y) ||  pl1[id]->buffer_time_move>8)
 		{
 			
 			pl1[id]->navigation_promise = false;
+			//cout << "\n the time since teh navigation promise removed is==>" << pl1[id]->buffer_time_move;
+			pl1[id]->buffer_time_move = 0;
 		}
 		pl1[id]->front_abs_pos = ob.front_abs_pos;
 		pl1[id]->rear_abs_pos = ob.rear_abs_pos;
@@ -2668,7 +2697,7 @@ public:
 				{
 					resend_navigation.erase(it);
 					j--;
-					//	cout << "\n deleted with the id==>" << ob.nav_recved[i];
+						cout << "\n deleted with the id==>" << ob.nav_recved[i];
 				}
 			}
 		}
@@ -2702,7 +2731,7 @@ public:
 		{
 			ob.killed_ships[i] = pl1[id]->killed_ships[i];
 		}
-
+		ob.cannot_move = pl1[id]->cannot_move;
 
 		ob.score = pl1[id]->score;
 
@@ -2790,9 +2819,9 @@ public:
 			k++;
 		}
 
-		ob.size_nav_id = std::min(6, (int)pl1[id]->nav_id_count.size());
+		ob.size_nav_id = std::min(25, (int)pl1[id]->nav_id_count.size());
 		k = 0;
-		for (int i = max(0, (int)pl1[id]->nav_id_count.size() - 6); i < pl1[id]->nav_id_count.size(); i++)
+		for (int i = max(0, (int)pl1[id]->nav_id_count.size() - 25); i < pl1[id]->nav_id_count.size(); i++)
 		{
 			auto it = pl1[id]->nav_id_count.begin();
 			advance(it, i);
@@ -2816,7 +2845,7 @@ public:
 
 
 		ob.radius = pl1[ship_id]->radius;
-		ob.size_navigation = min(4, (int)pl1[ship_id]->nav_data_final.size());
+		ob.size_navigation = min(15, (int)pl1[ship_id]->nav_data_final.size());
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
 			if (pl1[ship_id]->nav_data_final[0].id == -1)//its a new command add in the resend queue
@@ -2826,7 +2855,7 @@ public:
 				pl1[ship_id]->navigation_count++;
 			}
 			ob.nav_data[i] = pl1[ship_id]->nav_data_final[0];
-			cout << "\n sending navigation with the id==>" << pl1[ship_id]->nav_data_final[0].id;
+			cout << "\nsending the navigation data with the id==>" << ob.nav_data[i].id << " with the type==>" << ob.nav_data[i].type;
 			pl1[ship_id]->nav_data_final.pop_front();
 		}
 
@@ -2951,19 +2980,30 @@ public:
 
 	}
 
-	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id, Mutex* mutx)
+	void server_to_myData(shipData_forServer& ob, deque<ship*>& pl1, int ship_id, Mutex* mutx)//client to the server
 	{
 
 		for (int i = 0; i < ob.size_navigation; i++)
 		{
 			if (pl1[ship_id]->nav_id_count.find(ob.nav_data[i].id) == pl1[ship_id]->nav_id_count.end())
 			{
-				pl1[ship_id]->nav_data_temp.push_back(ob.nav_data[i]);
+				if (ob.nav_data[i].type != 1)
+				{
+					pl1[ship_id]->nav_data_temp.push_back(ob.nav_data[i]);
+				}
+				else if (ob.nav_data[i].type == 1)
+				{
+					pl1[ship_id]->nav_data_temp_sail.push(ob.nav_data[i]);
+				}
 				pl1[ship_id]->nav_id_count[ob.nav_data[i].id] = 1;
+				cout << "\n recved navigation request with the id==>" << ob.nav_data[i].id;
 			}
 
 		}
-		
+		if (ob.cannot_move == 10)
+		{
+			pl1[ship_id]->cannot_move = 0;
+		}
 		pl1[ship_id]->ship_id = ob.ship_id;
 		pl1[ship_id]->threshold_health = ob.threshold_health;
 		pl1[ship_id]->threshold_ammo = ob.threshold_ammo;

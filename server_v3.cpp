@@ -6,6 +6,7 @@ start client_v1
 starting client_v1 will automatically start the client_v2 unit so no need to start it manually
 
 */
+//fuck you all
 #pragma once
 
 #include <cppconn/driver.h> 
@@ -327,6 +328,11 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 									pl1[i]->navigation_promise = 1;
 
 								}
+								else
+								{
+									pl1[i]->cannot_move = 1;
+									
+								}
 								pl1[i]->setPath(path.getPath());
 								
 									//cout << "\n in type 0 in target=>" << temp[i][0].target.r << " " << temp[i][0].target.c;
@@ -342,6 +348,10 @@ void control1::nav_data_processor(deque<ship*>& pl1, Mutex* mutx)
 									
 									pl1[i]->solid_motion = 1;
 									pl1[i]->navigation_promise = 1;
+								}
+								else
+								{
+									pl1[i]->cannot_move = 1;
 								}
 								lk1.unlock();
 								pl1[i]->setPath(path.getPath());
@@ -1144,7 +1154,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 			sf::Clock processing1;
 			processing1.restart();
 			//this shit won't pass until two conditions get okay
-			if (check_game_over(pl1) || (total_secs / 60) >= 10)//if game is over/if time of the game is 10 minutes, then the game will be over.
+			if (check_game_over(pl1) || (total_secs / 60) >= 100)//if game is over/if time of the game is 10 minutes, then the game will be over.
 			{
 				if (!checked)
 				{
@@ -1448,21 +1458,24 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 						for (int j = 0; j < pl1[i]->nav_data_temp.size(); j++)
 						{
 
-							if (pl1[i]->solid_motion==0 && pl1[i]->nav_data_temp[j].type != 3)//add only in the queue if the ship is in motion..
+							if (pl1[i]->solid_motion==0 && pl1[i]->nav_data_temp[j].type != 3 && pl1[i]->nav_data_temp[j].type!=1)//add only in the queue if the ship is in motion..
 							{
 								//cout << "\n recved the value of navigation with the type==>"<< pl1[i]->nav_data_temp[j].type<<" at the time stamp=>"<<game_tick;
 								//cout << "\n navigation is to==>" << pl1[i]->nav_data_temp[j].target.r << " " << pl1[i]->nav_data_temp[j].target.c;
 								pl1[i]->nav_data.push_back(pl1[i]->nav_data_temp[j]);
+								pl1[i]->nav_data_temp.pop_front();
 								
 							}
 							else if (pl1[i]->solid_motion == 1 && pl1[i]->nav_data_temp[j].type == 3)
 							{
 								pl1[i]->nav_data.push_back(pl1[i]->nav_data_temp[j]);
+								pl1[i]->nav_data_temp.pop_front();
 							}
+								
 						}
 						lk.unlock();
 						mutx->cond_updating_data.notify_all();
-						pl1[i]->nav_data_temp.clear();
+						
 					}
 					//till upgrade and fire
 					fire_upgrade += processing1.getElapsedTime().asSeconds();
@@ -1505,7 +1518,36 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 								}
 							}
 						}
-					
+					//handling sail stuff here
+						if (pl1[i]->motion == 0)
+						{
+							if (pl1[i]->nav_data_temp_sail.size() > 0 )
+							{
+								if (pl1[i]->nav_data_temp_sail.top().id - pl1[i]->last_executed_id == 1)
+								{
+									cout << "\n executing the id of============>" << pl1[i]->nav_data_temp_sail.top().id;
+									pl1[i]->sail(pl1[i]->nav_data_temp_sail.top().dir);
+									pl1[i]->nav_data_temp_sail.pop();
+									pl1[i]->buffer_count_sail = 0;
+									pl1[i]->last_executed_id++;
+									
+								}
+								else//lets wait for two frames
+								{
+									pl1[i]->buffer_count_sail++;
+									if (pl1[i]->buffer_count_sail > 100)
+									{
+										pl1[i]->last_executed_id++;
+										cout << "\n i have waited for too long===============================>";
+										pl1[i]->buffer_count_sail = 0;
+									}
+								}
+							}
+							else
+							{
+								pl1[i]->buffer_count_sail = 0;
+							}
+						}
 						mutx->m[i].lock();
 							List<Greed::abs_pos>& l1 = pl1[i]->getPathList(2369);
 							if (pl1[i]->fuel <= 0)
@@ -1547,7 +1589,7 @@ void graphics::callable(Mutex* mutx, int code[rows][columns], Map& map_ob, int n
 							{
 								
 								pl1[i]->motion = 0;
-								if(!pl1[i]->navigation_promise)
+								if(!pl1[i]->navigation_promise && pl1[i]->nav_data_temp_sail.size()==0)
 								pl1[i]->solid_motion = 0;
 							}
 
