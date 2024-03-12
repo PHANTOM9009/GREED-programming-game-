@@ -1,4 +1,5 @@
 #include<iostream>
+
 #include "List.h"
 #include<thread>
 #include<mutex>
@@ -2076,11 +2077,13 @@ private:
 
 public:
 	// bool updateCost(Greed::abs_pos ob,double new_cost);
-	bool Greed_sail(Direction d, int tiles = 1)
+	bool Greed_sail(Direction d)
 	{
-
+		//now by default the number of tiles will be 1
+		int tiles = 1;
 		unique_lock<mutex> lk(mutx->m[ship_id]);
-		if (solid_motion == 0 && tiles > 0 && fuel > 0 && d != Direction::NA)
+		if (tiles > 0 && fuel > 0 && d != Direction::NA && ((d==Direction::NORTH && tile_pos_front.r-1>=0 && tile_pos_front.r-1<=rows-1&& whatsHere(Greed::coords(tile_pos_front.r-1,tile_pos_front.c)).entity==Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c)).getShipId()==-1)
+			||(d == Direction::SOUTH && tile_pos_front.r + 1 >= 0 && tile_pos_front.r + 1 <= rows - 1 && whatsHere(Greed::coords(tile_pos_front.r +1, tile_pos_front.c)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c)).getShipId() == -1) || (d == Direction::EAST && tile_pos_front.c + 1 >= 0 && tile_pos_front.c + 1 <= columns - 1 && whatsHere(Greed::coords(tile_pos_front.r, tile_pos_front.c+1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r, tile_pos_front.c+1)).getShipId() == -1)||(d == Direction::WEST && tile_pos_front.c - 1 >= 0 && tile_pos_front.c - 1 <= columns - 1 && whatsHere(Greed::coords(tile_pos_front.r, tile_pos_front.c-1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r, tile_pos_front.c-1)).getShipId() == -1) || (d == Direction::NORTH_EAST && tile_pos_front.r - 1 >= 0 && tile_pos_front.r - 1 <= rows - 1 && tile_pos_front.c+1>=0 && tile_pos_front.c+1<columns && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c+1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c+1)).getShipId() == -1)||(d == Direction::SOUTH_EAST && tile_pos_front.r + 1 >= 0 && tile_pos_front.r + 1 <= rows - 1 && tile_pos_front.c + 1 >= 0 && tile_pos_front.c + 1 < columns && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c + 1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c + 1)).getShipId() == -1)||(d == Direction::NORTH_WEST && tile_pos_front.r - 1 >= 0 && tile_pos_front.r - 1 <= rows - 1 && tile_pos_front.c - 1 >= 0 && tile_pos_front.c - 1 < columns && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c - 1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r - 1, tile_pos_front.c - 1)).getShipId() == -1)||(d == Direction::SOUTH_WEST && tile_pos_front.r + 1 >= 0 && tile_pos_front.r + 1 <= rows - 1 && tile_pos_front.c - 1 >= 0 && tile_pos_front.c - 1 < columns && whatsHere(Greed::coords(tile_pos_front.r + 1, tile_pos_front.c - 1)).entity == Entity::WATER && whatsHere(Greed::coords(tile_pos_front.r +1, tile_pos_front.c - 1)).getShipId() == -1)))//we need to check direction per direction if the move  is valid move or not, since it can go to some obstacle
 		{
 			navigation nav(1, Greed::coords(-1, -1), -1, tiles, d);
 			nav_data.push_back(nav);
@@ -2823,6 +2826,7 @@ public:
 				pl1[ship_id]->navigation_count++;
 			}
 			ob.nav_data[i] = pl1[ship_id]->nav_data_final[0];
+			cout << "\n sending navigation with the id==>" << pl1[ship_id]->nav_data_final[0].id;
 			pl1[ship_id]->nav_data_final.pop_front();
 		}
 

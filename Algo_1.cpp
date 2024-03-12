@@ -227,8 +227,8 @@ void displayTree(node& state,int level)
 }
 int main()
 {
-	state s0(0, 200, 100, 1, 5, true);
-	state s1(1, 80, 150, 1, 5, true);
+	state s0(0, 200, 155, 1, 5, true);
+	state s1(1, 80, 100, 1, 5, true);
 	node first;
 	first.action_taker_id = false;
 	first.states.push_back(s0);
@@ -240,6 +240,12 @@ int main()
 	{
 		cout << (int)max_decision[i] <<" ";
 	}
+	cout << "\n the min action is==>" << endl;
+	for (int i = 0; i < min_decision.size(); i++)
+	{
+		cout << (int)min_decision[i] <<" ";
+
+	}
 	/*
 	cout << "\n the tree is==>\n";
 	displayTree(first,0);
@@ -248,12 +254,7 @@ int main()
 	{
 		cout << (int)max_decision[i] << endl;
 	}
-	cout << "\n the min action is==>" << endl;
-	for (int i = 0; i < min_decision.size(); i++)
-	{
-		cout << (int)min_decision[i] << endl;
-
-	}
+	
 	*/
 }
 

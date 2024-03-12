@@ -1502,11 +1502,7 @@ void graphics::callable_client(int ship_id,Mutex* mutx, int code[rows][columns],
 							{
 								//cout << "\n sending firing data at==>" << game_tick;
 							}
-							for (int i = 0; i < pl1[ship_id]->nav_data_final.size(); i++)
-							{
-								cout << "\n sending navigation data at==>" << game_tick;
-							}
-
+							
 							no_of_bullets += pl1[ship_id]->bullet_info.size();
 							no_of_times++;
 							control_ob.mydata_to_server(pl1, ship_id, shipdata, newBullets, mutx,nav_res_count,bullet_res_count,no_bullet_resend);

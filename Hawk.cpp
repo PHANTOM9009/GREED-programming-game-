@@ -72,7 +72,10 @@ int generateRandomInt(int lowerLimit, int upperLimit) {
 		
 		int frame_rate = 0;
 		
-	
+		for (int i = 1; i <= 25; i++)
+		{
+			cout << ob.Greed_sail(Direction::EAST) << " ";
+		}
 		ob.threshold_health = 20;
 		while (1)
 		{
@@ -81,41 +84,7 @@ int generateRandomInt(int lowerLimit, int upperLimit) {
 			{    //this is anchit rana talking to the world and i want ot know the difference between
 				//cout<<"\n my health is==>"<<ob.getCurrentHealth();
 				
-				if (ob.isShipInMotion() == 0)
-				{
-					int ind = find_ship_to_kill(ob.getShipList(), ob.getShipId(), ob, ob.getShipId());
-					cout << "\n gonig to chase==>" << ind;
-					ob.Greed_chaseShip(ind);
-				}
 				
-				Event e;
-				ob.getNextCurrentEvent(e);
-				if (e.eventType == Event::EventType::ShipFire)
-				{
-					for (auto it: e.shipFire.getShipId())
-					{
-						ob.Greed_fireCannon(cannon::FRONT,it.first, ShipSide::FRONT);
-					}   
-				}
-				if (e.eventType == Event::EventType::ShipsInMyRadius)
-				{
-					cout << "\n ship is in my radius..........";
-					for (int i = 0; i < e.radiusShip.getShipId().size(); i++)
-					{
-						ob.Greed_fireCannon(cannon::FRONT, e.radiusShip.getShipId()[i], ShipSide::FRONT);
-					}
-					//ob.Greed_setPath(Greed::coords(10, 0));
-				}
-				if (ob.getCurrentHealth() <= 10)
-				{
-					ob.Greed_upgradeHealth(10);
-				}
-				if (ob.getCurrentAmmo() <= 10)
-				{
-					ob.Greed_upgradeAmmo(10);
-				}
-
-			
 
 			}
 
